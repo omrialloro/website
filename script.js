@@ -72,7 +72,7 @@ const data = {
         ],
         videos: [
           {
-            url: "vibrating armchair/DSC_0094.MOV",
+            url: "vibrating armchair/DSC_0094.mov",
             text: "Documentation footage from the exhibition opening.",
           },
           {
