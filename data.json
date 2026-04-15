@@ -1,0 +1,83 @@
+{
+  "sections": {
+    "selected drawings": [
+      { "image": "images/1.png", "title": "Pixel VJ 1" }
+    ],
+    "web projects": [
+      {
+        "name": "dontLookBack",
+        "text": "DontLookBack is a software project, co-created with Alma Alloro. It is a web-based tool developed through artistic research, aiming to find new ways of creating digital visuals and moving image art that carries qualities of materiality.\n\nWith its inherent simplicity, derived from a small set of operations, it offers a way to explore creativity and expression under constraints, experiencing the potential that emerges from working with limitations.\n\nIt is an attempt to continue a line of ideas from movements such as Oulipo and Fluxus, and from the demoscene.\n\nAt the moment, the tool consists of two interfaces: one for creating clips, and another for playing and manipulating them live - either for VJ performance or for editing video clips. This makes the tool a self-contained environment, defined by its own distinct and cohesive aesthetic system.",
+        "images": ["dlb/1.png", "dlb/2.png"],
+        "videos": [
+          "https://www.youtube.com/watch?v=xxxx",
+          "videos/pixel-vj-demo.mp4"
+        ]
+      },
+      {
+        "name": "Time To Space",
+        "text": "A web-based tool for creating and performing pixel animations in real time.",
+        "images": ["images/pixel-vj/1.png", "images/pixel-vj/2.png"],
+        "videos": [
+          "https://www.youtube.com/watch?v=xxxx",
+          "videos/pixel-vj-demo.mp4"
+        ]
+      }
+    ],
+    "exhibitions": [
+      {
+        "name": "The RGB Of The Smoothie",
+        "date": "2025",
+        "place": "Petach Tikva Art Museum",
+        "text": "Group exhibition exploring data-driven artistic practices.",
+        "images": [
+          "The RGB Of The Smoothie/1.jpeg",
+          "The RGB Of The Smoothie/2.jpeg",
+          "The RGB Of The Smoothie/3.jpeg"
+        ],
+        "videos": []
+      },
+      {
+        "name": "Acid Knobs",
+        "date": "2025",
+        "place": "Hamachbesa Gallery, Gesher Haziv",
+        "text": "Group exhibition exporing data-driven artistic practices.",
+        "images": ["Acid Knobs/1.jpg"],
+        "videos": []
+      },
+      {
+        "name": "A Vibrating Armchair",
+        "date": "2024",
+        "place": "A Popup Exhibition,Minhal Handasa Building, Haifa",
+        "text": "Group exhibition exploring data-driven artistic practices.",
+        "images": [
+          "vibrating armchair/1.jpg",
+          "vibrating armchair/2.jpg",
+          "vibrating armchair/3.jpg"
+        ],
+        "videos": ["vibrating armchair/DSC_0094.MOV"]
+      },
+      {
+        "name": "silk road",
+        "date": "2023",
+        "place": "Hagada Hasmalit, Tel Aviv",
+        "text": "Group exhibition exploring data-driven artistic practices.",
+        "images": [
+          "silk road/1.jpg",
+          "silk road/2.jpg",
+          "silk road/3.jpg"
+        ],
+        "videos": []
+      }
+    ],
+    "Music": [],
+    "Courses": [],
+    "bio": {
+      "text": "A multidisciplinary artist, algorithm designer, and web developer. My academic background is in mathematics, while my practice has always been rooted in art, including painting, writing, music, and, in recent years, digital art.\n\nIn recent years, I have begun integrating my work as an algorithm designer and web developer into code-based artistic projects. I also teach creative coding and robotics, working with students on the intersection of technology and artistic practice. I am currently engaged in research and development of creative interfaces that explore the material qualities of digital creation.\n\nAlthough I work across different fields, the underlying thread in my practice is a search for a free, intuitive, and spontaneous line, one that gives rise to the unexpected and continues to surprise me."
+    },
+    "social": {
+      "github": "https://github.com/omrialloro",
+      "instagram": "https://www.instagram.com/omrialloro/",
+      "linkedin": "https://www.linkedin.com/in/omri-alloro-b0184bb9/"
+    }
+  }
+}
