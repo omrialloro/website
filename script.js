@@ -284,13 +284,6 @@ function createItemToggle(title) {
 function renderMedia(images = [], videos = [], gifs = []) {
   const wrap = createEl("div");
 
-  console.log(gifs.length);
-  console.log(gifs.length);
-  console.log(gifs.length);
-  console.log(gifs.length);
-  console.log(gifs.length);
-  console.log(gifs.length);
-
   if (gifs.length) {
     const gifGrid = createEl("div", "gif-grid");
     gifs.forEach((src) => {
