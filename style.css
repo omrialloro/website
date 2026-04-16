@@ -14,7 +14,7 @@
 
   --header-height: 48px;
   --header-padding-x: 80px;
-  --header-bg: rgba(10, 50, 100, 0.95);
+  --header-bg: rgba(10, 70, 100, 0.95);
   --header-blur: 12px;
   --header-border: rgba(205, 205, 205, 0.7);
 
@@ -582,4 +582,44 @@ body.subsection-open #close-btn {
   font-size: 13px;
   line-height: 1.4;
   max-width: var(--media-max-width);
+}
+
+.gif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.gif-grid img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.drawings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+  padding: 16px 0;
+}
+
+.drawing-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawing-item img {
+  width: 100%;
+  aspect-ratio: auto;   /* change from 1 to auto */
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+}
+
+.drawing-title {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
 }

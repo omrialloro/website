@@ -1,7 +1,14 @@
 const data = {
   sections: {
     "selected drawings": [
-      { image: "images/pixel-vj/1.png", title: "Pixel VJ 1" },
+      { image: "selected drawings/1.png", title: "Selected Drawing 1" },
+      { image: "selected drawings/2.png", title: "Selected Drawing 2" },
+      { image: "selected drawings/3.png", title: "Selected Drawing 3" },
+      { image: "selected drawings/4.png", title: "Selected Drawing 4" },
+      { image: "selected drawings/5.png", title: "Selected Drawing 5" },
+      { image: "selected drawings/6.png", title: "Selected Drawing 6" },
+      { image: "selected drawings/7.png", title: "Selected Drawing 7" },
+      { image: "selected drawings/8.png", title: "Selected Drawing 8" },
     ],
     "web projects": [
       {
@@ -17,6 +24,18 @@ const data = {
             url: "videos/pixel-vj-demo.mp4",
             text: "Live performance demo recorded at a VJ session.",
           },
+        ],
+        gifs: [
+          "gifs/1.gif",
+          "gifs/2.gif",
+          "gifs/3.gif",
+          "gifs/4.gif",
+          "gifs/5.gif",
+          "gifs/6.gif",
+          "gifs/7.gif",
+          "gifs/8.gif",
+          "gifs/9.gif",
+          "gifs/10.gif",
         ],
       },
       {
@@ -262,8 +281,26 @@ function createItemToggle(title) {
   return { wrapper, body };
 }
 
-function renderMedia(images = [], videos = []) {
+function renderMedia(images = [], videos = [], gifs = []) {
   const wrap = createEl("div");
+
+  console.log(gifs.length);
+  console.log(gifs.length);
+  console.log(gifs.length);
+  console.log(gifs.length);
+  console.log(gifs.length);
+  console.log(gifs.length);
+
+  if (gifs.length) {
+    const gifGrid = createEl("div", "gif-grid");
+    gifs.forEach((src) => {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "";
+      gifGrid.appendChild(img);
+    });
+    wrap.appendChild(gifGrid);
+  }
 
   if (images.length) {
     const grid = createEl("div", "media-grid");
@@ -367,7 +404,40 @@ function renderHeader() {
   siteHeader.appendChild(bio);
 }
 
+function renderDrawingsGrid(items, body) {
+  const grid = document.createElement("div");
+  grid.className = "drawings-grid";
+
+  items.forEach((item) => {
+    const cell = document.createElement("div");
+    cell.className = "drawing-item";
+
+    if (item.image) {
+      const img = document.createElement("img");
+      img.src = item.image;
+      img.alt = item.title || "";
+      cell.appendChild(img);
+    }
+
+    if (item.title) {
+      const title = document.createElement("p");
+      title.className = "drawing-title";
+      title.textContent = item.title;
+      cell.appendChild(title);
+    }
+
+    grid.appendChild(cell);
+  });
+
+  body.appendChild(grid);
+}
 function renderCollection(items, body) {
+  if (items.length && items[0].image) {
+    const { wrapper, body: itemBody } = createItemToggle("view all");
+    renderDrawingsGrid(items, itemBody);
+    body.appendChild(wrapper);
+    return;
+  }
   items.forEach((item) => {
     const label = item.name || item.title || "Untitled";
     const { wrapper, body: itemBody } = createItemToggle(label);
@@ -383,12 +453,14 @@ function renderCollection(items, body) {
     if (item.text) {
       renderParagraphs(item.text, itemBody);
     }
-
     if (
       (item.images && item.images.length) ||
-      (item.videos && item.videos.length)
+      (item.videos && item.videos.length) ||
+      (item.gifs && item.gifs.length)
     ) {
-      itemBody.appendChild(renderMedia(item.images || [], item.videos || []));
+      itemBody.appendChild(
+        renderMedia(item.images || [], item.videos || [], item.gifs || []),
+      );
     }
 
     body.appendChild(wrapper);
