@@ -418,6 +418,189 @@ function createItemToggle(title, sectionTitle) {
   return { wrapper, body, toggle };
 }
 
+// ─── Animated app frame (for dontLookBack) ───────────────────────────────────
+
+let appFrameCanvas = null;
+let appFrameRaf = null;
+let appFrameExpanded = false;
+let appFrameExpandStart = null;
+
+const FRAME_GREEN_R = 0,
+  FRAME_GREEN_G = 255,
+  FRAME_GREEN_B = 60;
+const FRAME_RED_R = 255,
+  FRAME_RED_G = 40,
+  FRAME_RED_B = 90;
+const FRAME_DELTA = 40;
+const FRAME_EXPAND_DURATION = 700;
+
+function flickerColor(r, g, b) {
+  const d = FRAME_DELTA;
+  return [
+    Math.round(Math.max(0, Math.min(255, r + (Math.random() * 2 - 1) * d))),
+    Math.round(Math.max(0, Math.min(255, g + (Math.random() * 2 - 1) * d))),
+    Math.round(Math.max(0, Math.min(255, b + (Math.random() * 2 - 1) * d))),
+  ];
+}
+
+function drawAppFrame(ts) {
+  if (!appFrameCanvas) return;
+
+  const rect = app.getBoundingClientRect();
+  const W = Math.round(rect.width);
+  const H = Math.round(rect.height);
+
+  // Keep canvas sized and positioned exactly over #app
+  appFrameCanvas.style.left = rect.left + "px";
+  appFrameCanvas.style.top = rect.top + "px";
+  appFrameCanvas.style.width = W + "px";
+  appFrameCanvas.style.height = H + "px";
+
+  if (appFrameCanvas.width !== W || appFrameCanvas.height !== H) {
+    appFrameCanvas.width = W;
+    appFrameCanvas.height = H;
+  }
+
+  // Entrance progress
+  if (!appFrameExpanded) {
+    if (!appFrameExpandStart) appFrameExpandStart = ts;
+    const t = Math.min(1, (ts - appFrameExpandStart) / FRAME_EXPAND_DURATION);
+    const eased = 1 - Math.pow(1 - t, 3);
+    if (t >= 1) appFrameExpanded = true;
+
+    drawFrameLines(appFrameCanvas, W, H, eased);
+  } else {
+    drawFrameLines(appFrameCanvas, W, H, 1);
+  }
+
+  appFrameRaf = requestAnimationFrame(drawAppFrame);
+}
+
+function drawFrameLines(canvas, W, H, progress) {
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+
+  // The perimeter length of the rectangle
+  const perimeter = 2 * (W + H);
+  const drawLen = perimeter * progress;
+
+  // Green solid line (outer, offset 1px inward)
+  const [r1, g1, b1] = flickerColor(
+    FRAME_GREEN_R,
+    FRAME_GREEN_G,
+    FRAME_GREEN_B,
+  );
+  drawPerimeterLine(ctx, W, H, 1, drawLen, [], r1, g1, b1, 6);
+
+  // Red-pink dashed line (inner, offset 5px inward)
+  const [r2, g2, b2] = flickerColor(FRAME_RED_R, FRAME_RED_G, FRAME_RED_B);
+  drawPerimeterLine(ctx, W, H, 5, drawLen, [6, 5], r2, g2, b2, 4);
+}
+
+function drawPerimeterLine(ctx, W, H, inset, maxLen, dash, r, g, b, blur) {
+  // Path goes: top-left → top-right → bottom-right → bottom-left → top-left
+  // We clip it to maxLen pixels along this path.
+  const i = inset;
+  const corners = [
+    [i, i], // top-left  (start)
+    [W - i, i], // top-right
+    [W - i, H - i], // bottom-right
+    [i, H - i], // bottom-left
+    [i, i], // back to top-left (close)
+  ];
+
+  // Build segments with their lengths
+  const segments = [];
+  for (let s = 0; s < corners.length - 1; s++) {
+    const [x0, y0] = corners[s];
+    const [x1, y1] = corners[s + 1];
+    const len = Math.hypot(x1 - x0, y1 - y0);
+    segments.push({ x0, y0, x1, y1, len });
+  }
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.setLineDash(dash);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = `rgb(${r},${g},${b})`;
+  ctx.shadowColor = `rgb(${r},${g},${b})`;
+  ctx.shadowBlur = blur;
+
+  let remaining = maxLen;
+  let started = false;
+
+  for (const seg of segments) {
+    if (remaining <= 0) break;
+    const drawSeg = Math.min(seg.len, remaining);
+    const t = drawSeg / seg.len;
+    const ex = seg.x0 + (seg.x1 - seg.x0) * t;
+    const ey = seg.y0 + (seg.y1 - seg.y0) * t;
+
+    if (!started) {
+      ctx.moveTo(seg.x0, seg.y0);
+      started = true;
+    }
+    ctx.lineTo(ex, ey);
+    remaining -= drawSeg;
+  }
+
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function startAppFrame() {
+  if (appFrameCanvas) return;
+
+  // Dark overlay that fades over the background image
+  const overlay = document.createElement("div");
+  overlay.id = "dlb-overlay";
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    z-index: 99;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  `;
+  document.body.appendChild(overlay);
+  // Trigger fade-in on next frame
+  requestAnimationFrame(() => {
+    overlay.style.opacity = "0.88";
+  });
+
+  appFrameCanvas = document.createElement("canvas");
+  appFrameCanvas.style.cssText =
+    "position:fixed;pointer-events:none;z-index:101;";
+  document.body.appendChild(appFrameCanvas);
+
+  // Hide CSS border
+  app.style.border = "none";
+
+  appFrameExpanded = false;
+  appFrameExpandStart = null;
+  appFrameRaf = requestAnimationFrame(drawAppFrame);
+}
+
+function stopAppFrame() {
+  if (!appFrameCanvas) return;
+  cancelAnimationFrame(appFrameRaf);
+  appFrameCanvas.remove();
+  appFrameCanvas = null;
+  appFrameRaf = null;
+  // Restore CSS border
+  app.style.border = "";
+
+  // Fade out and remove the dark overlay
+  const overlay = document.getElementById("dlb-overlay");
+  if (overlay) {
+    overlay.style.opacity = "0";
+    setTimeout(() => overlay.remove(), 800);
+  }
+}
+
 // ─── Open / close primitives ──────────────────────────────────────────────────
 
 function openItem(wrapper, body, toggle, title) {
@@ -427,6 +610,7 @@ function openItem(wrapper, body, toggle, title) {
   animateOpen(body);
   app.classList.add("subsection-open");
   document.body.classList.add("subsection-open");
+  if (title === "dontLookBack") startAppFrame();
   requestAnimationFrame(updateAppWidthState);
 }
 
@@ -437,6 +621,7 @@ function closeItem(wrapper, body, toggle) {
   removeSubsectionTitle(body);
   app.classList.remove("subsection-open");
   document.body.classList.remove("subsection-open");
+  stopAppFrame();
   requestAnimationFrame(updateAppWidthState);
 }
 
@@ -456,6 +641,7 @@ function closeAllItems({ silent = false } = {}) {
   if (!silent) {
     app.classList.remove("subsection-open");
     document.body.classList.remove("subsection-open");
+    stopAppFrame();
     requestAnimationFrame(updateAppWidthState);
   }
 }
@@ -562,6 +748,136 @@ function makeClickableImage(src, sectionTitle, itemTitle) {
   return img;
 }
 
+// ─── Canvas divider ───────────────────────────────────────────────────────────
+
+function createCanvasDivider() {
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = "width:100%;margin:20px 0;";
+
+  const canvas = document.createElement("canvas");
+  canvas.height = 24;
+  canvas.style.cssText = "width:100%;height:24px;display:block;";
+  wrapper.appendChild(canvas);
+
+  function resize() {
+    const w = canvas.offsetWidth || 600;
+    if (canvas.width !== w) canvas.width = w;
+  }
+
+  // Green line
+  const BASE_R = 0,
+    BASE_G = 255,
+    BASE_B = 60;
+  // Red-pink dashed line
+  const BASE_R2 = 255,
+    BASE_G2 = 40,
+    BASE_B2 = 90;
+  const DELTA = 40;
+  const EXPAND_DURATION = 600;
+
+  let raf = null;
+  let progress = 0;
+  let expandStart = null;
+  let expanded = false;
+
+  function drawLines(ctx, W, endX) {
+    // -- Green solid line (top) --
+    const r1 = Math.round(
+      Math.max(0, Math.min(255, BASE_R + (Math.random() * 2 - 1) * DELTA)),
+    );
+    const g1 = Math.round(
+      Math.max(0, Math.min(255, BASE_G + (Math.random() * 2 - 1) * DELTA)),
+    );
+    const b1 = Math.round(
+      Math.max(0, Math.min(255, BASE_B + (Math.random() * 2 - 1) * DELTA)),
+    );
+
+    ctx.beginPath();
+    ctx.setLineDash([]);
+    ctx.moveTo(0, 5);
+    ctx.lineTo(endX, 5);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgb(${r1},${g1},${b1})`;
+    ctx.shadowColor = `rgb(${r1},${g1},${b1})`;
+    ctx.shadowBlur = 6;
+    ctx.stroke();
+
+    // -- Red-pink dashed line (bottom) --
+    const r2 = Math.round(
+      Math.max(0, Math.min(255, BASE_R2 + (Math.random() * 2 - 1) * DELTA)),
+    );
+    const g2 = Math.round(
+      Math.max(0, Math.min(255, BASE_G2 + (Math.random() * 2 - 1) * DELTA)),
+    );
+    const b2 = Math.round(
+      Math.max(0, Math.min(255, BASE_B2 + (Math.random() * 2 - 1) * DELTA)),
+    );
+
+    ctx.beginPath();
+    ctx.setLineDash([6, 5]);
+    ctx.moveTo(0, 13);
+    ctx.lineTo(endX, 13);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgb(${r2},${g2},${b2})`;
+    ctx.shadowColor = `rgb(${r2},${g2},${b2})`;
+    ctx.shadowBlur = 5;
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+  }
+
+  function draw(ts) {
+    resize();
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    if (!expanded) {
+      if (!expandStart) expandStart = ts;
+      const elapsed = ts - expandStart;
+      progress = Math.min(1, elapsed / EXPAND_DURATION);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      if (progress >= 1) expanded = true;
+
+      ctx.clearRect(0, 0, W, H);
+      drawLines(ctx, W, W * eased);
+      raf = requestAnimationFrame(draw);
+      return;
+    }
+
+    ctx.clearRect(0, 0, W, H);
+    drawLines(ctx, W, W);
+    raf = requestAnimationFrame(draw);
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          if (!raf) {
+            // Reset entrance each time it comes into view
+            expanded = false;
+            expandStart = null;
+            progress = 0;
+            raf = requestAnimationFrame(draw);
+          }
+        } else {
+          if (raf) {
+            cancelAnimationFrame(raf);
+            raf = null;
+          }
+        }
+      });
+    },
+    { threshold: 0 },
+  );
+
+  observer.observe(canvas);
+
+  return wrapper;
+}
+
 function renderMedia(
   images = [],
   videos = [],
@@ -571,13 +887,16 @@ function renderMedia(
 ) {
   const wrap = createEl("div");
 
+  // Track which blocks we add so we can insert dividers between them
+  const blocks = [];
+
   if (gifs.length) {
     const gifGrid = createEl("div", "gif-grid");
     gifs.forEach((src) => {
       const img = makeClickableImage(src, sectionTitle, itemTitle);
       gifGrid.appendChild(img);
     });
-    wrap.appendChild(gifGrid);
+    blocks.push(gifGrid);
   }
 
   if (images.length) {
@@ -586,10 +905,11 @@ function renderMedia(
       const img = makeClickableImage(src, sectionTitle, itemTitle);
       grid.appendChild(img);
     });
-    wrap.appendChild(grid);
+    blocks.push(grid);
   }
 
   if (videos.length) {
+    const videosWrap = createEl("div");
     videos.forEach(({ url, text }) => {
       const videoWrap = createEl("div", "video-item");
       if (text) videoWrap.appendChild(createEl("p", "video-caption", text));
@@ -617,9 +937,18 @@ function renderMedia(
         videoWrap.appendChild(video);
       }
 
-      wrap.appendChild(videoWrap);
+      videosWrap.appendChild(videoWrap);
     });
+    blocks.push(videosWrap);
   }
+
+  // Append blocks with canvas dividers between them
+  blocks.forEach((block, i) => {
+    wrap.appendChild(block);
+    if (i < blocks.length - 1) {
+      wrap.appendChild(createCanvasDivider());
+    }
+  });
 
   return wrap;
 }
@@ -720,11 +1049,13 @@ function renderCollection(items, body, sectionTitle) {
 
     if (item.text) renderParagraphs(item.text, itemBody);
 
-    if (
+    const hasMedia =
       (item.images && item.images.length) ||
       (item.videos && item.videos.length) ||
-      (item.gifs && item.gifs.length)
-    ) {
+      (item.gifs && item.gifs.length);
+
+    if (hasMedia) {
+      if (item.text) itemBody.appendChild(createCanvasDivider());
       itemBody.appendChild(
         renderMedia(
           item.images || [],
