@@ -140,6 +140,8 @@ const data = {
 const app = document.getElementById("app");
 const siteHeader = document.getElementById("site-header");
 
+const isMobile = () => window.innerWidth <= 700;
+
 function createEl(tag, className = "", text = "") {
   const el = document.createElement(tag);
   if (className) el.className = className;
@@ -357,6 +359,13 @@ function getIcon(name) {
 
 function updateAppWidthState() {
   const anyOpen = document.querySelector(".item-body.open");
+
+  if (isMobile()) {
+    // On mobile, CSS handles everything; just sync the class
+    app.classList.toggle("expanded", !!anyOpen);
+    return;
+  }
+
   app.classList.toggle("expanded", !!anyOpen);
 }
 
@@ -424,6 +433,7 @@ function renderDrawingsGrid(items, body) {
 
   body.appendChild(grid);
 }
+
 function renderCollection(items, body) {
   if (items.length && items[0].image) {
     const { wrapper, body: itemBody } = createItemToggle("view all");
