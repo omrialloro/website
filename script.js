@@ -142,6 +142,37 @@ const siteHeader = document.getElementById("site-header");
 
 const isMobile = () => window.innerWidth <= 700;
 
+// ─── URL / slug helpers ───────────────────────────────────────────────────────
+
+function toSlug(str) {
+  return str.toLowerCase().trim().replace(/\s+/g, "-");
+}
+
+function getURLState() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    section: params.get("section") || null,
+    item: params.get("item") || null,
+  };
+}
+
+function setURLState({ section, item } = {}, { replace = false } = {}) {
+  const params = new URLSearchParams();
+  if (section) params.set("section", toSlug(section));
+  if (item) params.set("item", toSlug(item));
+
+  const query = params.toString();
+  const url = query ? `?${query}` : window.location.pathname;
+
+  if (replace) {
+    history.replaceState({ section, item }, "", url);
+  } else {
+    history.pushState({ section, item }, "", url);
+  }
+}
+
+// ─── DOM helpers ─────────────────────────────────────────────────────────────
+
 function createEl(tag, className = "", text = "") {
   const el = document.createElement(tag);
   if (className) el.className = className;
@@ -151,35 +182,29 @@ function createEl(tag, className = "", text = "") {
 
 function renderParagraphs(text, container) {
   if (!text) return;
-  const paragraphs = text.split("\n\n");
-  paragraphs.forEach((p) => {
-    const paragraph = createEl("p", "", p);
-    container.appendChild(paragraph);
+  text.split("\n\n").forEach((p) => {
+    container.appendChild(createEl("p", "", p));
   });
 }
 
 function getYouTubeEmbedUrl(url) {
   try {
     const parsed = new URL(url);
-
     if (parsed.hostname.includes("youtube.com")) {
       if (parsed.pathname === "/watch") {
         const id = parsed.searchParams.get("v");
         return id ? `https://www.youtube.com/embed/${id}` : null;
       }
-
       if (parsed.pathname.startsWith("/embed/")) {
         const id = parsed.pathname.split("/embed/")[1];
         return id ? `https://www.youtube.com/embed/${id}` : null;
       }
     }
-
     if (parsed.hostname.includes("youtu.be")) {
       const id = parsed.pathname.slice(1);
       return id ? `https://www.youtube.com/embed/${id}` : null;
     }
   } catch {}
-
   return null;
 }
 
@@ -190,13 +215,23 @@ function animateOpen(el) {
 
 function animateClose(el) {
   el.style.height = "0px";
-  requestAnimationFrame(() => {
-    el.classList.remove("open");
-  });
+  requestAnimationFrame(() => el.classList.remove("open"));
 }
+
+function addSubsectionTitle(container, title) {
+  removeSubsectionTitle(container);
+  container.prepend(createEl("h2", "subsection-title", title));
+}
+
+function removeSubsectionTitle(container) {
+  container.querySelector(".subsection-title")?.remove();
+}
+
+// ─── Section shell ────────────────────────────────────────────────────────────
 
 function createSectionShell(title) {
   const section = createEl("section", "main-section");
+  section.dataset.sectionSlug = toSlug(title);
 
   const header = createEl("button", "section-toggle");
   header.innerHTML = `<span>${title}</span>`;
@@ -206,29 +241,30 @@ function createSectionShell(title) {
 
   header.onclick = () => {
     const open = header.getAttribute("aria-expanded") === "true";
-    header.setAttribute("aria-expanded", String(!open));
-    body.classList.toggle("open", !open);
+    const nowOpen = !open;
+    header.setAttribute("aria-expanded", String(nowOpen));
+    body.classList.toggle("open", nowOpen);
+
+    if (nowOpen) {
+      setURLState({ section: title });
+    } else {
+      // also close any open item inside
+      closeAllItems({ silent: true });
+      setURLState({});
+    }
   };
 
   section.appendChild(header);
   section.appendChild(body);
 
-  return { section, body };
+  return { section, body, header };
 }
 
-function addSubsectionTitle(container, title) {
-  removeSubsectionTitle(container);
-  const heading = createEl("h2", "subsection-title", title);
-  container.prepend(heading);
-}
+// ─── Item toggle ──────────────────────────────────────────────────────────────
 
-function removeSubsectionTitle(container) {
-  const existing = container.querySelector(".subsection-title");
-  if (existing) existing.remove();
-}
-
-function createItemToggle(title) {
+function createItemToggle(title, sectionTitle) {
   const wrapper = createEl("article", "item");
+  wrapper.dataset.itemSlug = toSlug(title);
 
   const toggle = createEl("button", "item-toggle");
   toggle.innerHTML = `<span>${title}</span>`;
@@ -241,47 +277,125 @@ function createItemToggle(title) {
     const open = toggle.getAttribute("aria-expanded") === "true";
 
     if (open) {
-      toggle.setAttribute("aria-expanded", "false");
-      animateClose(body);
-      wrapper.classList.remove("active-item");
-      removeSubsectionTitle(body);
-      app.classList.remove("subsection-open");
-      document.body.classList.remove("subsection-open");
-      requestAnimationFrame(updateAppWidthState);
+      closeItem(wrapper, body, toggle);
+      setURLState({ section: sectionTitle });
       return;
     }
 
-    document.querySelectorAll(".item.active-item").forEach((item) => {
-      item.classList.remove("active-item");
-    });
-
-    document
-      .querySelectorAll(".item-toggle[aria-expanded='true']")
-      .forEach((btn) => {
-        btn.setAttribute("aria-expanded", "false");
-      });
-
-    document.querySelectorAll(".item-body.open").forEach((openBody) => {
-      animateClose(openBody);
-      removeSubsectionTitle(openBody);
-    });
-
-    toggle.setAttribute("aria-expanded", "true");
-    wrapper.classList.add("active-item");
-    addSubsectionTitle(body, title);
-    animateOpen(body);
-
-    app.classList.add("subsection-open");
-    document.body.classList.add("subsection-open");
-
-    requestAnimationFrame(updateAppWidthState);
+    closeAllItems({ silent: true });
+    openItem(wrapper, body, toggle, title);
+    setURLState({ section: sectionTitle, item: title });
   };
 
   wrapper.appendChild(toggle);
   wrapper.appendChild(body);
 
-  return { wrapper, body };
+  return { wrapper, body, toggle };
 }
+
+// ─── Open / close primitives ──────────────────────────────────────────────────
+
+function openItem(wrapper, body, toggle, title) {
+  toggle.setAttribute("aria-expanded", "true");
+  wrapper.classList.add("active-item");
+  addSubsectionTitle(body, title);
+  animateOpen(body);
+  app.classList.add("subsection-open");
+  document.body.classList.add("subsection-open");
+  requestAnimationFrame(updateAppWidthState);
+}
+
+function closeItem(wrapper, body, toggle) {
+  toggle.setAttribute("aria-expanded", "false");
+  animateClose(body);
+  wrapper.classList.remove("active-item");
+  removeSubsectionTitle(body);
+  app.classList.remove("subsection-open");
+  document.body.classList.remove("subsection-open");
+  requestAnimationFrame(updateAppWidthState);
+}
+
+function closeAllItems({ silent = false } = {}) {
+  document.querySelectorAll(".item.active-item").forEach((item) => {
+    item.classList.remove("active-item");
+  });
+  document
+    .querySelectorAll(".item-toggle[aria-expanded='true']")
+    .forEach((btn) => {
+      btn.setAttribute("aria-expanded", "false");
+    });
+  document.querySelectorAll(".item-body.open").forEach((openBody) => {
+    animateClose(openBody);
+    removeSubsectionTitle(openBody);
+  });
+  if (!silent) {
+    app.classList.remove("subsection-open");
+    document.body.classList.remove("subsection-open");
+    requestAnimationFrame(updateAppWidthState);
+  }
+}
+
+function closeAllSections() {
+  document
+    .querySelectorAll(".section-toggle[aria-expanded='true']")
+    .forEach((btn) => {
+      btn.setAttribute("aria-expanded", "false");
+    });
+  document.querySelectorAll(".section-body.open").forEach((body) => {
+    body.classList.remove("open");
+  });
+}
+
+// ─── Restore state from URL ───────────────────────────────────────────────────
+
+function applyURLState({ section, item }) {
+  closeAllItems({ silent: true });
+  closeAllSections();
+  app.classList.remove("subsection-open");
+  document.body.classList.remove("subsection-open");
+
+  if (!section) {
+    updateAppWidthState();
+    return;
+  }
+
+  const sectionEl = document.querySelector(
+    `[data-section-slug="${toSlug(section)}"]`,
+  );
+  if (!sectionEl) {
+    updateAppWidthState();
+    return;
+  }
+
+  const sectionToggle = sectionEl.querySelector(".section-toggle");
+  const sectionBody = sectionEl.querySelector(".section-body");
+  sectionToggle.setAttribute("aria-expanded", "true");
+  sectionBody.classList.add("open");
+
+  if (!item) {
+    updateAppWidthState();
+    return;
+  }
+
+  const itemEl = sectionEl.querySelector(`[data-item-slug="${toSlug(item)}"]`);
+  if (!itemEl) {
+    updateAppWidthState();
+    return;
+  }
+
+  const itemToggle = itemEl.querySelector(".item-toggle");
+  const itemBody = itemEl.querySelector(".item-body");
+  openItem(itemEl, itemBody, itemToggle, item);
+}
+
+// ─── popstate (back / forward) ────────────────────────────────────────────────
+
+window.addEventListener("popstate", () => {
+  const { section, item } = getURLState();
+  applyURLState({ section, item });
+});
+
+// ─── Media rendering ──────────────────────────────────────────────────────────
 
 function renderMedia(images = [], videos = [], gifs = []) {
   const wrap = createEl("div");
@@ -311,14 +425,9 @@ function renderMedia(images = [], videos = [], gifs = []) {
   if (videos.length) {
     videos.forEach(({ url, text }) => {
       const videoWrap = createEl("div", "video-item");
-
-      if (text) {
-        const caption = createEl("p", "video-caption", text);
-        videoWrap.appendChild(caption);
-      }
+      if (text) videoWrap.appendChild(createEl("p", "video-caption", text));
 
       const yt = getYouTubeEmbedUrl(url);
-
       if (yt) {
         const iframe = document.createElement("iframe");
         iframe.src = yt;
@@ -348,25 +457,14 @@ function renderMedia(images = [], videos = [], gifs = []) {
   return wrap;
 }
 
+// ─── Header ───────────────────────────────────────────────────────────────────
+
 function getIcon(name) {
-  const icons = {
-    github: "🐙",
-    instagram: "📷",
-    linkedin: "in",
-  };
-  return icons[name] || "•";
+  return { github: "🐙", instagram: "📷", linkedin: "in" }[name] || "•";
 }
 
 function updateAppWidthState() {
-  const anyOpen = document.querySelector(".item-body.open");
-
-  if (isMobile()) {
-    // On mobile, CSS handles everything; just sync the class
-    app.classList.toggle("expanded", !!anyOpen);
-    return;
-  }
-
-  app.classList.toggle("expanded", !!anyOpen);
+  app.classList.toggle("expanded", !!document.querySelector(".item-body.open"));
 }
 
 function renderHeader() {
@@ -374,9 +472,7 @@ function renderHeader() {
   siteHeader.className = "site-header";
 
   const inner = createEl("div", "header-inner");
-
   const title = createEl("button", "site-title-toggle", "Omri Alloro");
-
   const bio = createEl("div", "site-bio");
   renderParagraphs(data.sections.bio.text, bio);
 
@@ -388,7 +484,6 @@ function renderHeader() {
   };
 
   const socials = createEl("div", "header-socials");
-
   Object.entries(data.sections.social).forEach(([k, v]) => {
     const a = document.createElement("a");
     a.href = v;
@@ -401,10 +496,11 @@ function renderHeader() {
 
   inner.appendChild(title);
   inner.appendChild(socials);
-
   siteHeader.appendChild(inner);
   siteHeader.appendChild(bio);
 }
+
+// ─── Drawings grid ────────────────────────────────────────────────────────────
 
 function renderDrawingsGrid(items, body) {
   const grid = document.createElement("div");
@@ -422,10 +518,10 @@ function renderDrawingsGrid(items, body) {
     }
 
     if (item.title) {
-      const title = document.createElement("p");
-      title.className = "drawing-title";
-      title.textContent = item.title;
-      cell.appendChild(title);
+      const t = document.createElement("p");
+      t.className = "drawing-title";
+      t.textContent = item.title;
+      cell.appendChild(t);
     }
 
     grid.appendChild(cell);
@@ -434,28 +530,31 @@ function renderDrawingsGrid(items, body) {
   body.appendChild(grid);
 }
 
-function renderCollection(items, body) {
+// ─── Collection rendering ─────────────────────────────────────────────────────
+
+function renderCollection(items, body, sectionTitle) {
   if (items.length && items[0].image) {
-    const { wrapper, body: itemBody } = createItemToggle("view all");
+    const { wrapper, body: itemBody } = createItemToggle(
+      "view all",
+      sectionTitle,
+    );
     renderDrawingsGrid(items, itemBody);
     body.appendChild(wrapper);
     return;
   }
+
   items.forEach((item) => {
     const label = item.name || item.title || "Untitled";
-    const { wrapper, body: itemBody } = createItemToggle(label);
+    const { wrapper, body: itemBody } = createItemToggle(label, sectionTitle);
 
     if (item.date || item.place) {
       const metaBits = [item.date, item.place].filter(Boolean);
-      if (metaBits.length) {
-        const meta = createEl("p", "", metaBits.join(" — "));
-        itemBody.appendChild(meta);
-      }
+      if (metaBits.length)
+        itemBody.appendChild(createEl("p", "", metaBits.join(" — ")));
     }
 
-    if (item.text) {
-      renderParagraphs(item.text, itemBody);
-    }
+    if (item.text) renderParagraphs(item.text, itemBody);
+
     if (
       (item.images && item.images.length) ||
       (item.videos && item.videos.length) ||
@@ -470,20 +569,21 @@ function renderCollection(items, body) {
   });
 }
 
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
 function initSite() {
   renderHeader();
   app.innerHTML = "";
 
   const content = createEl("main", "content");
-  const sections = data.sections;
 
-  Object.entries(sections).forEach(([key, val]) => {
+  Object.entries(data.sections).forEach(([key, val]) => {
     if (["bio", "social"].includes(key)) return;
 
     const { section, body } = createSectionShell(key);
 
     if (Array.isArray(val) && val.length) {
-      renderCollection(val, body);
+      renderCollection(val, body, key);
     }
 
     content.appendChild(section);
@@ -491,6 +591,8 @@ function initSite() {
 
   app.appendChild(content);
 }
+
+// ─── Splash ───────────────────────────────────────────────────────────────────
 
 function hideSite() {
   app.classList.add("app-hidden");
@@ -531,38 +633,37 @@ function showSplash() {
     splash.classList.add("fade-out");
     showSite();
 
+    // After splash dismissal, restore any URL state
+    const { section, item } = getURLState();
+    if (section) applyURLState({ section, item });
+
     setTimeout(() => {
       splash.style.display = "none";
     }, 800);
   };
 }
 
+// ─── Close button ─────────────────────────────────────────────────────────────
+
 function bindCloseButton() {
   const btn = document.getElementById("close-btn");
   if (!btn) return;
 
   btn.onclick = () => {
-    document.querySelectorAll(".item-body.open").forEach((body) => {
-      animateClose(body);
-      removeSubsectionTitle(body);
-    });
+    const openSectionEl = document
+      .querySelector(".section-body.open")
+      ?.closest(".main-section");
+    const sectionSlug = openSectionEl?.dataset.sectionSlug || null;
+    const sectionName = sectionSlug
+      ? Object.keys(data.sections).find((k) => toSlug(k) === sectionSlug)
+      : null;
 
-    document.querySelectorAll(".item-toggle").forEach((btn) => {
-      btn.setAttribute("aria-expanded", "false");
-    });
-
-    document.querySelectorAll(".item").forEach((item) => {
-      item.classList.remove("active-item");
-    });
-
-    app.classList.remove("subsection-open");
-    document.body.classList.remove("subsection-open");
-
-    requestAnimationFrame(() => {
-      updateAppWidthState();
-    });
+    closeAllItems();
+    setURLState(sectionName ? { section: sectionName } : {});
   };
 }
+
+// ─── Corner gif ───────────────────────────────────────────────────────────────
 
 function bindCornerGifReturn() {
   const cornerGif = document.querySelector(".corner-gif");
@@ -570,30 +671,30 @@ function bindCornerGifReturn() {
 
   cornerGif.onclick = (e) => {
     e.stopPropagation();
-
-    document.querySelectorAll(".item-body.open").forEach((body) => {
-      animateClose(body);
-      removeSubsectionTitle(body);
-    });
-
-    document.querySelectorAll(".item-toggle").forEach((btn) => {
-      btn.setAttribute("aria-expanded", "false");
-    });
-
-    document.querySelectorAll(".item").forEach((item) => {
-      item.classList.remove("active-item");
-    });
-
+    closeAllItems({ silent: true });
+    closeAllSections();
     app.classList.remove("subsection-open");
     document.body.classList.remove("subsection-open");
-
     updateAppWidthState();
+    setURLState({});
     showSplash();
   };
 }
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 
 initSite();
 updateAppWidthState();
 bindCloseButton();
 bindCornerGifReturn();
-showSplash();
+
+const { section: initSection, item: initItem } = getURLState();
+if (initSection) {
+  // Direct link — skip splash, restore state
+  history.replaceState({ section: initSection, item: initItem }, "");
+  showSite();
+  applyURLState({ section: initSection, item: initItem });
+} else {
+  history.replaceState({}, "", window.location.href);
+  showSplash();
+}
