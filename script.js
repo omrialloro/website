@@ -153,22 +153,148 @@ function getURLState() {
   return {
     section: params.get("section") || null,
     item: params.get("item") || null,
+    img: params.get("img") || null,
   };
 }
 
-function setURLState({ section, item } = {}, { replace = false } = {}) {
+function setURLState({ section, item, img } = {}, { replace = false } = {}) {
   const params = new URLSearchParams();
   if (section) params.set("section", toSlug(section));
   if (item) params.set("item", toSlug(item));
+  if (img !== undefined && img !== null) params.set("img", img);
 
   const query = params.toString();
   const url = query ? `?${query}` : window.location.pathname;
 
   if (replace) {
-    history.replaceState({ section, item }, "", url);
+    history.replaceState({ section, item, img }, "", url);
   } else {
-    history.pushState({ section, item }, "", url);
+    history.pushState({ section, item, img }, "", url);
   }
+}
+
+// ─── Lightbox ─────────────────────────────────────────────────────────────────
+
+let lightboxEl = null;
+
+function createLightbox() {
+  if (lightboxEl) return;
+
+  lightboxEl = document.createElement("div");
+  lightboxEl.id = "lightbox";
+  lightboxEl.innerHTML = `
+    <div id="lightbox-backdrop"></div>
+    <button id="lightbox-close">✕</button>
+    <div id="lightbox-inner">
+      <img id="lightbox-img" src="" alt="" />
+    </div>
+  `;
+
+  document.body.appendChild(lightboxEl);
+
+  // Close on backdrop click
+  lightboxEl.querySelector("#lightbox-backdrop").onclick = closeLightbox;
+  // Close on X button
+  lightboxEl.querySelector("#lightbox-close").onclick = closeLightbox;
+
+  // Inject lightbox CSS
+  const style = document.createElement("style");
+  style.textContent = `
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    #lightbox.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #lightbox-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      cursor: zoom-out;
+    }
+    #lightbox-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 92vw;
+      max-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #lightbox-img {
+      max-width: 92vw;
+      max-height: 90vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      transform: scale(0.96);
+      transition: transform 0.25s ease;
+      display: block;
+    }
+    #lightbox.open #lightbox-img {
+      transform: scale(1);
+    }
+    #lightbox-close {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      z-index: 2;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.85);
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+    #lightbox-close:hover {
+      color: #fff;
+      transform: scale(1.15);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function openLightbox(src, { section, item, imgIndex }) {
+  createLightbox();
+  const imgEl = lightboxEl.querySelector("#lightbox-img");
+  imgEl.src = src;
+
+  requestAnimationFrame(() => {
+    lightboxEl.classList.add("open");
+  });
+
+  // Push a lightbox URL state so back button closes it
+  setURLState({ section, item, img: imgIndex });
+}
+
+function closeLightbox() {
+  if (!lightboxEl || !lightboxEl.classList.contains("open")) return;
+  lightboxEl.classList.remove("open");
+
+  // Strip the img param from the URL without navigating.
+  // Do NOT use history.back() — it fires popstate async and causes a full
+  // state reset that breaks the open section/item underneath.
+  const { section, item } = getURLState();
+  setURLState({ section, item }, { replace: true });
+}
+
+function closeLightboxSilent() {
+  // Close without triggering history.back() — used when popstate fires
+  if (!lightboxEl) return;
+  lightboxEl.classList.remove("open");
 }
 
 // ─── DOM helpers ─────────────────────────────────────────────────────────────
@@ -248,7 +374,6 @@ function createSectionShell(title) {
     if (nowOpen) {
       setURLState({ section: title });
     } else {
-      // also close any open item inside
       closeAllItems({ silent: true });
       setURLState({});
     }
@@ -348,7 +473,24 @@ function closeAllSections() {
 
 // ─── Restore state from URL ───────────────────────────────────────────────────
 
-function applyURLState({ section, item }) {
+function applyURLState({ section, item, img }) {
+  // Always close lightbox first (silently)
+  closeLightboxSilent();
+
+  // If img param is present, open lightbox on top of current state
+  if (img !== null && img !== undefined) {
+    const index = parseInt(img, 10);
+    if (!isNaN(index) && imageRegistry[index]) {
+      createLightbox();
+      const imgEl = lightboxEl.querySelector("#lightbox-img");
+      imgEl.src = imageRegistry[index];
+      requestAnimationFrame(() => lightboxEl.classList.add("open"));
+    }
+    // Don't touch the section/item DOM — lightbox sits on top
+    return;
+  }
+
+  // Restore section/item state
   closeAllItems({ silent: true });
   closeAllSections();
   app.classList.remove("subsection-open");
@@ -391,21 +533,48 @@ function applyURLState({ section, item }) {
 // ─── popstate (back / forward) ────────────────────────────────────────────────
 
 window.addEventListener("popstate", () => {
-  const { section, item } = getURLState();
-  applyURLState({ section, item });
+  const { section, item, img } = getURLState();
+  applyURLState({ section, item, img });
 });
 
 // ─── Media rendering ──────────────────────────────────────────────────────────
 
-function renderMedia(images = [], videos = [], gifs = []) {
+// Global image registry for lightbox index lookup
+const imageRegistry = [];
+
+function makeClickableImage(src, sectionTitle, itemTitle) {
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = "";
+  img.style.cursor = "zoom-in";
+
+  const index = imageRegistry.length;
+  imageRegistry.push(src);
+
+  img.onclick = () => {
+    openLightbox(src, {
+      section: sectionTitle,
+      item: itemTitle,
+      imgIndex: index,
+    });
+  };
+
+  return img;
+}
+
+function renderMedia(
+  images = [],
+  videos = [],
+  gifs = [],
+  sectionTitle = "",
+  itemTitle = "",
+) {
   const wrap = createEl("div");
 
   if (gifs.length) {
     const gifGrid = createEl("div", "gif-grid");
     gifs.forEach((src) => {
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = "";
+      const img = makeClickableImage(src, sectionTitle, itemTitle);
       gifGrid.appendChild(img);
     });
     wrap.appendChild(gifGrid);
@@ -414,9 +583,7 @@ function renderMedia(images = [], videos = [], gifs = []) {
   if (images.length) {
     const grid = createEl("div", "media-grid");
     images.forEach((src) => {
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = "";
+      const img = makeClickableImage(src, sectionTitle, itemTitle);
       grid.appendChild(img);
     });
     wrap.appendChild(grid);
@@ -502,7 +669,7 @@ function renderHeader() {
 
 // ─── Drawings grid ────────────────────────────────────────────────────────────
 
-function renderDrawingsGrid(items, body) {
+function renderDrawingsGrid(items, body, sectionTitle) {
   const grid = document.createElement("div");
   grid.className = "drawings-grid";
 
@@ -511,9 +678,7 @@ function renderDrawingsGrid(items, body) {
     cell.className = "drawing-item";
 
     if (item.image) {
-      const img = document.createElement("img");
-      img.src = item.image;
-      img.alt = item.title || "";
+      const img = makeClickableImage(item.image, sectionTitle, "view all");
       cell.appendChild(img);
     }
 
@@ -538,7 +703,7 @@ function renderCollection(items, body, sectionTitle) {
       "view all",
       sectionTitle,
     );
-    renderDrawingsGrid(items, itemBody);
+    renderDrawingsGrid(items, itemBody, sectionTitle);
     body.appendChild(wrapper);
     return;
   }
@@ -561,7 +726,13 @@ function renderCollection(items, body, sectionTitle) {
       (item.gifs && item.gifs.length)
     ) {
       itemBody.appendChild(
-        renderMedia(item.images || [], item.videos || [], item.gifs || []),
+        renderMedia(
+          item.images || [],
+          item.videos || [],
+          item.gifs || [],
+          sectionTitle,
+          label,
+        ),
       );
     }
 
@@ -633,9 +804,8 @@ function showSplash() {
     splash.classList.add("fade-out");
     showSite();
 
-    // After splash dismissal, restore any URL state
-    const { section, item } = getURLState();
-    if (section) applyURLState({ section, item });
+    const { section, item, img } = getURLState();
+    if (section) applyURLState({ section, item, img });
 
     setTimeout(() => {
       splash.style.display = "none";
@@ -671,6 +841,7 @@ function bindCornerGifReturn() {
 
   cornerGif.onclick = (e) => {
     e.stopPropagation();
+    closeLightboxSilent();
     closeAllItems({ silent: true });
     closeAllSections();
     app.classList.remove("subsection-open");
@@ -688,12 +859,14 @@ updateAppWidthState();
 bindCloseButton();
 bindCornerGifReturn();
 
-const { section: initSection, item: initItem } = getURLState();
+const { section: initSection, item: initItem, img: initImg } = getURLState();
 if (initSection) {
-  // Direct link — skip splash, restore state
-  history.replaceState({ section: initSection, item: initItem }, "");
+  history.replaceState(
+    { section: initSection, item: initItem, img: initImg },
+    "",
+  );
   showSite();
-  applyURLState({ section: initSection, item: initItem });
+  applyURLState({ section: initSection, item: initItem, img: initImg });
 } else {
   history.replaceState({}, "", window.location.href);
   showSplash();
