@@ -346,7 +346,21 @@ function animateClose(el) {
 
 function addSubsectionTitle(container, title) {
   removeSubsectionTitle(container);
-  container.prepend(createEl("h2", "subsection-title", title));
+  // Remove any existing dlb strip
+  container.querySelector(".dlb-strip-wrap")?.remove();
+
+  const heading = createEl("h2", "subsection-title", title);
+
+  // For dontLookBack: prepend title first, then prepend strip above it
+  if (container.dataset.dlbGifs) {
+    const gifs = JSON.parse(container.dataset.dlbGifs);
+    const strip = renderDLBStrip(gifs);
+    strip.classList.add("dlb-strip-wrap");
+    container.prepend(heading); // title goes in
+    container.prepend(strip); // strip prepended above title
+  } else {
+    container.prepend(heading);
+  }
 }
 
 function removeSubsectionTitle(container) {
@@ -408,7 +422,7 @@ function createItemToggle(title, sectionTitle) {
     }
 
     closeAllItems({ silent: true });
-    openItem(wrapper, body, toggle, title);
+    openItem(wrapper, body, toggle, title, sectionTitle);
     setURLState({ section: sectionTitle, item: title });
   };
 
@@ -579,6 +593,11 @@ function startAppFrame() {
   // Hide CSS border
   app.style.border = "none";
 
+  // Black header
+  document.getElementById("site-header").style.transition =
+    "background 0.5s ease";
+  document.getElementById("site-header").style.background = "rgba(0,0,0,0.95)";
+
   appFrameExpanded = false;
   appFrameExpandStart = null;
   appFrameRaf = requestAnimationFrame(drawAppFrame);
@@ -593,6 +612,11 @@ function stopAppFrame() {
   // Restore CSS border
   app.style.border = "";
 
+  // Restore header
+  const hdr = document.getElementById("site-header");
+  hdr.style.transition = "background 0.5s ease";
+  hdr.style.background = "";
+
   // Fade out and remove the dark overlay
   const overlay = document.getElementById("dlb-overlay");
   if (overlay) {
@@ -601,9 +625,49 @@ function stopAppFrame() {
   }
 }
 
+// ─── Drawings full-screen expand ─────────────────────────────────────────────
+
+function startDrawingsExpand() {
+  const headerH = document.getElementById("site-header").offsetHeight;
+  app.classList.add("drawings-fullscreen");
+  // Inject styles once
+  if (!document.getElementById("drawings-fs-style")) {
+    const style = document.createElement("style");
+    style.id = "drawings-fs-style";
+    style.textContent = `
+      #app.drawings-fullscreen {
+        left: 0 !important;
+        top: var(--header-height) !important;
+        width: 100vw !important;
+        height: calc(100vh - var(--header-height)) !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: rgba(10, 10, 0, 0.92) !important;
+        transition:
+          left 0.5s ease,
+          top 0.5s ease,
+          width 0.5s ease,
+          height 0.5s ease,
+          opacity 0.8s ease !important;
+      }
+      #app.drawings-fullscreen .item-body.open {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        height: calc(100vh - var(--header-height) - 60px) !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+function stopDrawingsExpand() {
+  app.classList.remove("drawings-fullscreen");
+}
+
 // ─── Open / close primitives ──────────────────────────────────────────────────
 
-function openItem(wrapper, body, toggle, title) {
+function openItem(wrapper, body, toggle, title, sectionTitle = "") {
   toggle.setAttribute("aria-expanded", "true");
   wrapper.classList.add("active-item");
   addSubsectionTitle(body, title);
@@ -611,6 +675,18 @@ function openItem(wrapper, body, toggle, title) {
   app.classList.add("subsection-open");
   document.body.classList.add("subsection-open");
   if (title === "dontLookBack") startAppFrame();
+  if (sectionTitle === "selected drawings") startDrawingsExpand();
+  if (sectionTitle === "exhibitions") {
+    app.classList.add("exhibitions-open");
+    const ov = document.createElement("div");
+    ov.id = "exhibitions-overlay";
+    ov.style.cssText =
+      "position:fixed;inset:0;background:#fff;opacity:0;z-index:99;pointer-events:none;transition:opacity 0.8s ease;";
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => {
+      ov.style.opacity = "0.25";
+    });
+  }
   requestAnimationFrame(updateAppWidthState);
 }
 
@@ -622,6 +698,13 @@ function closeItem(wrapper, body, toggle) {
   app.classList.remove("subsection-open");
   document.body.classList.remove("subsection-open");
   stopAppFrame();
+  stopDrawingsExpand();
+  app.classList.remove("exhibitions-open");
+  const exOv = document.getElementById("exhibitions-overlay");
+  if (exOv) {
+    exOv.style.opacity = "0";
+    setTimeout(() => exOv.remove(), 800);
+  }
   requestAnimationFrame(updateAppWidthState);
 }
 
@@ -642,6 +725,13 @@ function closeAllItems({ silent = false } = {}) {
     app.classList.remove("subsection-open");
     document.body.classList.remove("subsection-open");
     stopAppFrame();
+    stopDrawingsExpand();
+    app.classList.remove("exhibitions-open");
+    const exOv2 = document.getElementById("exhibitions-overlay");
+    if (exOv2) {
+      exOv2.style.opacity = "0";
+      setTimeout(() => exOv2.remove(), 800);
+    }
     requestAnimationFrame(updateAppWidthState);
   }
 }
@@ -713,7 +803,7 @@ function applyURLState({ section, item, img }) {
 
   const itemToggle = itemEl.querySelector(".item-toggle");
   const itemBody = itemEl.querySelector(".item-body");
-  openItem(itemEl, itemBody, itemToggle, item);
+  openItem(itemEl, itemBody, itemToggle, item, section);
 }
 
 // ─── popstate (back / forward) ────────────────────────────────────────────────
@@ -750,13 +840,18 @@ function makeClickableImage(src, sectionTitle, itemTitle) {
 
 // ─── Canvas divider ───────────────────────────────────────────────────────────
 
-function createCanvasDivider() {
+function createCanvasDivider(sectionTitle = "") {
+  const isExhibitions = sectionTitle === "exhibitions";
+  const RADIUS = 10;
+  const SPACING = RADIUS * 3; // center-to-center gap between semicircles
+  const canvasH = isExhibitions ? RADIUS + 6 : 24;
+
   const wrapper = document.createElement("div");
   wrapper.style.cssText = "width:100%;margin:20px 0;";
 
   const canvas = document.createElement("canvas");
-  canvas.height = 24;
-  canvas.style.cssText = "width:100%;height:24px;display:block;";
+  canvas.height = canvasH;
+  canvas.style.cssText = `width:100%;height:${canvasH}px;display:block;`;
   wrapper.appendChild(canvas);
 
   function resize() {
@@ -772,6 +867,10 @@ function createCanvasDivider() {
   const BASE_R2 = 255,
     BASE_G2 = 40,
     BASE_B2 = 90;
+  // Exhibitions pink
+  const EX_R = 250,
+    EX_G = 90,
+    EX_B = 160;
   const DELTA = 40;
   const EXPAND_DURATION = 600;
 
@@ -780,7 +879,81 @@ function createCanvasDivider() {
   let expandStart = null;
   let expanded = false;
 
+  // Exhibitions orange fill
+  const FILL_R = 240,
+    FILL_G = 70,
+    FILL_B = 23;
+  const FILL_DELTA = 35;
+  const GAP = 2; // px gap between border and fill
+
+  function drawSemicircles(ctx, W, endX) {
+    const cy = canvasH; // bottom of canvas — semicircles arc upward
+    const count = Math.floor(endX / SPACING);
+
+    for (let i = 0; i < count; i++) {
+      const cx = i * SPACING + SPACING / 2;
+      if (cx - RADIUS < 0 || cx + RADIUS > endX) continue;
+
+      // Pink border
+      const pr = Math.round(
+        Math.max(0, Math.min(255, EX_R + (Math.random() * 2 - 1) * DELTA)),
+      );
+      const pg = Math.round(
+        Math.max(0, Math.min(255, EX_G + (Math.random() * 2 - 1) * DELTA)),
+      );
+      const pb = Math.round(
+        Math.max(0, Math.min(255, EX_B + (Math.random() * 2 - 1) * DELTA)),
+      );
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, RADIUS, Math.PI, 0, false);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgb(${pr},${pg},${pb})`;
+      ctx.shadowColor = `rgb(${pr},${pg},${pb})`;
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Orange fill (inset by GAP px)
+      const fr = Math.round(
+        Math.max(
+          0,
+          Math.min(255, FILL_R + (Math.random() * 2 - 1) * FILL_DELTA),
+        ),
+      );
+      const fg = Math.round(
+        Math.max(
+          0,
+          Math.min(255, FILL_G + (Math.random() * 2 - 1) * FILL_DELTA),
+        ),
+      );
+      const fb = Math.round(
+        Math.max(
+          0,
+          Math.min(255, FILL_B + (Math.random() * 2 - 1) * FILL_DELTA),
+        ),
+      );
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, RADIUS - GAP - 1, Math.PI, 0, false);
+      ctx.lineTo(cx + RADIUS - GAP - 1, cy); // close bottom line
+      ctx.lineTo(cx - RADIUS + GAP + 1, cy);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${fr},${fg},${fb})`;
+      ctx.shadowColor = `rgb(${fr},${fg},${fb})`;
+      ctx.shadowBlur = 4;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
   function drawLines(ctx, W, endX) {
+    if (isExhibitions) {
+      ctx.clearRect(0, 0, W, canvasH);
+      drawSemicircles(ctx, W, endX);
+      return;
+    }
+
     // -- Green solid line (top) --
     const r1 = Math.round(
       Math.max(0, Math.min(255, BASE_R + (Math.random() * 2 - 1) * DELTA)),
@@ -946,7 +1119,7 @@ function renderMedia(
   blocks.forEach((block, i) => {
     wrap.appendChild(block);
     if (i < blocks.length - 1) {
-      wrap.appendChild(createCanvasDivider());
+      wrap.appendChild(createCanvasDivider(sectionTitle));
     }
   });
 
@@ -1024,6 +1197,51 @@ function renderDrawingsGrid(items, body, sectionTitle) {
   body.appendChild(grid);
 }
 
+// ─── dontLookBack GIF strip ──────────────────────────────────────────────────
+
+function renderDLBStrip(gifs) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText =
+    "width:100%;margin-bottom:4px;margin-top:-24px;margin-left:-28px;margin-right:-28px;width:calc(100% + 56px);";
+
+  // GIF strip — 6 gifs, each showing only the top half
+  const strip = document.createElement("div");
+  strip.style.cssText = `
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+    width: 100%;
+  `;
+
+  gifs.slice(0, 6).forEach((src) => {
+    const cell = document.createElement("div");
+    cell.style.cssText = `
+      overflow: hidden;
+      height: 60px;
+    `;
+
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";
+    img.style.cssText = `
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    `;
+    cell.appendChild(img);
+    strip.appendChild(cell);
+  });
+
+  wrap.appendChild(strip);
+
+  // Line below
+  wrap.appendChild(createCanvasDivider("web projects"));
+
+  return wrap;
+}
+
 // ─── Collection rendering ─────────────────────────────────────────────────────
 
 function renderCollection(items, body, sectionTitle) {
@@ -1041,6 +1259,11 @@ function renderCollection(items, body, sectionTitle) {
     const label = item.name || item.title || "Untitled";
     const { wrapper, body: itemBody } = createItemToggle(label, sectionTitle);
 
+    // dontLookBack: store gifs on the element so addSubsectionTitle can build the strip
+    if (label === "dontLookBack" && item.gifs && item.gifs.length) {
+      itemBody.dataset.dlbGifs = JSON.stringify(item.gifs);
+    }
+
     if (item.date || item.place) {
       const metaBits = [item.date, item.place].filter(Boolean);
       if (metaBits.length)
@@ -1055,7 +1278,7 @@ function renderCollection(items, body, sectionTitle) {
       (item.gifs && item.gifs.length);
 
     if (hasMedia) {
-      if (item.text) itemBody.appendChild(createCanvasDivider());
+      if (item.text) itemBody.appendChild(createCanvasDivider(sectionTitle));
       itemBody.appendChild(
         renderMedia(
           item.images || [],

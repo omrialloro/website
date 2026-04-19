@@ -200,11 +200,42 @@ body::after {
   background: rgba(10, 10, 0, 0.80);
   transition:
     width 0.4s ease,
-    opacity 0.8s ease;
+    opacity 0.8s ease,
+    background 0.6s ease;
 }
 
 #app.expanded {
   width: min(92vw, var(--subsec-width));
+}
+
+/* Drawings section — expand to fill screen below header */
+#app.drawings-fullscreen {
+  left: 0 !important;
+  top: var(--header-height) !important;
+  width: 100vw !important;
+  height: calc(100vh - var(--header-height)) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: rgba(10, 10, 0, 0.92) !important;
+  transition:
+    left 0.5s ease,
+    top 0.5s ease,
+    width 0.5s ease,
+    height 0.5s ease,
+    opacity 0.8s ease !important;
+}
+
+#app.drawings-fullscreen .item-body.open {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  height: calc(100vh - var(--header-height) - 60px) !important;
+}
+
+/* Exhibitions section — more transparent background */
+#app.exhibitions-open {
+  background: rgba(10, 10, 0, 0.25) !important;
+  border: 6px solid var(--c3) !important;
 }
 
 .app-hidden {
