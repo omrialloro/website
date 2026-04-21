@@ -1094,6 +1094,82 @@ function renderMedia(
   return wrap;
 }
 
+// ─── Moodboard ───────────────────────────────────────────────────────────────
+
+function openMoodboard() {
+  if (document.getElementById("moodboard-overlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "moodboard-overlay";
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 9500;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  `;
+
+  const img = document.createElement("img");
+  img.src = "architecture.jpeg";
+  img.style.cssText = `
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  `;
+  overlay.appendChild(img);
+
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "✕";
+  closeBtn.style.cssText = `
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.85);
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 9501;
+    line-height: 1;
+    padding: 4px 8px;
+    transition: color 0.15s, transform 0.15s;
+  `;
+  closeBtn.onmouseover = () => {
+    closeBtn.style.color = "#fff";
+    closeBtn.style.transform = "scale(1.15)";
+  };
+  closeBtn.onmouseout = () => {
+    closeBtn.style.color = "rgba(255,255,255,0.85)";
+    closeBtn.style.transform = "scale(1)";
+  };
+  closeBtn.onclick = closeMoodboard;
+  overlay.appendChild(closeBtn);
+
+  // Also close on backdrop click
+  overlay.onclick = (e) => {
+    if (e.target === overlay) closeMoodboard();
+  };
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => {
+    overlay.style.opacity = "1";
+  });
+}
+
+function closeMoodboard() {
+  const overlay = document.getElementById("moodboard-overlay");
+  if (!overlay) return;
+  overlay.style.opacity = "0";
+  setTimeout(() => overlay.remove(), 400);
+}
+
 // ─── Header ───────────────────────────────────────────────────────────────────
 
 function getIcon(name) {
@@ -1131,7 +1207,11 @@ function renderHeader() {
     socials.appendChild(a);
   });
 
+  const moodboardBtn = createEl("button", "moodboard-btn", "moodboard");
+  moodboardBtn.onclick = openMoodboard;
+
   inner.appendChild(title);
+  inner.appendChild(moodboardBtn);
   inner.appendChild(socials);
   siteHeader.appendChild(inner);
   siteHeader.appendChild(bio);
@@ -1148,7 +1228,7 @@ function renderDrawingsGrid(items, body, sectionTitle) {
     cell.className = "drawing-item";
 
     if (item.image) {
-      const img = makeClickableImage(item.image, sectionTitle, "view all");
+      const img = makeClickableImage(item.image, sectionTitle, "");
       cell.appendChild(img);
     }
 

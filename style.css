@@ -139,7 +139,7 @@ body::after {
 .site-title-toggle {
   background: none;
   border: none;
-  color: var(--text-header);
+  color: var(--c2);
   cursor: pointer;
   font: inherit;
   margin: 0;
@@ -685,4 +685,22 @@ body.subsection-open #close-btn {
     font-size: 24px;
     margin-bottom: 12px;
   }
+}
+
+/* Moodboard button */
+.moodboard-btn {
+  background: none;
+  border: none;
+  color: var(--c2);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  opacity: 0.85;
+  padding: 0;
+  transition: opacity 0.15s;
+}
+.moodboard-btn:hover {
+  opacity: 1;
 }
