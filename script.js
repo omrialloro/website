@@ -16,6 +16,11 @@ const data = {
       { image: "selected drawings/13.png", title: "Selected Drawing 13" },
       { image: "selected drawings/14.png", title: "Selected Drawing 14" },
       { image: "selected drawings/15.png", title: "Selected Drawing 15" },
+      { image: "selected drawings/16.png", title: "Selected Drawing 15" },
+      { image: "selected drawings/17.png", title: "Selected Drawing 17" },
+      { image: "selected drawings/18.png", title: "Selected Drawing 18" },
+      { image: "selected drawings/19.png", title: "Selected Drawing 19" },
+      { image: "selected drawings/20.png", title: "Selected Drawing 20" },
     ],
     "web projects": [
       {
