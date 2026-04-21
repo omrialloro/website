@@ -9,6 +9,13 @@ const data = {
       { image: "selected drawings/6.png", title: "Selected Drawing 6" },
       { image: "selected drawings/7.png", title: "Selected Drawing 7" },
       { image: "selected drawings/8.png", title: "Selected Drawing 8" },
+      { image: "selected drawings/9.png", title: "Selected Drawing 9" },
+      { image: "selected drawings/10.png", title: "Selected Drawing 10" },
+      { image: "selected drawings/11.png", title: "Selected Drawing 11" },
+      { image: "selected drawings/12.png", title: "Selected Drawing 12" },
+      { image: "selected drawings/13.png", title: "Selected Drawing 13" },
+      { image: "selected drawings/14.png", title: "Selected Drawing 14" },
+      { image: "selected drawings/15.png", title: "Selected Drawing 15" },
     ],
     "web projects": [
       {
@@ -36,6 +43,12 @@ const data = {
           "gifs/8.gif",
           "gifs/9.gif",
           "gifs/10.gif",
+          "gifs/11.gif",
+          "gifs/12.gif",
+          "gifs/13.gif",
+          "gifs/14.gif",
+          "gifs/15.gif",
+          "gifs/16.gif",
         ],
       },
       {
@@ -192,12 +205,9 @@ function createLightbox() {
 
   document.body.appendChild(lightboxEl);
 
-  // Close on backdrop click
   lightboxEl.querySelector("#lightbox-backdrop").onclick = closeLightbox;
-  // Close on X button
   lightboxEl.querySelector("#lightbox-close").onclick = closeLightbox;
 
-  // Inject lightbox CSS
   const style = document.createElement("style");
   style.textContent = `
     #lightbox {
@@ -276,7 +286,6 @@ function openLightbox(src, { section, item, imgIndex }) {
     lightboxEl.classList.add("open");
   });
 
-  // Push a lightbox URL state so back button closes it
   setURLState({ section, item, img: imgIndex });
 }
 
@@ -284,15 +293,11 @@ function closeLightbox() {
   if (!lightboxEl || !lightboxEl.classList.contains("open")) return;
   lightboxEl.classList.remove("open");
 
-  // Strip the img param from the URL without navigating.
-  // Do NOT use history.back() — it fires popstate async and causes a full
-  // state reset that breaks the open section/item underneath.
   const { section, item } = getURLState();
   setURLState({ section, item }, { replace: true });
 }
 
 function closeLightboxSilent() {
-  // Close without triggering history.back() — used when popstate fires
   if (!lightboxEl) return;
   lightboxEl.classList.remove("open");
 }
@@ -346,18 +351,16 @@ function animateClose(el) {
 
 function addSubsectionTitle(container, title) {
   removeSubsectionTitle(container);
-  // Remove any existing dlb strip
   container.querySelector(".dlb-strip-wrap")?.remove();
 
   const heading = createEl("h2", "subsection-title", title);
 
-  // For dontLookBack: prepend title first, then prepend strip above it
   if (container.dataset.dlbGifs) {
     const gifs = JSON.parse(container.dataset.dlbGifs);
     const strip = renderDLBStrip(gifs);
     strip.classList.add("dlb-strip-wrap");
-    container.prepend(heading); // title goes in
-    container.prepend(strip); // strip prepended above title
+    container.prepend(heading);
+    container.prepend(strip);
   } else {
     container.prepend(heading);
   }
@@ -464,7 +467,6 @@ function drawAppFrame(ts) {
   const W = Math.round(rect.width);
   const H = Math.round(rect.height);
 
-  // Keep canvas sized and positioned exactly over #app
   appFrameCanvas.style.left = rect.left + "px";
   appFrameCanvas.style.top = rect.top + "px";
   appFrameCanvas.style.width = W + "px";
@@ -475,13 +477,11 @@ function drawAppFrame(ts) {
     appFrameCanvas.height = H;
   }
 
-  // Entrance progress
   if (!appFrameExpanded) {
     if (!appFrameExpandStart) appFrameExpandStart = ts;
     const t = Math.min(1, (ts - appFrameExpandStart) / FRAME_EXPAND_DURATION);
     const eased = 1 - Math.pow(1 - t, 3);
     if (t >= 1) appFrameExpanded = true;
-
     drawFrameLines(appFrameCanvas, W, H, eased);
   } else {
     drawFrameLines(appFrameCanvas, W, H, 1);
@@ -494,11 +494,9 @@ function drawFrameLines(canvas, W, H, progress) {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, W, H);
 
-  // The perimeter length of the rectangle
   const perimeter = 2 * (W + H);
   const drawLen = perimeter * progress;
 
-  // Green solid line (outer, offset 1px inward)
   const [r1, g1, b1] = flickerColor(
     FRAME_GREEN_R,
     FRAME_GREEN_G,
@@ -506,24 +504,20 @@ function drawFrameLines(canvas, W, H, progress) {
   );
   drawPerimeterLine(ctx, W, H, 1, drawLen, [], r1, g1, b1, 6);
 
-  // Red-pink dashed line (inner, offset 5px inward)
   const [r2, g2, b2] = flickerColor(FRAME_RED_R, FRAME_RED_G, FRAME_RED_B);
   drawPerimeterLine(ctx, W, H, 5, drawLen, [6, 5], r2, g2, b2, 4);
 }
 
 function drawPerimeterLine(ctx, W, H, inset, maxLen, dash, r, g, b, blur) {
-  // Path goes: top-left → top-right → bottom-right → bottom-left → top-left
-  // We clip it to maxLen pixels along this path.
   const i = inset;
   const corners = [
-    [i, i], // top-left  (start)
-    [W - i, i], // top-right
-    [W - i, H - i], // bottom-right
-    [i, H - i], // bottom-left
-    [i, i], // back to top-left (close)
+    [i, i],
+    [W - i, i],
+    [W - i, H - i],
+    [i, H - i],
+    [i, i],
   ];
 
-  // Build segments with their lengths
   const segments = [];
   for (let s = 0; s < corners.length - 1; s++) {
     const [x0, y0] = corners[s];
@@ -567,7 +561,6 @@ function drawPerimeterLine(ctx, W, H, inset, maxLen, dash, r, g, b, blur) {
 function startAppFrame() {
   if (appFrameCanvas) return;
 
-  // Dark overlay that fades over the background image
   const overlay = document.createElement("div");
   overlay.id = "dlb-overlay";
   overlay.style.cssText = `
@@ -580,7 +573,6 @@ function startAppFrame() {
     transition: opacity 0.8s ease;
   `;
   document.body.appendChild(overlay);
-  // Trigger fade-in on next frame
   requestAnimationFrame(() => {
     overlay.style.opacity = "0.88";
   });
@@ -590,10 +582,8 @@ function startAppFrame() {
     "position:fixed;pointer-events:none;z-index:101;";
   document.body.appendChild(appFrameCanvas);
 
-  // Hide CSS border
   app.style.border = "none";
 
-  // Black header
   document.getElementById("site-header").style.transition =
     "background 0.5s ease";
   document.getElementById("site-header").style.background = "rgba(0,0,0,0.95)";
@@ -609,15 +599,12 @@ function stopAppFrame() {
   appFrameCanvas.remove();
   appFrameCanvas = null;
   appFrameRaf = null;
-  // Restore CSS border
   app.style.border = "";
 
-  // Restore header
   const hdr = document.getElementById("site-header");
   hdr.style.transition = "background 0.5s ease";
   hdr.style.background = "";
 
-  // Fade out and remove the dark overlay
   const overlay = document.getElementById("dlb-overlay");
   if (overlay) {
     overlay.style.opacity = "0";
@@ -628,9 +615,7 @@ function stopAppFrame() {
 // ─── Drawings full-screen expand ─────────────────────────────────────────────
 
 function startDrawingsExpand() {
-  const headerH = document.getElementById("site-header").offsetHeight;
   app.classList.add("drawings-fullscreen");
-  // Inject styles once
   if (!document.getElementById("drawings-fs-style")) {
     const style = document.createElement("style");
     style.id = "drawings-fs-style";
@@ -642,7 +627,7 @@ function startDrawingsExpand() {
         height: calc(100vh - var(--header-height)) !important;
         border: none !important;
         border-radius: 0 !important;
-        background: rgba(10, 10, 0, 0.92) !important;
+        background: rgba(10, 20, 20, 0.9) !important;
         transition:
           left 0.5s ease,
           top 0.5s ease,
@@ -750,10 +735,8 @@ function closeAllSections() {
 // ─── Restore state from URL ───────────────────────────────────────────────────
 
 function applyURLState({ section, item, img }) {
-  // Always close lightbox first (silently)
   closeLightboxSilent();
 
-  // If img param is present, open lightbox on top of current state
   if (img !== null && img !== undefined) {
     const index = parseInt(img, 10);
     if (!isNaN(index) && imageRegistry[index]) {
@@ -762,11 +745,9 @@ function applyURLState({ section, item, img }) {
       imgEl.src = imageRegistry[index];
       requestAnimationFrame(() => lightboxEl.classList.add("open"));
     }
-    // Don't touch the section/item DOM — lightbox sits on top
     return;
   }
 
-  // Restore section/item state
   closeAllItems({ silent: true });
   closeAllSections();
   app.classList.remove("subsection-open");
@@ -815,7 +796,6 @@ window.addEventListener("popstate", () => {
 
 // ─── Media rendering ──────────────────────────────────────────────────────────
 
-// Global image registry for lightbox index lookup
 const imageRegistry = [];
 
 function makeClickableImage(src, sectionTitle, itemTitle) {
@@ -843,7 +823,7 @@ function makeClickableImage(src, sectionTitle, itemTitle) {
 function createCanvasDivider(sectionTitle = "") {
   const isExhibitions = sectionTitle === "exhibitions";
   const RADIUS = 10;
-  const SPACING = RADIUS * 3; // center-to-center gap between semicircles
+  const SPACING = RADIUS * 3;
   const canvasH = isExhibitions ? RADIUS + 6 : 24;
 
   const wrapper = document.createElement("div");
@@ -859,42 +839,37 @@ function createCanvasDivider(sectionTitle = "") {
     if (canvas.width !== w) canvas.width = w;
   }
 
-  // Green line
   const BASE_R = 0,
     BASE_G = 255,
     BASE_B = 60;
-  // Red-pink dashed line
   const BASE_R2 = 255,
     BASE_G2 = 40,
     BASE_B2 = 90;
-  // Exhibitions pink
   const EX_R = 250,
     EX_G = 90,
     EX_B = 160;
   const DELTA = 40;
   const EXPAND_DURATION = 600;
 
+  const FILL_R = 240,
+    FILL_G = 70,
+    FILL_B = 23;
+  const FILL_DELTA = 35;
+  const GAP = 2;
+
   let raf = null;
   let progress = 0;
   let expandStart = null;
   let expanded = false;
 
-  // Exhibitions orange fill
-  const FILL_R = 240,
-    FILL_G = 70,
-    FILL_B = 23;
-  const FILL_DELTA = 35;
-  const GAP = 2; // px gap between border and fill
-
   function drawSemicircles(ctx, W, endX) {
-    const cy = canvasH; // bottom of canvas — semicircles arc upward
+    const cy = canvasH;
     const count = Math.floor(endX / SPACING);
 
     for (let i = 0; i < count; i++) {
       const cx = i * SPACING + SPACING / 2;
       if (cx - RADIUS < 0 || cx + RADIUS > endX) continue;
 
-      // Pink border
       const pr = Math.round(
         Math.max(0, Math.min(255, EX_R + (Math.random() * 2 - 1) * DELTA)),
       );
@@ -914,7 +889,6 @@ function createCanvasDivider(sectionTitle = "") {
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Orange fill (inset by GAP px)
       const fr = Math.round(
         Math.max(
           0,
@@ -936,7 +910,7 @@ function createCanvasDivider(sectionTitle = "") {
 
       ctx.beginPath();
       ctx.arc(cx, cy, RADIUS - GAP - 1, Math.PI, 0, false);
-      ctx.lineTo(cx + RADIUS - GAP - 1, cy); // close bottom line
+      ctx.lineTo(cx + RADIUS - GAP - 1, cy);
       ctx.lineTo(cx - RADIUS + GAP + 1, cy);
       ctx.closePath();
       ctx.fillStyle = `rgb(${fr},${fg},${fb})`;
@@ -954,7 +928,6 @@ function createCanvasDivider(sectionTitle = "") {
       return;
     }
 
-    // -- Green solid line (top) --
     const r1 = Math.round(
       Math.max(0, Math.min(255, BASE_R + (Math.random() * 2 - 1) * DELTA)),
     );
@@ -975,7 +948,6 @@ function createCanvasDivider(sectionTitle = "") {
     ctx.shadowBlur = 6;
     ctx.stroke();
 
-    // -- Red-pink dashed line (bottom) --
     const r2 = Math.round(
       Math.max(0, Math.min(255, BASE_R2 + (Math.random() * 2 - 1) * DELTA)),
     );
@@ -1029,7 +1001,6 @@ function createCanvasDivider(sectionTitle = "") {
       entries.forEach((e) => {
         if (e.isIntersecting) {
           if (!raf) {
-            // Reset entrance each time it comes into view
             expanded = false;
             expandStart = null;
             progress = 0;
@@ -1059,8 +1030,6 @@ function renderMedia(
   itemTitle = "",
 ) {
   const wrap = createEl("div");
-
-  // Track which blocks we add so we can insert dividers between them
   const blocks = [];
 
   if (gifs.length) {
@@ -1115,7 +1084,6 @@ function renderMedia(
     blocks.push(videosWrap);
   }
 
-  // Append blocks with canvas dividers between them
   blocks.forEach((block, i) => {
     wrap.appendChild(block);
     if (i < blocks.length - 1) {
@@ -1204,7 +1172,6 @@ function renderDLBStrip(gifs) {
   wrap.style.cssText =
     "width:100%;margin-bottom:4px;margin-top:-24px;margin-left:-28px;margin-right:-28px;width:calc(100% + 56px);";
 
-  // GIF strip — 6 gifs, each showing only the top half
   const strip = document.createElement("div");
   strip.style.cssText = `
     display: grid;
@@ -1215,28 +1182,18 @@ function renderDLBStrip(gifs) {
 
   gifs.slice(0, 6).forEach((src) => {
     const cell = document.createElement("div");
-    cell.style.cssText = `
-      overflow: hidden;
-      height: 60px;
-    `;
+    cell.style.cssText = "overflow:hidden;height:60px;";
 
     const img = document.createElement("img");
     img.src = src;
     img.alt = "";
-    img.style.cssText = `
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      object-position: top;
-      display: block;
-    `;
+    img.style.cssText =
+      "width:100%;height:120px;object-fit:cover;object-position:top;display:block;";
     cell.appendChild(img);
     strip.appendChild(cell);
   });
 
   wrap.appendChild(strip);
-
-  // Line below
   wrap.appendChild(createCanvasDivider("web projects"));
 
   return wrap;
@@ -1259,7 +1216,6 @@ function renderCollection(items, body, sectionTitle) {
     const label = item.name || item.title || "Untitled";
     const { wrapper, body: itemBody } = createItemToggle(label, sectionTitle);
 
-    // dontLookBack: store gifs on the element so addSubsectionTitle can build the strip
     if (label === "dontLookBack" && item.gifs && item.gifs.length) {
       itemBody.dataset.dlbGifs = JSON.stringify(item.gifs);
     }
@@ -1272,22 +1228,30 @@ function renderCollection(items, body, sectionTitle) {
 
     if (item.text) renderParagraphs(item.text, itemBody);
 
-    const hasMedia =
-      (item.images && item.images.length) ||
-      (item.videos && item.videos.length) ||
-      (item.gifs && item.gifs.length);
+    // Time To Space: navigate directly to tts.html on click
+    if (label === "Time To Space") {
+      wrapper.querySelector(".item-toggle").onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = "tts.html";
+      };
+    } else {
+      const hasMedia =
+        (item.images && item.images.length) ||
+        (item.videos && item.videos.length) ||
+        (item.gifs && item.gifs.length);
 
-    if (hasMedia) {
-      if (item.text) itemBody.appendChild(createCanvasDivider(sectionTitle));
-      itemBody.appendChild(
-        renderMedia(
-          item.images || [],
-          item.videos || [],
-          item.gifs || [],
-          sectionTitle,
-          label,
-        ),
-      );
+      if (hasMedia) {
+        if (item.text) itemBody.appendChild(createCanvasDivider(sectionTitle));
+        itemBody.appendChild(
+          renderMedia(
+            item.images || [],
+            item.videos || [],
+            item.gifs || [],
+            sectionTitle,
+            label,
+          ),
+        );
+      }
     }
 
     body.appendChild(wrapper);
