@@ -25,23 +25,21 @@
   --subsec-left-shift: -20px;
   --subsec-max-height: 80vh;
 
-
   /* CONTENT SYSTEM */
+  --content-max-width: 720px;
+  --content-line-height: 1.6;
+  --content-font-size: 15px;
 
---content-max-width: 720px;
---content-line-height: 1.6;
---content-font-size: 15px;
+  --content-gap-y: 16px;
+  --content-gap-x: 16px;
 
---content-gap-y: 16px;
---content-gap-x: 16px;
+  --media-max-width: 720px;
+  --media-radius: 6px;
+  --media-shadow: 0 4px 20px rgba(0,0,0,0.25);
 
---media-max-width: 720px;
---media-radius: 6px;
---media-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  --media-gap: 16px;
 
---media-gap: 16px;
-
---media-aspect: 16 / 9; /* for videos */
+  --media-aspect: 16 / 9;
 }
 
 * {
@@ -77,10 +75,8 @@ body {
   left: 2px;
   top: 50%;
   transform: translateY(-50%);
-
   width: 20px;
   height: 20px;
-
   border-radius: 50%;
   background: rgba(255, 55, 30, 0.8);
 }
@@ -98,7 +94,6 @@ body::after {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  
   background:
     radial-gradient(circle at 20% 30%, rgba(212, 183, 12, 0.5), transparent 30%),
     radial-gradient(circle at 80% 20%, rgba(235, 90, 12, 0.5), transparent 30%),
@@ -262,7 +257,6 @@ body::after {
   overflow: visible;
 }
 
-/* keep your original toggle styles */
 .section-toggle,
 .item-toggle {
   width: 100%;
@@ -395,6 +389,7 @@ body::after {
   aspect-ratio: var(--media-aspect);
   object-fit: cover;
 }
+
 .item-body.open > *:last-child {
   margin-bottom: 0;
 }
@@ -538,32 +533,37 @@ body.subsection-open #close-btn {
   display: block;
 }
 
+/* ─── DRAWINGS GRID — CSS columns masonry ────────────────────────────────── */
+
 .drawings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 24px;
+  columns: 4;
+  column-gap: 16px;
   padding: 16px 0;
 }
 
 .drawing-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  break-inside: avoid;
+  margin-bottom: 16px;
 }
 
 .drawing-item img {
   width: 100%;
-  aspect-ratio: auto;
+  height: auto;
+  display: block;
   object-fit: contain;
   border-radius: 8px;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .drawing-title {
   font-size: 13px;
   color: #888;
   text-align: center;
+  margin-top: 4px;
+  font-family: Inter, Arial, sans-serif;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 
 .corner-gif {
   position: fixed;
@@ -588,22 +588,19 @@ body.subsection-open #close-btn {
     --subsec-max-height: 75dvh;
   }
 
-  /* App panel: full width, no fixed left offset */
   #app {
     left: 0;
     right: 0;
-    width: calc(100vw - 0px) !important; /* override expanded too */
+    width: calc(100vw - 0px) !important;
     top: calc(var(--header-height) + 16px);
     padding: 14px 14px 14px 14px;
     border-width: 3px;
   }
 
-  /* When expanded, still full width */
   #app.expanded {
     width: 100vw !important;
   }
 
-  /* Subsection panel: take full available width, no horizontal shift */
   .item-body.open {
     width: 100% !important;
     max-width: 100% !important;
@@ -612,12 +609,10 @@ body.subsection-open #close-btn {
     height: var(--subsec-max-height);
   }
 
-  /* Section titles slightly smaller */
   .section-toggle {
     font-size: 28px;
   }
 
-  /* Text readable on small screens */
   .item-body {
     font-size: var(--content-font-size);
     line-height: var(--content-line-height);
@@ -630,39 +625,38 @@ body.subsection-open #close-btn {
     font-family: Inter, Arial, sans-serif;
   }
 
-  /* Media grid: single column on mobile */
   .media-grid {
     grid-template-columns: 1fr;
     gap: 12px;
     margin-top: 16px;
   }
 
-  /* Images/videos fill full width */
   .item-body img,
   .item-body video,
   .item-body iframe {
     max-width: 100%;
   }
 
-  /* GIF grid: 2 columns on small screens */
   .gif-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 
-  /* Drawings: 2 columns */
+  /* Drawings: 2 columns on mobile */
   .drawings-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 14px;
+    columns: 2;
+    column-gap: 12px;
   }
 
-  /* Corner gif smaller on mobile */
+  .drawing-item {
+    margin-bottom: 12px;
+  }
+
   .corner-gif {
     width: 130px;
     height: 78px;
     top: calc(var(--header-height) + 4px);
   }
 
-  /* Close button: anchor to right edge of screen instead of subsec-width calc */
   #close-btn {
     left: auto;
     right: 10px;
@@ -675,12 +669,10 @@ body.subsection-open #close-btn {
     border-radius: 50%;
   }
 
-  /* Bio panel full width on mobile */
   .site-bio {
     max-width: 100%;
   }
 
-  /* Subsection title smaller */
   .subsection-title {
     font-size: 24px;
     margin-bottom: 12px;

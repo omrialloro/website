@@ -1,26 +1,30 @@
 const data = {
   sections: {
     "selected drawings": [
-      { image: "selected drawings/1.png", title: "Selected Drawing 1" },
-      { image: "selected drawings/2.png", title: "Selected Drawing 2" },
-      { image: "selected drawings/3.png", title: "Selected Drawing 3" },
-      { image: "selected drawings/4.png", title: "Selected Drawing 4" },
-      { image: "selected drawings/5.png", title: "Selected Drawing 5" },
-      { image: "selected drawings/6.png", title: "Selected Drawing 6" },
-      { image: "selected drawings/7.png", title: "Selected Drawing 7" },
-      { image: "selected drawings/8.png", title: "Selected Drawing 8" },
-      { image: "selected drawings/9.png", title: "Selected Drawing 9" },
-      { image: "selected drawings/10.png", title: "Selected Drawing 10" },
-      { image: "selected drawings/11.png", title: "Selected Drawing 11" },
-      { image: "selected drawings/12.png", title: "Selected Drawing 12" },
-      { image: "selected drawings/13.png", title: "Selected Drawing 13" },
-      { image: "selected drawings/14.png", title: "Selected Drawing 14" },
-      { image: "selected drawings/15.png", title: "Selected Drawing 15" },
-      { image: "selected drawings/16.png", title: "Selected Drawing 15" },
-      { image: "selected drawings/17.png", title: "Selected Drawing 17" },
-      { image: "selected drawings/18.png", title: "Selected Drawing 18" },
-      { image: "selected drawings/19.png", title: "Selected Drawing 19" },
-      { image: "selected drawings/20.png", title: "Selected Drawing 20" },
+      { image: "selected drawings/1.png", title: "" },
+      { image: "selected drawings/2.png", title: "" },
+      { image: "selected drawings/3.png", title: "" },
+      { image: "selected drawings/4.png", title: "" },
+      { image: "selected drawings/5.png", title: "" },
+      { image: "selected drawings/6.png", title: "" },
+      { image: "selected drawings/7.png", title: "" },
+      { image: "selected drawings/8.png", title: "" },
+      { image: "selected drawings/9.png", title: "" },
+      { image: "selected drawings/10.png", title: "" },
+      { image: "selected drawings/11.png", title: "" },
+      { image: "selected drawings/12.png", title: "" },
+      { image: "selected drawings/13.png", title: "" },
+      { image: "selected drawings/14.png", title: "" },
+      { image: "selected drawings/15.png", title: "" },
+      { image: "selected drawings/16.png", title: "" },
+      { image: "selected drawings/17.png", title: "" },
+      { image: "selected drawings/18.png", title: "" },
+      { image: "selected drawings/19.png", title: "" },
+      { image: "selected drawings/20.png", title: "" },
+      { image: "selected drawings/21.png", title: "" },
+      { image: "selected drawings/22.png", title: "" },
+      { image: "selected drawings/23.png", title: "" },
+      { image: "selected drawings/24.png", title: "" },
     ],
     "web projects": [
       {
@@ -1157,7 +1161,6 @@ function openMoodboard() {
   closeBtn.onclick = closeMoodboard;
   overlay.appendChild(closeBtn);
 
-  // Also close on backdrop click
   overlay.onclick = (e) => {
     if (e.target === overlay) closeMoodboard();
   };
@@ -1237,13 +1240,6 @@ function renderDrawingsGrid(items, body, sectionTitle) {
       cell.appendChild(img);
     }
 
-    if (item.title) {
-      const t = document.createElement("p");
-      t.className = "drawing-title";
-      t.textContent = item.title;
-      cell.appendChild(t);
-    }
-
     grid.appendChild(cell);
   });
 
@@ -1313,7 +1309,6 @@ function renderCollection(items, body, sectionTitle) {
 
     if (item.text) renderParagraphs(item.text, itemBody);
 
-    // Time To Space: navigate directly to tts.html on click
     if (label === "Time To Space") {
       wrapper.querySelector(".item-toggle").onclick = (e) => {
         e.stopPropagation();
