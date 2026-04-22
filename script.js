@@ -391,6 +391,8 @@ function createSectionShell(title) {
 
   const body = createEl("div", "section-body");
 
+  const isDrawings = title === "selected drawings";
+
   header.onclick = () => {
     const open = header.getAttribute("aria-expanded") === "true";
     const nowOpen = !open;
@@ -399,9 +401,21 @@ function createSectionShell(title) {
 
     if (nowOpen) {
       setURLState({ section: title });
+      if (isDrawings) {
+        app.classList.add("subsection-open");
+        document.body.classList.add("subsection-open");
+        startDrawingsExpand();
+        requestAnimationFrame(updateAppWidthState);
+      }
     } else {
       closeAllItems({ silent: true });
       setURLState({});
+      if (isDrawings) {
+        app.classList.remove("subsection-open");
+        document.body.classList.remove("subsection-open");
+        stopDrawingsExpand();
+        requestAnimationFrame(updateAppWidthState);
+      }
     }
   };
 
@@ -644,12 +658,6 @@ function startDrawingsExpand() {
           height 0.5s ease,
           opacity 0.8s ease !important;
       }
-      #app.drawings-fullscreen .item-body.open {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-left: 0 !important;
-        height: calc(100vh - var(--header-height) - 60px) !important;
-      }
     `;
     document.head.appendChild(style);
   }
@@ -669,7 +677,6 @@ function openItem(wrapper, body, toggle, title, sectionTitle = "") {
   app.classList.add("subsection-open");
   document.body.classList.add("subsection-open");
   if (title === "dontLookBack") startAppFrame();
-  if (sectionTitle === "selected drawings") startDrawingsExpand();
   if (sectionTitle === "exhibitions") {
     app.classList.add("exhibitions-open");
     const ov = document.createElement("div");
@@ -692,7 +699,6 @@ function closeItem(wrapper, body, toggle) {
   app.classList.remove("subsection-open");
   document.body.classList.remove("subsection-open");
   stopAppFrame();
-  stopDrawingsExpand();
   app.classList.remove("exhibitions-open");
   const exOv = document.getElementById("exhibitions-overlay");
   if (exOv) {
@@ -719,7 +725,6 @@ function closeAllItems({ silent = false } = {}) {
     app.classList.remove("subsection-open");
     document.body.classList.remove("subsection-open");
     stopAppFrame();
-    stopDrawingsExpand();
     app.classList.remove("exhibitions-open");
     const exOv2 = document.getElementById("exhibitions-overlay");
     if (exOv2) {
@@ -761,6 +766,7 @@ function applyURLState({ section, item, img }) {
   closeAllSections();
   app.classList.remove("subsection-open");
   document.body.classList.remove("subsection-open");
+  stopDrawingsExpand();
 
   if (!section) {
     updateAppWidthState();
@@ -779,6 +785,15 @@ function applyURLState({ section, item, img }) {
   const sectionBody = sectionEl.querySelector(".section-body");
   sectionToggle.setAttribute("aria-expanded", "true");
   sectionBody.classList.add("open");
+
+  // If drawings section, trigger the fullscreen expand directly
+  if (section === "selected drawings") {
+    app.classList.add("subsection-open");
+    document.body.classList.add("subsection-open");
+    startDrawingsExpand();
+    updateAppWidthState();
+    return;
+  }
 
   if (!item) {
     updateAppWidthState();
@@ -859,7 +874,6 @@ function createCanvasDivider(sectionTitle = "") {
     EX_B = 160;
   const DELTA = 40;
   const EXPAND_DURATION = 600;
-
   const FILL_R = 240,
     FILL_G = 70,
     FILL_B = 23;
@@ -874,11 +888,9 @@ function createCanvasDivider(sectionTitle = "") {
   function drawSemicircles(ctx, W, endX) {
     const cy = canvasH;
     const count = Math.floor(endX / SPACING);
-
     for (let i = 0; i < count; i++) {
       const cx = i * SPACING + SPACING / 2;
       if (cx - RADIUS < 0 || cx + RADIUS > endX) continue;
-
       const pr = Math.round(
         Math.max(0, Math.min(255, EX_R + (Math.random() * 2 - 1) * DELTA)),
       );
@@ -888,7 +900,6 @@ function createCanvasDivider(sectionTitle = "") {
       const pb = Math.round(
         Math.max(0, Math.min(255, EX_B + (Math.random() * 2 - 1) * DELTA)),
       );
-
       ctx.beginPath();
       ctx.arc(cx, cy, RADIUS, Math.PI, 0, false);
       ctx.lineWidth = 1;
@@ -897,7 +908,6 @@ function createCanvasDivider(sectionTitle = "") {
       ctx.shadowBlur = 6;
       ctx.stroke();
       ctx.shadowBlur = 0;
-
       const fr = Math.round(
         Math.max(
           0,
@@ -916,7 +926,6 @@ function createCanvasDivider(sectionTitle = "") {
           Math.min(255, FILL_B + (Math.random() * 2 - 1) * FILL_DELTA),
         ),
       );
-
       ctx.beginPath();
       ctx.arc(cx, cy, RADIUS - GAP - 1, Math.PI, 0, false);
       ctx.lineTo(cx + RADIUS - GAP - 1, cy);
@@ -936,7 +945,6 @@ function createCanvasDivider(sectionTitle = "") {
       drawSemicircles(ctx, W, endX);
       return;
     }
-
     const r1 = Math.round(
       Math.max(0, Math.min(255, BASE_R + (Math.random() * 2 - 1) * DELTA)),
     );
@@ -946,7 +954,6 @@ function createCanvasDivider(sectionTitle = "") {
     const b1 = Math.round(
       Math.max(0, Math.min(255, BASE_B + (Math.random() * 2 - 1) * DELTA)),
     );
-
     ctx.beginPath();
     ctx.setLineDash([]);
     ctx.moveTo(0, 5);
@@ -956,7 +963,6 @@ function createCanvasDivider(sectionTitle = "") {
     ctx.shadowColor = `rgb(${r1},${g1},${b1})`;
     ctx.shadowBlur = 6;
     ctx.stroke();
-
     const r2 = Math.round(
       Math.max(0, Math.min(255, BASE_R2 + (Math.random() * 2 - 1) * DELTA)),
     );
@@ -966,7 +972,6 @@ function createCanvasDivider(sectionTitle = "") {
     const b2 = Math.round(
       Math.max(0, Math.min(255, BASE_B2 + (Math.random() * 2 - 1) * DELTA)),
     );
-
     ctx.beginPath();
     ctx.setLineDash([6, 5]);
     ctx.moveTo(0, 13);
@@ -976,7 +981,6 @@ function createCanvasDivider(sectionTitle = "") {
     ctx.shadowColor = `rgb(${r2},${g2},${b2})`;
     ctx.shadowBlur = 5;
     ctx.stroke();
-
     ctx.setLineDash([]);
     ctx.shadowBlur = 0;
   }
@@ -986,20 +990,17 @@ function createCanvasDivider(sectionTitle = "") {
     const ctx = canvas.getContext("2d");
     const W = canvas.width;
     const H = canvas.height;
-
     if (!expanded) {
       if (!expandStart) expandStart = ts;
       const elapsed = ts - expandStart;
       progress = Math.min(1, elapsed / EXPAND_DURATION);
       const eased = 1 - Math.pow(1 - progress, 3);
       if (progress >= 1) expanded = true;
-
       ctx.clearRect(0, 0, W, H);
       drawLines(ctx, W, W * eased);
       raf = requestAnimationFrame(draw);
       return;
     }
-
     ctx.clearRect(0, 0, W, H);
     drawLines(ctx, W, W);
     raf = requestAnimationFrame(draw);
@@ -1027,7 +1028,6 @@ function createCanvasDivider(sectionTitle = "") {
   );
 
   observer.observe(canvas);
-
   return wrapper;
 }
 
@@ -1064,7 +1064,6 @@ function renderMedia(
     videos.forEach(({ url, text }) => {
       const videoWrap = createEl("div", "video-item");
       if (text) videoWrap.appendChild(createEl("p", "video-caption", text));
-
       const yt = getYouTubeEmbedUrl(url);
       if (yt) {
         const iframe = document.createElement("iframe");
@@ -1087,7 +1086,6 @@ function renderMedia(
         video.controls = false;
         videoWrap.appendChild(video);
       }
-
       videosWrap.appendChild(videoWrap);
     });
     blocks.push(videosWrap);
@@ -1107,48 +1105,24 @@ function renderMedia(
 
 function openMoodboard() {
   if (document.getElementById("moodboard-overlay")) return;
-
   const overlay = document.createElement("div");
   overlay.id = "moodboard-overlay";
   overlay.style.cssText = `
-    position: fixed;
-    inset: 0;
-    z-index: 9500;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    position: fixed; inset: 0; z-index: 9500; background: #000;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.4s ease;
   `;
-
   const img = document.createElement("img");
   img.src = "architecture.jpeg";
-  img.style.cssText = `
-    max-width: 100vw;
-    max-height: 100vh;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-  `;
+  img.style.cssText =
+    "max-width:100vw;max-height:100vh;width:100%;height:100%;object-fit:contain;display:block;";
   overlay.appendChild(img);
-
   const closeBtn = document.createElement("button");
   closeBtn.textContent = "✕";
   closeBtn.style.cssText = `
-    position: fixed;
-    top: 16px;
-    right: 20px;
-    background: none;
-    border: none;
-    color: rgba(255,255,255,0.85);
-    font-size: 28px;
-    cursor: pointer;
-    z-index: 9501;
-    line-height: 1;
-    padding: 4px 8px;
-    transition: color 0.15s, transform 0.15s;
+    position: fixed; top: 16px; right: 20px; background: none; border: none;
+    color: rgba(255,255,255,0.85); font-size: 28px; cursor: pointer;
+    z-index: 9501; line-height: 1; padding: 4px 8px; transition: color 0.15s, transform 0.15s;
   `;
   closeBtn.onmouseover = () => {
     closeBtn.style.color = "#fff";
@@ -1160,11 +1134,9 @@ function openMoodboard() {
   };
   closeBtn.onclick = closeMoodboard;
   overlay.appendChild(closeBtn);
-
   overlay.onclick = (e) => {
     if (e.target === overlay) closeMoodboard();
   };
-
   document.body.appendChild(overlay);
   requestAnimationFrame(() => {
     overlay.style.opacity = "1";
@@ -1191,19 +1163,16 @@ function updateAppWidthState() {
 function renderHeader() {
   siteHeader.innerHTML = "";
   siteHeader.className = "site-header";
-
   const inner = createEl("div", "header-inner");
   const title = createEl("button", "site-title-toggle", "Omri Alloro");
   const bio = createEl("div", "site-bio");
   renderParagraphs(data.sections.bio.text, bio);
-
   title.onclick = () => {
     bio.classList.toggle("open");
     bio.style.maxHeight = bio.classList.contains("open")
       ? bio.scrollHeight + "px"
       : "0px";
   };
-
   const socials = createEl("div", "header-socials");
   Object.entries(data.sections.social).forEach(([k, v]) => {
     const a = document.createElement("a");
@@ -1214,10 +1183,8 @@ function renderHeader() {
     a.innerHTML = getIcon(k);
     socials.appendChild(a);
   });
-
   const moodboardBtn = createEl("button", "moodboard-btn", "moodboard");
   moodboardBtn.onclick = openMoodboard;
-
   inner.appendChild(title);
   inner.appendChild(moodboardBtn);
   inner.appendChild(socials);
@@ -1234,12 +1201,10 @@ function renderDrawingsGrid(items, body, sectionTitle) {
   items.forEach((item) => {
     const cell = document.createElement("div");
     cell.className = "drawing-item";
-
     if (item.image) {
       const img = makeClickableImage(item.image, sectionTitle, "");
       cell.appendChild(img);
     }
-
     grid.appendChild(cell);
   });
 
@@ -1252,19 +1217,12 @@ function renderDLBStrip(gifs) {
   const wrap = document.createElement("div");
   wrap.style.cssText =
     "width:100%;margin-bottom:4px;margin-top:-24px;margin-left:-28px;margin-right:-28px;width:calc(100% + 56px);";
-
   const strip = document.createElement("div");
-  strip.style.cssText = `
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 3px;
-    width: 100%;
-  `;
-
+  strip.style.cssText =
+    "display:grid;grid-template-columns:repeat(6,1fr);gap:3px;width:100%;";
   gifs.slice(0, 6).forEach((src) => {
     const cell = document.createElement("div");
     cell.style.cssText = "overflow:hidden;height:60px;";
-
     const img = document.createElement("img");
     img.src = src;
     img.alt = "";
@@ -1273,23 +1231,17 @@ function renderDLBStrip(gifs) {
     cell.appendChild(img);
     strip.appendChild(cell);
   });
-
   wrap.appendChild(strip);
   wrap.appendChild(createCanvasDivider("web projects"));
-
   return wrap;
 }
 
 // ─── Collection rendering ─────────────────────────────────────────────────────
 
 function renderCollection(items, body, sectionTitle) {
+  // Drawings: render grid directly into section body, no item toggle
   if (items.length && items[0].image) {
-    const { wrapper, body: itemBody } = createItemToggle(
-      "view all",
-      sectionTitle,
-    );
-    renderDrawingsGrid(items, itemBody, sectionTitle);
-    body.appendChild(wrapper);
+    renderDrawingsGrid(items, body, sectionTitle);
     return;
   }
 
@@ -1343,21 +1295,15 @@ function renderCollection(items, body, sectionTitle) {
 function initSite() {
   renderHeader();
   app.innerHTML = "";
-
   const content = createEl("main", "content");
-
   Object.entries(data.sections).forEach(([key, val]) => {
     if (["bio", "social"].includes(key)) return;
-
     const { section, body } = createSectionShell(key);
-
     if (Array.isArray(val) && val.length) {
       renderCollection(val, body, key);
     }
-
     content.appendChild(section);
   });
-
   app.appendChild(content);
 }
 
@@ -1375,21 +1321,16 @@ function showSite() {
 
 function showSplash() {
   hideSite();
-
   let splash = document.getElementById("splash");
-
   if (!splash) {
     splash = document.createElement("div");
     splash.id = "splash";
-
     const gif1 = document.createElement("img");
     gif1.src = "NTT2.gif";
     gif1.className = "splash-gif gif-back";
-
     const gif2 = document.createElement("img");
     gif2.src = "bbb.gif";
     gif2.className = "splash-gif gif-front";
-
     splash.appendChild(gif1);
     splash.appendChild(gif2);
     document.body.appendChild(splash);
@@ -1397,14 +1338,11 @@ function showSplash() {
     splash.classList.remove("fade-out");
     splash.style.display = "block";
   }
-
   splash.onclick = () => {
     splash.classList.add("fade-out");
     showSite();
-
     const { section, item, img } = getURLState();
     if (section) applyURLState({ section, item, img });
-
     setTimeout(() => {
       splash.style.display = "none";
     }, 800);
@@ -1416,8 +1354,23 @@ function showSplash() {
 function bindCloseButton() {
   const btn = document.getElementById("close-btn");
   if (!btn) return;
-
   btn.onclick = () => {
+    // If drawings section is open, close it properly
+    const drawingsSectionEl = document.querySelector(
+      '[data-section-slug="selected-drawings"]',
+    );
+    const drawingsToggle = drawingsSectionEl?.querySelector(".section-toggle");
+    if (drawingsToggle?.getAttribute("aria-expanded") === "true") {
+      drawingsToggle.setAttribute("aria-expanded", "false");
+      drawingsSectionEl.querySelector(".section-body").classList.remove("open");
+      app.classList.remove("subsection-open");
+      document.body.classList.remove("subsection-open");
+      stopDrawingsExpand();
+      updateAppWidthState();
+      setURLState({});
+      return;
+    }
+
     const openSectionEl = document
       .querySelector(".section-body.open")
       ?.closest(".main-section");
@@ -1425,7 +1378,6 @@ function bindCloseButton() {
     const sectionName = sectionSlug
       ? Object.keys(data.sections).find((k) => toSlug(k) === sectionSlug)
       : null;
-
     closeAllItems();
     setURLState(sectionName ? { section: sectionName } : {});
   };
@@ -1436,7 +1388,6 @@ function bindCloseButton() {
 function bindCornerGifReturn() {
   const cornerGif = document.querySelector(".corner-gif");
   if (!cornerGif) return;
-
   cornerGif.onclick = (e) => {
     e.stopPropagation();
     closeLightboxSilent();
@@ -1444,6 +1395,7 @@ function bindCornerGifReturn() {
     closeAllSections();
     app.classList.remove("subsection-open");
     document.body.classList.remove("subsection-open");
+    stopDrawingsExpand();
     updateAppWidthState();
     setURLState({});
     showSplash();
