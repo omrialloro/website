@@ -147,7 +147,22 @@ const data = {
       },
     ],
     Music: [],
-    Courses: [],
+    Courses: {
+      main_text:
+        "Recent technological developments in prompt-based coding and large language models (LLMs) mark one of the most dramatic transformations in the field of software development. They create an unprecedented opportunity for designers, artists, and individuals with ideas and vision, even without a programming background, to harness the power of code and independently experiment with software-based projects, without relying on mediation by developers or technical experts. This shift has the potential to democratize access to software creation and open up new avenues for creative expression and innovation.\n\n The courses are grounded in the understanding that despite this new accessibility, many who do not operate at the intersection of technology and creative practice are not yet aware of the unique range of possibilities embedded in this medium.Hence, the primary objective of the courses is to expose  participants to a different paradigm of thinking, in which code is not merely a functional tool, but also a fundamental means for opening new creative horizons. This is approached through principles such as generativity, randomness, the exploration of chaotic processes, working under constraints, and digital disruptions. These courses place special emphasis on the search for the unexpected and the surprising — experiencing code as a unique artistic expression and as a material that continues to surprise, guide, and lead us toward paths yet to be explored.",
+      courses: [
+        {
+          title: "Design with Algorithms",
+          description:
+            "This course, developed in collaboration with Dr. Alon Weiss for HIT, introduces design students to fundamental concepts of designing with code. It begins with hands-on experimentation using the p5.js library and progresses toward prompt-based coding. Along the way, we explore topics such as working with data—reading, recording, and data bending—alongside randomness, generative processes, and interactivity.",
+        },
+        {
+          title: "Design And Robotics",
+          description:
+            "This course, developed for HIT, aims to make hardware technology accessible to artists and design students who wish to experiment with technological projects integrating components such as sensors, motors, sound, and LEDs. Structured as a hands-on workshop, it provides a platform for students to develop their own independent projects, encouraging exploration, prototyping, and the creation of personalized technological expressions.",
+        },
+      ],
+    },
     bio: {
       text: "A multidisciplinary artist, algorithm designer, and web developer. My academic background is in mathematics, while my practice has always been rooted in art, including painting, writing, music, and, in recent years, digital art.\n\nIn recent years, I have begun integrating my work as an algorithm designer and web developer into code-based artistic projects. I also teach creative coding and robotics, working with students on the intersection of technology and artistic practice. I am currently engaged in research and development of creative interfaces that explore the material qualities of digital creation.\n\nAlthough I work across different fields, the underlying thread in my practice is a search for a free, intuitive, and spontaneous line, one that gives rise to the unexpected and continues to surprise me.",
     },

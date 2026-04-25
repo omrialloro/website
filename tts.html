@@ -60,7 +60,7 @@
       min-height: 100vh;
       padding: 0;
       position: relative;
-      background: #0a1a2a;
+      background: rgba(0,0,0,0.35);
     }
 
     #video-bg {
@@ -71,7 +71,7 @@
       object-fit: cover;
       z-index: 0;
       pointer-events: none;
-      opacity: 0.18; /* ← adjust this to control video background transparency */
+      opacity: 0.18;
     }
 
     #grid-bg {
@@ -111,16 +111,12 @@
       background: rgba(0,0,0,0.65);
       border-color: rgba(255,255,255,0.3);
     }
-    #back-btn svg {
-      width: 14px;
-      height: 14px;
-      flex-shrink: 0;
-    }
+    #back-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
     .app {
       max-width: 800px;
       margin: 0 auto;
-      padding: 4.5rem 1.25rem 4rem; /* extra top pad to clear back button */
+      padding: 4.5rem 1.25rem 4rem;
       position: relative;
       z-index: 1;
     }
@@ -264,7 +260,165 @@
     .step-num { font-size: 9px; font-weight: 600; font-family: 'Contair', sans-serif; letter-spacing: 0.05em; color: var(--accent-text); background: var(--accent-bg); border-radius: 3px; display: inline-block; padding: 2px 7px; margin-bottom: 8px; }
     .step p { font-size: 13px; color: var(--text-2); line-height: 1.5; }
 
+    /* ── TRIPTYCH SECTION ── */
+    .triptych-section {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: 40px 0 60px;
+      margin-top: 40px;
+      border-top: 0.5px solid rgba(100,180,200,0.15);
+    }
+
+    .triptych-header {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      padding: 0 1.25rem;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .triptych-title {
+      font-family: 'Contair', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 4px;
+    }
+
+    .triptych-work-title {
+      font-family: 'Contair', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: var(--text);
+      transition: opacity 0.3s ease;
+    }
+
+    .triptych-counter {
+      font-family: 'Contair', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--text-3);
+    }
+
+    /* Row with side arrows */
+    .triptych-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    .triptych-arrow {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(100,180,200,0.2);
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      color: var(--text-3);
+    }
+    .triptych-arrow:hover {
+      background: rgba(0,0,0,0.6);
+      border-color: rgba(100,180,200,0.45);
+      color: var(--text);
+    }
+    .triptych-arrow:disabled {
+      opacity: 0.18;
+      cursor: default;
+      pointer-events: none;
+    }
+    .triptych-arrow svg { width: 14px; height: 14px; }
+
+    /* The three panels in a row */
+    .triptych-panels {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .triptych-panel {
+      position: relative;
+      overflow: hidden;
+      border-radius: 3px;
+      background: #000;
+      aspect-ratio: 16/9;
+    }
+
+    .triptych-panel video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.4s ease;
+    }
+
+    .triptych-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 0.5px solid rgba(100,180,200,0.12);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
+    .panel-label {
+      position: absolute;
+      bottom: 7px;
+      left: 9px;
+      font-family: 'Contair', sans-serif;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(200,220,230,0.45);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Fade transition */
+    .triptych-panels.transitioning .triptych-panel video {
+      opacity: 0;
+    }
+
+    /* Dots below */
+    .triptych-dots-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .triptych-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(100,180,200,0.22);
+      transition: background 0.3s, transform 0.3s;
+      cursor: pointer;
+    }
+    .triptych-dot.active {
+      background: var(--accent-mid);
+      transform: scale(1.5);
+    }
+
     #hint { display: none; }
+
+    @media (max-width: 600px) {
+      .triptych-row { gap: 6px; padding: 0 0.5rem; }
+      .triptych-arrow { width: 26px; height: 26px; }
+    }
   </style>
 </head>
 <body>
@@ -272,7 +426,6 @@
 <video id="video-bg" src="tts1.mp4" autoplay loop muted playsinline></video>
 <canvas id="grid-bg"></canvas>
 
-<!-- Back button -->
 <a id="back-btn" href="javascript:history.back()">
   <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -344,110 +497,116 @@
   </section>
 </div>
 
+<!-- ── TRIPTYCH SECTION ── -->
+<section class="triptych-section" id="triptychSection">
+  <div class="triptych-header">
+    <div>
+      <div class="triptych-title">Works</div>
+      <div class="triptych-work-title" id="triptychWorkTitle">—</div>
+    </div>
+    <div class="triptych-counter" id="triptychCounter">1 / 1</div>
+  </div>
+
+  <div class="triptych-row">
+    <!-- Left arrow -->
+    <button class="triptych-arrow" id="triptychPrev" aria-label="Previous">
+      <svg viewBox="0 0 14 14" fill="none">
+        <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Three panels -->
+    <div class="triptych-panels" id="triptychPanels">
+      <div class="triptych-panel" id="panelVertical">
+        <video autoplay loop muted playsinline></video>
+        <span class="panel-label">Vertical</span>
+      </div>
+      <div class="triptych-panel" id="panelRegular">
+        <video autoplay loop muted playsinline></video>
+        <span class="panel-label">Regular</span>
+      </div>
+      <div class="triptych-panel" id="panelHorizontal">
+        <video autoplay loop muted playsinline></video>
+        <span class="panel-label">Horizontal</span>
+      </div>
+    </div>
+
+    <!-- Right arrow -->
+    <button class="triptych-arrow" id="triptychNext" aria-label="Next">
+      <svg viewBox="0 0 14 14" fill="none">
+        <path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Dots -->
+  <div class="triptych-dots-row" id="triptychDots"></div>
+</section>
+
 <!-- ── Deformed grid background ── -->
 <script>
 (function () {
   const cvs = document.getElementById('grid-bg');
   const ctx = cvs.getContext('2d');
-
-  const COLS = 22;
-  const ROWS = 16;
-  const DEFORM = 36;
-  const SPEED  = 0.00018;
-  const ALPHA  = 0.15;
-
+  const COLS = 22, ROWS = 16, DEFORM = 36, SPEED = 0.00018, ALPHA = 0.15;
   let W, H, t = 0;
-
   function sn(x, y, s) {
     return (
-      Math.sin(x * 1.27 + y * 0.74 + s)        * 0.50 +
-      Math.sin(x * 2.08 - y * 1.39 + s * 1.31) * 0.30 +
-      Math.sin(x * 0.61 + y * 2.17 - s * 0.83) * 0.20
+      Math.sin(x*1.27+y*0.74+s)*0.50 +
+      Math.sin(x*2.08-y*1.39+s*1.31)*0.30 +
+      Math.sin(x*0.61+y*2.17-s*0.83)*0.20
     );
   }
-
-  function resize() {
-    W = cvs.width  = window.innerWidth;
-    H = cvs.height = window.innerHeight;
-  }
-
+  function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight; }
   function parseBg() {
-    const raw = getComputedStyle(document.documentElement)
-      .getPropertyValue('--bg').trim();
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
     let m = raw.match(/rgba?\(([^)]+)\)/);
-    if (m) {
-      const parts = m[1].split(',').map(Number);
-      return { r: parts[0]||0, g: parts[1]||0, b: parts[2]||0 };
-    }
+    if (m) { const p = m[1].split(',').map(Number); return {r:p[0]||0,g:p[1]||0,b:p[2]||0}; }
     let hex = raw.replace('#','');
-    if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
-    if (hex.length === 6) {
-      return {
-        r: parseInt(hex.slice(0,2),16),
-        g: parseInt(hex.slice(2,4),16),
-        b: parseInt(hex.slice(4,6),16)
-      };
-    }
-    return { r: 230, g: 242, b: 253 };
+    if (hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+    if (hex.length===6) return {r:parseInt(hex.slice(0,2),16),g:parseInt(hex.slice(2,4),16),b:parseInt(hex.slice(4,6),16)};
+    return {r:230,g:242,b:253};
   }
-
   function draw() {
     t += SPEED;
-
     const bg = parseBg();
     const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    // Clear canvas so video background shows through
     ctx.clearRect(0, 0, W, H);
-
-    const lr = dark ? Math.min(bg.r + 50, 255) : Math.max(bg.r - 20, 0);
-    const lg = dark ? Math.min(bg.g + 40, 255) : Math.max(bg.g - 10, 0);
-    const lb = dark ? Math.min(bg.b + 30, 255) : Math.max(bg.b + 15, 255);
-
+    const lr = dark ? Math.min(bg.r+50,255) : Math.max(bg.r-20,0);
+    const lg = dark ? Math.min(bg.g+40,255) : Math.max(bg.g-10,0);
+    const lb = dark ? Math.min(bg.b+30,255) : Math.max(bg.b+15,255);
     ctx.strokeStyle = `rgba(${lr},${lg},${lb},${ALPHA})`;
     ctx.lineWidth = 1;
-
-    const cw = W / COLS;
-    const ch = H / ROWS;
-
+    const cw = W/COLS, ch = H/ROWS;
     const pts = [];
     for (let r = 0; r <= ROWS; r++) {
       pts[r] = [];
       for (let c = 0; c <= COLS; c++) {
-        const nx = sn(c * 0.18, r * 0.18,  t)         * DEFORM;
-        const ny = sn(c * 0.18, r * 0.18,  t + 99.7)  * DEFORM;
-        pts[r][c] = { x: c * cw + nx, y: r * ch + ny };
+        const nx = sn(c*0.18,r*0.18,t)*DEFORM;
+        const ny = sn(c*0.18,r*0.18,t+99.7)*DEFORM;
+        pts[r][c] = {x:c*cw+nx, y:r*ch+ny};
       }
     }
-
     for (let r = 0; r <= ROWS; r++) {
-      ctx.beginPath();
-      ctx.moveTo(pts[r][0].x, pts[r][0].y);
+      ctx.beginPath(); ctx.moveTo(pts[r][0].x, pts[r][0].y);
       for (let c = 1; c <= COLS; c++) {
-        const p = pts[r][c-1], q = pts[r][c];
-        ctx.quadraticCurveTo(p.x, p.y, (p.x+q.x)/2, (p.y+q.y)/2);
+        const p=pts[r][c-1], q=pts[r][c];
+        ctx.quadraticCurveTo(p.x,p.y,(p.x+q.x)/2,(p.y+q.y)/2);
       }
-      ctx.lineTo(pts[r][COLS].x, pts[r][COLS].y);
-      ctx.stroke();
+      ctx.lineTo(pts[r][COLS].x, pts[r][COLS].y); ctx.stroke();
     }
-
     for (let c = 0; c <= COLS; c++) {
-      ctx.beginPath();
-      ctx.moveTo(pts[0][c].x, pts[0][c].y);
+      ctx.beginPath(); ctx.moveTo(pts[0][c].x, pts[0][c].y);
       for (let r = 1; r <= ROWS; r++) {
-        const p = pts[r-1][c], q = pts[r][c];
-        ctx.quadraticCurveTo(p.x, p.y, (p.x+q.x)/2, (p.y+q.y)/2);
+        const p=pts[r-1][c], q=pts[r][c];
+        ctx.quadraticCurveTo(p.x,p.y,(p.x+q.x)/2,(p.y+q.y)/2);
       }
-      ctx.lineTo(pts[ROWS][c].x, pts[ROWS][c].y);
-      ctx.stroke();
+      ctx.lineTo(pts[ROWS][c].x, pts[ROWS][c].y); ctx.stroke();
     }
-
     requestAnimationFrame(draw);
   }
-
   window.addEventListener('resize', resize);
-  resize();
-  draw();
+  resize(); draw();
 })();
 </script>
 
@@ -527,16 +686,10 @@
 
   // ── Button color flicker ──
   const flickerBtns = [uiHBtn, uiVBtn, uiTBtn];
-
-  function randDelta(base, range) {
-    return Math.max(0, Math.min(255, base + Math.round((Math.random() - 0.5) * 2 * range)));
-  }
+  function randDelta(base, range) { return Math.max(0, Math.min(255, base + Math.round((Math.random()-0.5)*2*range))); }
   function flickerColor(isActive) {
-    if (isActive) {
-      return { color: `rgb(${randDelta(232,8)},${randDelta(0,5)},${randDelta(40,6)})` };
-    } else {
-      return { color: `rgb(${randDelta(20,5)},${randDelta(140,8)},${randDelta(8,4)})` };
-    }
+    if (isActive) return { color: `rgb(${randDelta(232,8)},${randDelta(0,5)},${randDelta(40,6)})` };
+    else return { color: `rgb(${randDelta(20,5)},${randDelta(140,8)},${randDelta(8,4)})` };
   }
   function applyFlicker() {
     flickerBtns.forEach(btn => {
@@ -577,7 +730,7 @@
       window.uiShowProgress(label, 0);
       let rafId = null;
       const tick = () => {
-        const p = Math.min((performance.now() - start) / durationMs, 1);
+        const p = Math.min((performance.now()-start)/durationMs, 1);
         window.uiShowProgress(label, p);
         if (p < 1) rafId = requestAnimationFrame(tick);
       };
@@ -588,8 +741,8 @@
         window.uiShowProgress(label, 1);
         const type = mediaRecorder.mimeType || 'video/webm';
         const blob = new Blob(recordedChunks, { type });
-        const ext  = type.includes('mp4') ? 'mp4' : 'webm';
-        const url  = URL.createObjectURL(blob);
+        const ext = type.includes('mp4') ? 'mp4' : 'webm';
+        const url = URL.createObjectURL(blob);
         const a = Object.assign(document.createElement('a'), { href: url, download: `slit-scan.${ext}` });
         document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
@@ -673,12 +826,10 @@
     currentFileSizeMB = file.file.size / (1024*1024);
     if (currentFileSizeMB > 32) { alert(`Video too large (${currentFileSizeMB.toFixed(1)} MB). Max 32 MB.`); return; }
     if (video) { try { video.remove(); } catch(e) {} video = null; }
-
     uiInfoStrip.style.display = 'grid';
     document.getElementById('icSize').textContent   = currentFileSizeMB.toFixed(1) + ' MB';
     document.getElementById('icStatus').textContent = 'Capturing…';
     document.getElementById('icFrames').textContent = '…';
-
     if (file.type === "video") {
       video = createVideo(file.data, () => {
         video.hide(); video.volume(0); video.play();
@@ -739,6 +890,118 @@
       }
     }
   }
+</script>
+
+<!-- ── Triptych controller ── -->
+<script>
+  // ─── DATA ────────────────────────────────────────────────────────────────────
+  // Add your works here. Each entry has:
+  //   title          — displayed above the triptych
+  //   videovertical  — URL for the left (tall) panel
+  //   videoregular   — URL for the centre (wide) panel
+  //   videohorizontal — URL for the right (square) panel
+  const data = [
+    {
+      title: "The Servant",
+      videovertical:    "timeSpace/servantT.mp4",
+      videoregular:     "timeSpace/servantY.mp4",
+      videohorizontal:  "timeSpace/servantX.mp4"
+    },
+    {
+      title: "Apocalypse Now",
+      videovertical:    "timeSpace/apocT.mp4",
+      videoregular:     "timeSpace/apocY.mp4",
+      videohorizontal:  "timeSpace/apocX.mp4"
+    },
+    {
+      title: "Amadeus",
+      videovertical:    "timeSpace/mozartT.mp4",
+      videoregular:     "timeSpace/mozartY.mp4",
+      videohorizontal:  "timeSpace/mozartX.mp4"
+    },
+        {
+      title: "Tatti",
+      videovertical:    "timeSpace/tattiT.mp4",
+      videoregular:     "timeSpace/tattiX.mp4",
+      videohorizontal:  "timeSpace/tattiY.mp4"
+    },
+    // add more entries here…
+  ];
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  (function () {
+    if (!data || data.length === 0) {
+      document.getElementById('triptychSection').style.display = 'none';
+      return;
+    }
+
+    let current = 0;
+
+    const titleEl   = document.getElementById('triptychWorkTitle');
+    const counterEl = document.getElementById('triptychCounter');
+    const panels    = document.getElementById('triptychPanels');
+    const dotsEl    = document.getElementById('triptychDots');
+    const prevBtn   = document.getElementById('triptychPrev');
+    const nextBtn   = document.getElementById('triptychNext');
+
+    const videoV = document.querySelector('#panelVertical video');
+    const videoR = document.querySelector('#panelRegular video');
+    const videoH = document.querySelector('#panelHorizontal video');
+
+    // Build dots
+    data.forEach((_, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'triptych-dot' + (i === 0 ? ' active' : '');
+      dot.addEventListener('click', () => goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    function goTo(idx) {
+      current = idx;
+      const item = data[current];
+
+      // Fade out
+      panels.classList.add('transitioning');
+
+      setTimeout(() => {
+        // Swap sources
+        videoV.src = item.videovertical   || '';
+        videoR.src = item.videoregular    || '';
+        videoH.src = item.videohorizontal || '';
+
+        [videoV, videoR, videoH].forEach(v => {
+          if (v.src) { v.load(); v.play().catch(() => {}); }
+        });
+
+        titleEl.textContent   = item.title || '—';
+        counterEl.textContent = `${current + 1} / ${data.length}`;
+
+        // Update dots
+        dotsEl.querySelectorAll('.triptych-dot').forEach((d, i) => {
+          d.classList.toggle('active', i === current);
+        });
+
+        // Update arrow state
+        prevBtn.disabled = current === 0;
+        nextBtn.disabled = current === data.length - 1;
+
+        // Fade back in
+        panels.classList.remove('transitioning');
+      }, 300);
+    }
+
+    prevBtn.addEventListener('click', () => { if (current > 0) goTo(current - 1); });
+    nextBtn.addEventListener('click', () => { if (current < data.length - 1) goTo(current + 1); });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft'  && current > 0)              goTo(current - 1);
+      if (e.key === 'ArrowRight' && current < data.length - 1) goTo(current + 1);
+    });
+
+    // Init
+    goTo(0);
+  })();
 </script>
 
 </body>
