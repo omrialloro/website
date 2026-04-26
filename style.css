@@ -43,9 +43,11 @@
 
   /* ─── COURSES ──────────────────────────────────────────────────────────── */
 
-  /* App frame when courses is open */
-  --courses-bg: rgba(8, 8, 20, 0.92);
-  --courses-border: var(--c1);
+  /* App frame when courses is open — soft white wash */
+  --courses-bg: rgba(155, 105, 25, 0.68);
+
+  /* The dark highlight behind text */
+  --courses-content-bg: rgba(4, 4, 0, 0.45);
 
   /* Section body (the scrollable full page) */
   --courses-padding: 48px 60px 60px;
@@ -53,29 +55,37 @@
   --courses-scrollbar-color: var(--c1);
 
   /* Intro text block */
-  --courses-intro-color: rgba(255, 245, 200, 0.7);
-  --courses-intro-max-width: 72ch;
-  --courses-intro-font-size: 14px;
+  --courses-intro-color:rgba(255, 245, 200, 0.85);
+  --courses-intro-max-width: 62ch;
+  --courses-intro-font-size: 18px;
   --courses-intro-line-height: 1.6;
-  --courses-intro-gap: 14px;                   /* space between intro paragraphs */
+  --courses-intro-gap: 14px;
 
   /* Course cards */
-  --courses-list-gap: 40px;                    /* vertical gap between cards */
+  --courses-list-gap: 40px;
   --courses-card-border: rgba(212, 183, 12, 0.25);
-  --courses-card-border-width: 1px 0 0 0;      /* top border only by default */
+  --courses-card-border-width: 1px 0 0 0;
   --courses-card-padding: 24px 0 0;
 
+  /* Course group title */
+  --courses-group-title-color: rgb(200, 60, 0);
+  --courses-group-title-size: 22px;
+
+  /* Course section title (top-level "Code and Art Courses") */
+  --courses-section-title-color: rgb(200, 60, 0);
+  --courses-section-title-size: 42px;
+
   /* Course card title */
-  --courses-card-title-color: var(--text);
+  --courses-card-title-color: rgb(200, 60, 0);
   --courses-card-title-size: 28px;
-  --courses-card-title-gap: 12px;              /* space below title before description */
+  --courses-card-title-gap: 12px;
 
   /* Course card description */
   --courses-desc-color: rgba(255, 245, 200, 0.85);
-  --courses-desc-font-size: 14px;
+  --courses-desc-font-size: 18px;
   --courses-desc-line-height: 1.55;
   --courses-desc-max-width: 62ch;
-  --courses-desc-gap: 12px;                    /* space between description paragraphs */
+  --courses-desc-gap: 12px;
   /* ─────────────────────────────────────────────────────────────────────── */
 }
 
@@ -702,8 +712,6 @@ body.subsection-open #close-btn {
     font-size: 24px;
     margin-bottom: 12px;
   }
-
-
 }
 
 /* Moodboard button */
@@ -754,7 +762,7 @@ body.subsection-open #close-btn {
 
 #app.drawings-fullscreen .section-body.open {
   max-height: none !important;
-  overflow: hidden !important;      /* drawings doesn't scroll, masonry fills */
+  overflow: hidden !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   height: calc(100vh - var(--header-height)) !important;
@@ -803,7 +811,54 @@ body.subsection-open #close-btn {
 #app.courses-fullscreen .section-body.open::-webkit-scrollbar-thumb { background: var(--courses-scrollbar-color); }
 #app.courses-fullscreen .section-body.open::-webkit-scrollbar-track { background: transparent; }
 
+/* Parent blocks — justified so bg fills flush on both left and right */
+#app.courses-fullscreen .courses-intro p,
+#app.courses-fullscreen .courses-section-title,
+#app.courses-fullscreen .courses-group-title,
+#app.courses-fullscreen .courses-card-title,
+#app.courses-fullscreen .courses-description p {
+  display: block;
+  max-width: var(--courses-intro-max-width);
+  margin-left: -8px;
+  margin-right: -8px;
+  line-height: 1.85;
+  text-align: justify;
+  text-align-last: left;
+}
+
+/* Span: horizontal padding cloned per line, vertical gap closed by shadow */
+#app.courses-fullscreen .courses-intro p span,
+#app.courses-fullscreen .courses-section-title span,
+#app.courses-fullscreen .courses-group-title span,
+#app.courses-fullscreen .courses-card-title span,
+#app.courses-fullscreen .courses-description p span {
+  display: inline;
+  background: var(--courses-content-bg);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 8px;
+  box-shadow:
+    0  0.45em 0 0 var(--courses-content-bg),
+    0 -0.45em 0 0 var(--courses-content-bg);
+}
+
+#app.courses-fullscreen .courses-syllabus-link {
+  display: inline-block;
+  background: var(--courses-content-bg);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
 /* ─── Courses content styles ─────────────────────────────────────────────── */
+
+.courses-section-title {
+  font-family: inherit;
+  font-size: var(--courses-section-title-size);
+  font-weight: 700;
+  color: var(--courses-section-title-color);
+  margin: 0 0 28px;
+  line-height: 1;
+}
 
 .courses-intro p {
   max-width: var(--courses-intro-max-width);
@@ -822,9 +877,9 @@ body.subsection-open #close-btn {
 
 .courses-group-title {
   font-family: inherit;
-  font-size: 22px;
+  font-size: var(--courses-group-title-size);
   font-weight: 700;
-  color: var(--text-sub);
+  color: var(--courses-group-title-color);
   margin: 0 0 20px;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -878,6 +933,11 @@ body.subsection-open #close-btn {
 
 @media (max-width: 700px) {
   #app.courses-fullscreen .section-body.open {
+    height: calc(100dvh - var(--header-height)) !important;
+    max-height: none !important;
     padding: var(--courses-padding-mobile) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    opacity: 1 !important;
   }
 }

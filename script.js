@@ -1319,32 +1319,55 @@ function renderDLBStrip(gifs) {
 
 // ─── Courses rendering ────────────────────────────────────────────────────────
 
+function renderCourseParagraphs(text, container) {
+  if (!text) return;
+  text.split("\n\n").forEach((p) => {
+    const el = document.createElement("p");
+    const span = document.createElement("span");
+    span.textContent = p.trim();
+    el.appendChild(span);
+    container.appendChild(el);
+  });
+}
+
 function renderCourses(coursesData, body) {
-  // Intro text
+  // Section title
+  const sectionTitle = document.createElement("h2");
+  sectionTitle.className = "courses-section-title";
+  const sectionTitleSpan = document.createElement("span");
+  sectionTitleSpan.textContent = "Code and Art Courses";
+  sectionTitle.appendChild(sectionTitleSpan);
+  body.appendChild(sectionTitle);
   if (coursesData.main_text) {
     const introWrap = createEl("div", "courses-intro");
-    renderParagraphs(coursesData.main_text, introWrap);
+    renderCourseParagraphs(coursesData.main_text, introWrap);
     body.appendChild(introWrap);
     body.appendChild(createCanvasDivider());
   }
 
   // Groups
   coursesData.groups.forEach((group, groupIndex) => {
-    // Group title
-    const groupTitle = createEl("h3", "courses-group-title", group.title);
+    const groupTitle = document.createElement("h3");
+    groupTitle.className = "courses-group-title";
+    const groupSpan = document.createElement("span");
+    groupSpan.textContent = group.title;
+    groupTitle.appendChild(groupSpan);
     body.appendChild(groupTitle);
 
-    // Course cards
     const coursesList = createEl("div", "courses-list");
     group.courses.forEach((course) => {
       const card = createEl("div", "courses-card");
 
-      const titleEl = createEl("h4", "courses-card-title", course.title);
+      const titleEl = document.createElement("h4");
+      titleEl.className = "courses-card-title";
+      const titleSpan = document.createElement("span");
+      titleSpan.textContent = course.title;
+      titleEl.appendChild(titleSpan);
       card.appendChild(titleEl);
 
       if (course.description) {
         const descWrap = createEl("div", "courses-description");
-        renderParagraphs(course.description, descWrap);
+        renderCourseParagraphs(course.description, descWrap);
         card.appendChild(descWrap);
       }
 
@@ -1362,7 +1385,6 @@ function renderCourses(coursesData, body) {
     });
     body.appendChild(coursesList);
 
-    // Divider between groups, not after the last one
     if (groupIndex < coursesData.groups.length - 1) {
       body.appendChild(createCanvasDivider());
     }
