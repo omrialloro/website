@@ -150,16 +150,34 @@ const data = {
     Courses: {
       main_text:
         "Recent technological developments in prompt-based coding and large language models (LLMs) mark one of the most dramatic transformations in the field of software development. They create an unprecedented opportunity for designers, artists, and individuals with ideas and vision, even without a programming background, to harness the power of code and independently experiment with software-based projects, without relying on mediation by developers or technical experts. This shift has the potential to democratize access to software creation and open up new avenues for creative expression and innovation.\n\n The courses are grounded in the understanding that despite this new accessibility, many who do not operate at the intersection of technology and creative practice are not yet aware of the unique range of possibilities embedded in this medium.Hence, the primary objective of the courses is to expose  participants to a different paradigm of thinking, in which code is not merely a functional tool, but also a fundamental means for opening new creative horizons. This is approached through principles such as generativity, randomness, the exploration of chaotic processes, working under constraints, and digital disruptions. These courses place special emphasis on the search for the unexpected and the surprising — experiencing code as a unique artistic expression and as a material that continues to surprise, guide, and lead us toward paths yet to be explored.",
-      courses: [
+      groups: [
         {
-          title: "Design with Algorithms",
-          description:
-            "This course, developed in collaboration with Dr. Alon Weiss for HIT, introduces design students to fundamental concepts of designing with code. It begins with hands-on experimentation using the p5.js library and progresses toward prompt-based coding. Along the way, we explore topics such as working with data—reading, recording, and data bending—alongside randomness, generative processes, and interactivity.",
+          title: "HIT Courses",
+          courses: [
+            {
+              title: "Design with Algorithms",
+              description:
+                "This course, developed in collaboration with Dr. Alon Weiss for HIT, introduces design students to fundamental concepts of designing with code. It begins with hands-on experimentation using the p5.js library and progresses toward prompt-based coding. Along the way, we explore topics such as working with data—reading, recording, and data bending—alongside randomness, generative processes, and interactivity.",
+              syllabus: "https://REPLACE_WITH_DESIGN_ALGORITHMS_SYLLABUS_URL",
+            },
+            {
+              title: "Design And Robotics",
+              description:
+                "This course, developed for HIT, aims to make hardware technology accessible to artists and design students who wish to experiment with technological projects integrating components such as sensors, motors, sound, and LEDs. Structured as a hands-on workshop, it provides a platform for students to develop their own independent projects, encouraging exploration, prototyping, and the creation of personalized technological expressions.",
+              syllabus: "https://REPLACE_WITH_DESIGN_ROBOTICS_SYLLABUS_URL",
+            },
+          ],
         },
         {
-          title: "Design And Robotics",
-          description:
-            "This course, developed for HIT, aims to make hardware technology accessible to artists and design students who wish to experiment with technological projects integrating components such as sensors, motors, sound, and LEDs. Structured as a hands-on workshop, it provides a platform for students to develop their own independent projects, encouraging exploration, prototyping, and the creation of personalized technological expressions.",
+          title: "Other Courses",
+          courses: [
+            {
+              title: "Dummy Course Title",
+              description:
+                "This is a placeholder description for the dummy course. Replace this text with the actual course description.",
+              syllabus: "https://REPLACE_WITH_DUMMY_COURSE_SYLLABUS_URL",
+            },
+          ],
         },
       ],
     },
@@ -407,6 +425,7 @@ function createSectionShell(title) {
   const body = createEl("div", "section-body");
 
   const isDrawings = title === "selected drawings";
+  const isCourses = title === "Courses";
 
   header.onclick = () => {
     const open = header.getAttribute("aria-expanded") === "true";
@@ -415,11 +434,23 @@ function createSectionShell(title) {
     body.classList.toggle("open", nowOpen);
 
     if (nowOpen) {
+      // Close anything else that may be open first
+      closeAllItems({ silent: true });
+      closeAllSections();
+      // Re-open this section (closeAllSections just closed it)
+      header.setAttribute("aria-expanded", "true");
+      body.classList.add("open");
       setURLState({ section: title });
       if (isDrawings) {
         app.classList.add("subsection-open");
         document.body.classList.add("subsection-open");
         startDrawingsExpand();
+        requestAnimationFrame(updateAppWidthState);
+      }
+      if (isCourses) {
+        app.classList.add("subsection-open");
+        document.body.classList.add("subsection-open");
+        startCoursesExpand();
         requestAnimationFrame(updateAppWidthState);
       }
     } else {
@@ -429,6 +460,12 @@ function createSectionShell(title) {
         app.classList.remove("subsection-open");
         document.body.classList.remove("subsection-open");
         stopDrawingsExpand();
+        requestAnimationFrame(updateAppWidthState);
+      }
+      if (isCourses) {
+        app.classList.remove("subsection-open");
+        document.body.classList.remove("subsection-open");
+        stopCoursesExpand();
         requestAnimationFrame(updateAppWidthState);
       }
     }
@@ -654,32 +691,20 @@ function stopAppFrame() {
 
 function startDrawingsExpand() {
   app.classList.add("drawings-fullscreen");
-  if (!document.getElementById("drawings-fs-style")) {
-    const style = document.createElement("style");
-    style.id = "drawings-fs-style";
-    style.textContent = `
-      #app.drawings-fullscreen {
-        left: 0 !important;
-        top: var(--header-height) !important;
-        width: 100vw !important;
-        height: calc(100vh - var(--header-height)) !important;
-        border: none !important;
-        border-radius: 0 !important;
-        background: rgba(10, 20, 20, 0.9) !important;
-        transition:
-          left 0.5s ease,
-          top 0.5s ease,
-          width 0.5s ease,
-          height 0.5s ease,
-          opacity 0.8s ease !important;
-      }
-    `;
-    document.head.appendChild(style);
-  }
 }
 
 function stopDrawingsExpand() {
   app.classList.remove("drawings-fullscreen");
+}
+
+// ─── Courses full-screen expand ───────────────────────────────────────────────
+
+function startCoursesExpand() {
+  app.classList.add("courses-fullscreen");
+}
+
+function stopCoursesExpand() {
+  app.classList.remove("courses-fullscreen");
 }
 
 // ─── Open / close primitives ──────────────────────────────────────────────────
@@ -703,10 +728,38 @@ function openItem(wrapper, body, toggle, title, sectionTitle = "") {
       ov.style.opacity = "0.25";
     });
   }
+  if (sectionTitle === "Courses") {
+    app.classList.add("courses-open");
+  }
   requestAnimationFrame(updateAppWidthState);
 }
 
+// ─── Kill media + reset scroll ────────────────────────────────────────────────
+
+function killAllMedia() {
+  // Stop iframes (YouTube etc) by blanking and restoring src
+  document
+    .querySelectorAll(".item-body iframe, .section-body iframe")
+    .forEach((iframe) => {
+      iframe.src = iframe.src;
+    });
+  // Pause all HTML5 videos
+  document
+    .querySelectorAll(".item-body video, .section-body video")
+    .forEach((video) => {
+      video.pause();
+      video.currentTime = 0;
+    });
+  // Reset scroll on any open body
+  document
+    .querySelectorAll(".item-body.open, .section-body.open")
+    .forEach((el) => {
+      el.scrollTop = 0;
+    });
+}
+
 function closeItem(wrapper, body, toggle) {
+  killAllMedia();
   toggle.setAttribute("aria-expanded", "false");
   animateClose(body);
   wrapper.classList.remove("active-item");
@@ -715,6 +768,7 @@ function closeItem(wrapper, body, toggle) {
   document.body.classList.remove("subsection-open");
   stopAppFrame();
   app.classList.remove("exhibitions-open");
+  app.classList.remove("courses-open");
   const exOv = document.getElementById("exhibitions-overlay");
   if (exOv) {
     exOv.style.opacity = "0";
@@ -724,6 +778,7 @@ function closeItem(wrapper, body, toggle) {
 }
 
 function closeAllItems({ silent = false } = {}) {
+  killAllMedia();
   document.querySelectorAll(".item.active-item").forEach((item) => {
     item.classList.remove("active-item");
   });
@@ -741,6 +796,7 @@ function closeAllItems({ silent = false } = {}) {
     document.body.classList.remove("subsection-open");
     stopAppFrame();
     app.classList.remove("exhibitions-open");
+    app.classList.remove("courses-open");
     const exOv2 = document.getElementById("exhibitions-overlay");
     if (exOv2) {
       exOv2.style.opacity = "0";
@@ -751,12 +807,14 @@ function closeAllItems({ silent = false } = {}) {
 }
 
 function closeAllSections() {
+  killAllMedia();
   document
     .querySelectorAll(".section-toggle[aria-expanded='true']")
     .forEach((btn) => {
       btn.setAttribute("aria-expanded", "false");
     });
   document.querySelectorAll(".section-body.open").forEach((body) => {
+    body.scrollTop = 0;
     body.classList.remove("open");
   });
 }
@@ -782,6 +840,7 @@ function applyURLState({ section, item, img }) {
   app.classList.remove("subsection-open");
   document.body.classList.remove("subsection-open");
   stopDrawingsExpand();
+  stopCoursesExpand();
 
   if (!section) {
     updateAppWidthState();
@@ -801,11 +860,18 @@ function applyURLState({ section, item, img }) {
   sectionToggle.setAttribute("aria-expanded", "true");
   sectionBody.classList.add("open");
 
-  // If drawings section, trigger the fullscreen expand directly
   if (section === "selected drawings") {
     app.classList.add("subsection-open");
     document.body.classList.add("subsection-open");
     startDrawingsExpand();
+    updateAppWidthState();
+    return;
+  }
+
+  if (section === "Courses") {
+    app.classList.add("subsection-open");
+    document.body.classList.add("subsection-open");
+    startCoursesExpand();
     updateAppWidthState();
     return;
   }
@@ -1251,10 +1317,61 @@ function renderDLBStrip(gifs) {
   return wrap;
 }
 
+// ─── Courses rendering ────────────────────────────────────────────────────────
+
+function renderCourses(coursesData, body) {
+  // Intro text
+  if (coursesData.main_text) {
+    const introWrap = createEl("div", "courses-intro");
+    renderParagraphs(coursesData.main_text, introWrap);
+    body.appendChild(introWrap);
+    body.appendChild(createCanvasDivider());
+  }
+
+  // Groups
+  coursesData.groups.forEach((group, groupIndex) => {
+    // Group title
+    const groupTitle = createEl("h3", "courses-group-title", group.title);
+    body.appendChild(groupTitle);
+
+    // Course cards
+    const coursesList = createEl("div", "courses-list");
+    group.courses.forEach((course) => {
+      const card = createEl("div", "courses-card");
+
+      const titleEl = createEl("h4", "courses-card-title", course.title);
+      card.appendChild(titleEl);
+
+      if (course.description) {
+        const descWrap = createEl("div", "courses-description");
+        renderParagraphs(course.description, descWrap);
+        card.appendChild(descWrap);
+      }
+
+      if (course.syllabus) {
+        const link = document.createElement("a");
+        link.href = course.syllabus;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.className = "courses-syllabus-link";
+        link.textContent = "syllabus →";
+        card.appendChild(link);
+      }
+
+      coursesList.appendChild(card);
+    });
+    body.appendChild(coursesList);
+
+    // Divider between groups, not after the last one
+    if (groupIndex < coursesData.groups.length - 1) {
+      body.appendChild(createCanvasDivider());
+    }
+  });
+}
+
 // ─── Collection rendering ─────────────────────────────────────────────────────
 
 function renderCollection(items, body, sectionTitle) {
-  // Drawings: render grid directly into section body, no item toggle
   if (items.length && items[0].image) {
     renderDrawingsGrid(items, body, sectionTitle);
     return;
@@ -1314,7 +1431,9 @@ function initSite() {
   Object.entries(data.sections).forEach(([key, val]) => {
     if (["bio", "social"].includes(key)) return;
     const { section, body } = createSectionShell(key);
-    if (Array.isArray(val) && val.length) {
+    if (key === "Courses") {
+      renderCourses(val, body);
+    } else if (Array.isArray(val) && val.length) {
       renderCollection(val, body, key);
     }
     content.appendChild(section);
@@ -1370,12 +1489,13 @@ function bindCloseButton() {
   const btn = document.getElementById("close-btn");
   if (!btn) return;
   btn.onclick = () => {
-    // If drawings section is open, close it properly
+    // ── Drawings fullscreen ──
     const drawingsSectionEl = document.querySelector(
       '[data-section-slug="selected-drawings"]',
     );
     const drawingsToggle = drawingsSectionEl?.querySelector(".section-toggle");
     if (drawingsToggle?.getAttribute("aria-expanded") === "true") {
+      killAllMedia();
       drawingsToggle.setAttribute("aria-expanded", "false");
       drawingsSectionEl.querySelector(".section-body").classList.remove("open");
       app.classList.remove("subsection-open");
@@ -1386,6 +1506,24 @@ function bindCloseButton() {
       return;
     }
 
+    // ── Courses fullscreen ──
+    const coursesSectionEl = document.querySelector(
+      '[data-section-slug="courses"]',
+    );
+    const coursesToggle = coursesSectionEl?.querySelector(".section-toggle");
+    if (coursesToggle?.getAttribute("aria-expanded") === "true") {
+      killAllMedia();
+      coursesToggle.setAttribute("aria-expanded", "false");
+      coursesSectionEl.querySelector(".section-body").classList.remove("open");
+      app.classList.remove("subsection-open");
+      document.body.classList.remove("subsection-open");
+      stopCoursesExpand();
+      updateAppWidthState();
+      setURLState({});
+      return;
+    }
+
+    // ── Normal item subsection ──
     const openSectionEl = document
       .querySelector(".section-body.open")
       ?.closest(".main-section");
@@ -1404,6 +1542,14 @@ function bindCornerGifReturn() {
   const cornerGif = document.querySelector(".corner-gif");
   if (!cornerGif) return;
   cornerGif.onclick = (e) => {
+    // Ignore clicks when a fullscreen section is open — the gif is invisible
+    // and the close button occupies the same screen area
+    if (
+      app.classList.contains("drawings-fullscreen") ||
+      app.classList.contains("courses-fullscreen")
+    ) {
+      return;
+    }
     e.stopPropagation();
     closeLightboxSilent();
     closeAllItems({ silent: true });
@@ -1411,6 +1557,7 @@ function bindCornerGifReturn() {
     app.classList.remove("subsection-open");
     document.body.classList.remove("subsection-open");
     stopDrawingsExpand();
+    stopCoursesExpand();
     updateAppWidthState();
     setURLState({});
     showSplash();
