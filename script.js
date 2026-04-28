@@ -158,13 +158,13 @@ const data = {
               title: "Design with Algorithms",
               description:
                 "This course, developed in collaboration with Dr. Alon Weiss for HIT, introduces design students to fundamental concepts of designing with code. It begins with hands-on experimentation using the p5.js library and progresses toward prompt-based coding. Along the way, we explore topics such as working with data—reading, recording, and data bending—alongside randomness, generative processes, and interactivity.",
-              syllabus: "https://REPLACE_WITH_DESIGN_ALGORITHMS_SYLLABUS_URL",
+              syllabus: "DesignAlgoSyllabus.pdf",
             },
             {
               title: "Design And Robotics",
               description:
                 "This course, developed for HIT, aims to make hardware technology accessible to artists and design students who wish to experiment with technological projects integrating components such as sensors, motors, sound, and LEDs. Structured as a hands-on workshop, it provides a platform for students to develop their own independent projects, encouraging exploration, prototyping, and the creation of personalized technological expressions.",
-              syllabus: "https://REPLACE_WITH_DESIGN_ROBOTICS_SYLLABUS_URL",
+              syllabus: "roboticSyllabus.pdf",
             },
           ],
         },
