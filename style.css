@@ -55,7 +55,7 @@
   --courses-scrollbar-color: var(--c1);
 
   /* Intro text block */
-  --courses-intro-color:rgba(255, 245, 200, 0.85);
+  --courses-intro-color: rgba(255, 245, 200, 0.85);
   --courses-intro-max-width: 62ch;
   --courses-intro-font-size: 18px;
   --courses-intro-line-height: 1.6;
@@ -86,6 +86,10 @@
   --courses-desc-line-height: 1.55;
   --courses-desc-max-width: 62ch;
   --courses-desc-gap: 12px;
+
+  /* Course links */
+  --courses-links-gap: 24px;
+  --courses-projects-link-color: var(--c3);
   /* ─────────────────────────────────────────────────────────────────────── */
 }
 
@@ -842,8 +846,8 @@ body.subsection-open #close-btn {
     0 -0.45em 0 0 var(--courses-content-bg);
 }
 
-#app.courses-fullscreen .courses-syllabus-link {
-  display: inline-block;
+#app.courses-fullscreen .courses-syllabus-link,
+#app.courses-fullscreen .courses-projects-link {
   background: var(--courses-content-bg);
   padding: 2px 6px;
   border-radius: 2px;
@@ -914,9 +918,18 @@ body.subsection-open #close-btn {
   margin-bottom: 0;
 }
 
+/* ─── Course links row ───────────────────────────────────────────────────── */
+
+.courses-links-row {
+  display: flex;
+  gap: var(--courses-links-gap);
+  align-items: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
 .courses-syllabus-link {
   display: inline-block;
-  margin-top: 14px;
   color: var(--c1);
   font-family: inherit;
   font-size: 18px;
@@ -928,6 +941,22 @@ body.subsection-open #close-btn {
 }
 
 .courses-syllabus-link:hover {
+  opacity: 1;
+}
+
+.courses-projects-link {
+  display: inline-block;
+  color: var(--courses-projects-link-color);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+
+.courses-projects-link:hover {
   opacity: 1;
 }
 

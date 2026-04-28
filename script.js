@@ -159,6 +159,8 @@ const data = {
               description:
                 "This course, developed in collaboration with Dr. Alon Weiss for HIT, introduces design students to fundamental concepts of designing with code. It begins with hands-on experimentation using the p5.js library and progresses toward prompt-based coding. Along the way, we explore topics such as working with data—reading, recording, and data bending—alongside randomness, generative processes, and interactivity.",
               syllabus: "DesignAlgoSyllabus.pdf",
+              courseProjects:
+                "https://omrialloro.github.io/algoDesignStudentsProjects/",
             },
             {
               title: "Design And Robotics",
@@ -697,14 +699,137 @@ function stopDrawingsExpand() {
   app.classList.remove("drawings-fullscreen");
 }
 
+// ─── Courses edge lines (top + left + right animated borders) ────────────────
+
+let coursesEdgeRaf = null;
+let coursesEdgeCanvas = null;
+
+function startCoursesEdgeLines() {
+  if (coursesEdgeCanvas) return;
+
+  coursesEdgeCanvas = document.createElement("canvas");
+  coursesEdgeCanvas.style.cssText =
+    "position:fixed;pointer-events:none;z-index:200;top:0;left:0;width:100vw;height:100vh;";
+  document.body.appendChild(coursesEdgeCanvas);
+
+  const BASE_R = 0,
+    BASE_G = 255,
+    BASE_B = 60;
+  const BASE_R2 = 255,
+    BASE_G2 = 40,
+    BASE_B2 = 90;
+  const DELTA = 40;
+  const EXPAND_DURATION = 900;
+  const EXPAND_DELAY = 500;
+
+  let expandStart = null;
+  let expanded = false;
+  let startTime = null;
+
+  function flicker(r, g, b) {
+    return [
+      Math.round(
+        Math.max(0, Math.min(255, r + (Math.random() * 2 - 1) * DELTA)),
+      ),
+      Math.round(
+        Math.max(0, Math.min(255, g + (Math.random() * 2 - 1) * DELTA)),
+      ),
+      Math.round(
+        Math.max(0, Math.min(255, b + (Math.random() * 2 - 1) * DELTA)),
+      ),
+    ];
+  }
+
+  function drawEdges(ts) {
+    if (!coursesEdgeCanvas) return;
+
+    if (!startTime) startTime = ts;
+    if (ts - startTime < EXPAND_DELAY) {
+      coursesEdgeRaf = requestAnimationFrame(drawEdges);
+      return;
+    }
+
+    const headerH =
+      parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--header-height",
+        ),
+      ) || 48;
+
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+
+    if (coursesEdgeCanvas.width !== W || coursesEdgeCanvas.height !== H) {
+      coursesEdgeCanvas.width = W;
+      coursesEdgeCanvas.height = H;
+    }
+
+    if (!expanded) {
+      if (!expandStart) expandStart = ts;
+      const t = Math.min(1, (ts - expandStart) / EXPAND_DURATION);
+      const eased = 1 - Math.pow(1 - t, 3);
+      if (t >= 1) expanded = true;
+      drawLines(coursesEdgeCanvas, W, H, headerH, eased);
+    } else {
+      drawLines(coursesEdgeCanvas, W, H, headerH, 1);
+    }
+
+    coursesEdgeRaf = requestAnimationFrame(drawEdges);
+  }
+
+  function drawLines(canvas, W, H, headerH, progress) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, W, H);
+
+    const topLen = W * progress;
+
+    // ── top line solid green ──
+    const [r1, g1, b1] = flicker(BASE_R, BASE_G, BASE_B);
+    ctx.beginPath();
+    ctx.setLineDash([]);
+    ctx.moveTo(0, headerH + 1);
+    ctx.lineTo(topLen, headerH + 1);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgb(${r1},${g1},${b1})`;
+    ctx.shadowColor = `rgb(${r1},${g1},${b1})`;
+    ctx.shadowBlur = 6;
+    ctx.stroke();
+
+    // ── top line dashed red ──
+    const [r2, g2, b2] = flicker(BASE_R2, BASE_G2, BASE_B2);
+    ctx.beginPath();
+    ctx.setLineDash([6, 5]);
+    ctx.moveTo(0, headerH + 5);
+    ctx.lineTo(topLen, headerH + 5);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgb(${r2},${g2},${b2})`;
+    ctx.shadowColor = `rgb(${r2},${g2},${b2})`;
+    ctx.shadowBlur = 5;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+  }
+
+  coursesEdgeRaf = requestAnimationFrame(drawEdges);
+}
+
+function stopCoursesEdgeLines() {
+  if (coursesEdgeRaf) cancelAnimationFrame(coursesEdgeRaf);
+  coursesEdgeRaf = null;
+  if (coursesEdgeCanvas) coursesEdgeCanvas.remove();
+  coursesEdgeCanvas = null;
+}
+
 // ─── Courses full-screen expand ───────────────────────────────────────────────
 
 function startCoursesExpand() {
   app.classList.add("courses-fullscreen");
+  startCoursesEdgeLines();
 }
 
 function stopCoursesExpand() {
   app.classList.remove("courses-fullscreen");
+  stopCoursesEdgeLines();
 }
 
 // ─── Open / close primitives ──────────────────────────────────────────────────
@@ -1371,14 +1496,31 @@ function renderCourses(coursesData, body) {
         card.appendChild(descWrap);
       }
 
-      if (course.syllabus) {
-        const link = document.createElement("a");
-        link.href = course.syllabus;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.className = "courses-syllabus-link";
-        link.textContent = "syllabus →";
-        card.appendChild(link);
+      // ── Links row: syllabus + optional courseProjects ──
+      if (course.syllabus || course.courseProjects) {
+        const linksRow = createEl("div", "courses-links-row");
+
+        if (course.syllabus) {
+          const syllabusLink = document.createElement("a");
+          syllabusLink.href = course.syllabus;
+          syllabusLink.target = "_blank";
+          syllabusLink.rel = "noopener noreferrer";
+          syllabusLink.className = "courses-syllabus-link";
+          syllabusLink.textContent = "syllabus →";
+          linksRow.appendChild(syllabusLink);
+        }
+
+        if (course.courseProjects) {
+          const projectsLink = document.createElement("a");
+          projectsLink.href = course.courseProjects;
+          projectsLink.target = "_blank";
+          projectsLink.rel = "noopener noreferrer";
+          projectsLink.className = "courses-projects-link";
+          projectsLink.textContent = "course projects →";
+          linksRow.appendChild(projectsLink);
+        }
+
+        card.appendChild(linksRow);
       }
 
       coursesList.appendChild(card);
