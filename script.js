@@ -104,13 +104,11 @@ const data = {
       {
         name: "A Vibrating Armchair",
         date: "2024",
-        place: "A Popup Exhibition, Minhal Handasa Building, Haifa",
-        text: "Group exhibition exploring data-driven artistic practices.",
-        images: [
-          "vibrating armchair/1.jpg",
-          "vibrating armchair/2.jpg",
-          "vibrating armchair/3.jpg",
-        ],
+        short_text: "A work in collaboration with Vera Korman",
+        place:
+          "Developed through the Mifal HaPais Art & Data Incubator and was presented in a pop-up exhibition at the Minhal Handasa Building, Haifa.",
+        text: "While everyone is busy trying to understand reality through tables and numbers, a second before humanity turns into AI pulp - calm your accumulated tension on the vibrating chair. Feel the data, breathe into it. The vibrating chair serves as a conduit to transform data into a captivating sensory experience.",
+        images: ["vibrating armchair/vac.png"],
         videos: [
           {
             url: "vibrating armchair/DSC_0094.mov",
@@ -1164,7 +1162,7 @@ function createCanvasDivider(sectionTitle = "") {
     ctx.setLineDash([]);
     ctx.moveTo(0, 5);
     ctx.lineTo(endX, 5);
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = `rgb(${r1},${g1},${b1})`;
     ctx.shadowColor = `rgb(${r1},${g1},${b1})`;
     ctx.shadowBlur = 6;
@@ -1548,12 +1546,17 @@ function renderCollection(items, body, sectionTitle) {
     if (label === "dontLookBack" && item.gifs && item.gifs.length) {
       itemBody.dataset.dlbGifs = JSON.stringify(item.gifs);
     }
+    if (item.short_text) {
+      itemBody.appendChild(createEl("p", "item-short-text", item.short_text));
+    }
 
     if (item.date || item.place) {
       const metaBits = [item.date, item.place].filter(Boolean);
       if (metaBits.length)
         itemBody.appendChild(createEl("p", "", metaBits.join(" — ")));
     }
+
+    // ── short_text: renders as a styled subtitle line ──
 
     if (item.text) renderParagraphs(item.text, itemBody);
 
