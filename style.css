@@ -5,7 +5,9 @@
   --c2: rgb(235, 90, 12);
   --c3: rgb(15, 123, 167);
 
-  --text: rgb(245, 220, 120);
+  /* --text: rgb(245, 220, 120); */
+    --text: rgb(245, 240, 160);
+
   --text-sub: rgb(200, 160, 60);
   --text-content: rgba(255, 245, 200, 0.9);
   --text-header: #fff;
@@ -14,7 +16,7 @@
 
   --header-height: 48px;
   --header-padding-x: 80px;
-  --header-bg: rgba(10, 70, 100, 0.95);
+  --header-bg: rgba(20, 60, 80, 0.95);
   --header-blur: 12px;
   --header-border: rgba(205, 205, 205, 0.7);
 
@@ -173,7 +175,7 @@ body::after {
   justify-content: center;
   background: var(--header-bg);
   backdrop-filter: blur(var(--header-blur));
-  border-bottom: 1px solid var(--header-border);
+  border-bottom: 0px solid var(--header-border);
 }
 
 .header-inner {
@@ -243,7 +245,7 @@ body::after {
   padding: 20px;
   overflow: visible;
   z-index: 100;
-  border: 4px solid;
+  border: 0px solid;
   border-color: var(--c3) var(--c2) var(--c1) var(--c3);
   background: rgba(10, 10, 0, 0.80);
   transition:
