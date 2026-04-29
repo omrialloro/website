@@ -102,12 +102,12 @@ const data = {
           "Acid Knobs/1.png",
           "Acid Knobs/2.png",
           "Acid Knobs/3.png",
-          "Acid Knobs/machbesa6.jpg",
+          "Acid Knobs/machbesa.jpg",
           "Acid Knobs/machbesa2.jpg",
-          // "Acid Knobs/machbesa3.jpg",
+          "Acid Knobs/machbesa3.jpg",
           "Acid Knobs/machbesa4.jpg",
           "Acid Knobs/machbesa5.jpg",
-          "Acid Knobs/machbesa.jpg",
+          "Acid Knobs/machbesa6.jpg",
         ],
         videos: [],
       },
@@ -961,10 +961,31 @@ function applyURLState({ section, item, img }) {
     return;
   }
 
-  closeAllItems({ silent: true });
+  // Hard reset ALL state — must happen before rebuilding from URL.
+  // We skip the animated close and force everything off immediately so
+  // CSS classes like "expanded" and "exhibitions-item-fullscreen" are
+  // gone before the new state is applied.
+  killAllMedia();
+  document
+    .querySelectorAll(".item.active-item")
+    .forEach((el) => el.classList.remove("active-item"));
+  document
+    .querySelectorAll(".item-toggle[aria-expanded='true']")
+    .forEach((btn) => btn.setAttribute("aria-expanded", "false"));
+  document.querySelectorAll(".item-body.open").forEach((body) => {
+    body.style.height = "0px";
+    body.classList.remove("open");
+    body.querySelector(".subsection-title")?.remove();
+  });
   closeAllSections();
   app.classList.remove("subsection-open");
+  app.classList.remove("exhibitions-item-fullscreen");
+  app.classList.remove("drawings-fullscreen");
+  app.classList.remove("courses-fullscreen");
+  app.classList.remove("courses-open");
+  app.classList.remove("expanded");
   document.body.classList.remove("subsection-open");
+  stopAppFrame();
   stopDrawingsExpand();
   stopCoursesExpand();
 
