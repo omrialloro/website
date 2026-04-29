@@ -97,19 +97,18 @@ const data = {
         name: "Acid Knobs",
         date: "2025",
         place: "Hamachbesa Gallery, Gesher Haziv",
-        text: "תערוכה זו מפגישה בין שני עולמות יצירה נפרדים של זוג האחים עלמה ועמרי כהן-אלורו, תוך יצירת קשרים עדינים ומרתקים בין האישי לקולקטיבי, בין חומר לרוח ובין עבר לעתיד. עלמה, חיה בברלין, יוצרת שמיכות טלאים צבעוניות, עוסקת בשכבות של זיכרון וחיבור. דרך גזירי בדים שונים, היא טווה סיפור חם ומלא חיים, המשלב מסורות של מלאכת יד עם קריצה עכשווית. כל שמיכה היא קנבס צבעוני של זמן, מרקם וזהות. עמרי, לעומת זאת, משתמש בטושים צבעוניים ליצירת ציורים מלאי דינמיות ואנרגיה. עבודותיו משקפות שפה אמנותית אינטואיטיבית ומיידית, המשלבת בין תנועה ספונטנית לחשיבה צורנית. הקווים והכתמים ביצירותיו מתפרצים, כמו שיח פנימי שמבקש לצאת אל העולם. גולת הכותרת של התערוכה היא העבודה המשותפת שלהם, DON’T LOOK BACK, פלטפורמת יצירה דיגיטלית חדשנית שפותחה על ידי עמרי ועלמה. הפלטפורמה מציעה מרחב לשיתוף פעולה ולביטוי אמנותי, שבו הצופה הופך גם ליוצר. יצירה זו, המשלבת צבע, צורה ותנועה, משקפת את השפה הוויזואלית המשותפת של עמרי ועלמה ומזמינה את הקהל לקחת חלק פעיל בתהליך היצירה. התערוכה חוקרת את האופן שבו קשר משפחתי ואמנות יכולים להשתלב ליצירת דיאלוג עשיר ופורץ גבולות. היא מזמינה את הצופים להרהר במשמעות של יצירה משותפת, בין אם היא מתרחשת על הבד, בדיגיטל או בחיי היומיום.",
+        text: "תערוכה זו מפגישה בין שני עולמות יצירה נפרדים של זוג האחים עלמה ועמרי כהן-אלורו, תוך יצירת קשרים עדינים ומרתקים בין האישי לקולקטיבי, בין חומר לרוח ובין עבר לעתיד. עלמה, חיה בברלין, יוצרת שמיכות טלאים צבעוניות, עוסקת בשכבות של זיכרון וחיבור. דרך גזירי בדים שונים, היא טווה סיפור חם ומלא חיים, המשלב מסורות של מלאכת יד עם קריצה עכשווית. כל שמיכה היא קנבס צבעוני של זמן, מרקם וזהות. עמרי, לעומת זאת, משתמש בטושים צבעוניים ליצירת ציורים מלאי דינמיות ואנרגיה. עבודותיו משקפות שפה אמנותית אינטואיטיבית ומיידית, המשלבת בין תנועה ספונטנית לחשיבה צורנית. הקווים והכתמים ביצירותיו מתפרצים, כמו שיח פנימי שמבקש לצאת אל העולם. גולת הכותרת של התערוכה היא העבודה המשותפת שלהם, DON'T LOOK BACK, פלטפורמת יצירה דיגיטלית חדשנית שפותחה על ידי עמרי ועלמה. הפלטפורמה מציעה מרחב לשיתוף פעולה ולביטוי אמנותי, שבו הצופה הופך גם ליוצר. יצירה זו, המשלבת צבע, צורה ותנועה, משקפת את השפה הוויזואלית המשותפת של עמרי ועלמה ומזמינה את הקהל לקחת חלק פעיל בתהליך היצירה. התערוכה חוקרת את האופן שבו קשר משפחתי ואמנות יכולים להשתלב ליצירת דיאלוג עשיר ופורץ גבולות. היא מזמינה את הצופים להרהר במשמעות של יצירה משותפת, בין אם היא מתרחשת על הבד, בדיגיטל או בחיי היומיום.",
         images: [
           "Acid Knobs/1.png",
           "Acid Knobs/2.png",
           "Acid Knobs/3.png",
-          "Acid Knobs/machbesa.jpg",
+          "Acid Knobs/machbesa6.jpg",
           "Acid Knobs/machbesa2.jpg",
-          "Acid Knobs/machbesa3.jpg",
+          // "Acid Knobs/machbesa3.jpg",
           "Acid Knobs/machbesa4.jpg",
           "Acid Knobs/machbesa5.jpg",
-          "Acid Knobs/machbesa6.jpg",
+          "Acid Knobs/machbesa.jpg",
         ],
-
         videos: [],
       },
       {
@@ -368,6 +367,18 @@ function renderParagraphs(text, container) {
   if (!text) return;
   text.split("\n\n").forEach((p) => {
     container.appendChild(createEl("p", "", p));
+  });
+}
+
+// Wraps each paragraph in a <span> for the highlight effect
+function renderParagraphsWithSpans(text, container) {
+  if (!text) return;
+  text.split("\n\n").forEach((p) => {
+    const el = document.createElement("p");
+    const span = document.createElement("span");
+    span.textContent = p.trim();
+    el.appendChild(span);
+    container.appendChild(el);
   });
 }
 
@@ -708,7 +719,7 @@ function stopDrawingsExpand() {
   app.classList.remove("drawings-fullscreen");
 }
 
-// ─── Courses edge lines (top + left + right animated borders) ────────────────
+// ─── Courses edge lines ───────────────────────────────────────────────────────
 
 let coursesEdgeRaf = null;
 let coursesEdgeCanvas = null;
@@ -792,7 +803,6 @@ function startCoursesEdgeLines() {
 
     const topLen = W * progress;
 
-    // ── top line solid green ──
     const [r1, g1, b1] = flicker(BASE_R, BASE_G, BASE_B);
     ctx.beginPath();
     ctx.setLineDash([]);
@@ -804,7 +814,6 @@ function startCoursesEdgeLines() {
     ctx.shadowBlur = 6;
     ctx.stroke();
 
-    // ── top line dashed red ──
     const [r2, g2, b2] = flicker(BASE_R2, BASE_G2, BASE_B2);
     ctx.beginPath();
     ctx.setLineDash([6, 5]);
@@ -851,16 +860,9 @@ function openItem(wrapper, body, toggle, title, sectionTitle = "") {
   app.classList.add("subsection-open");
   document.body.classList.add("subsection-open");
   if (title === "dontLookBack") startAppFrame();
+  // ── CHANGED: exhibitions items go fullscreen instead of the old white overlay ──
   if (sectionTitle === "exhibitions") {
-    app.classList.add("exhibitions-open");
-    const ov = document.createElement("div");
-    ov.id = "exhibitions-overlay";
-    ov.style.cssText =
-      "position:fixed;inset:0;background:#fff;opacity:0;z-index:99;pointer-events:none;transition:opacity 0.8s ease;";
-    document.body.appendChild(ov);
-    requestAnimationFrame(() => {
-      ov.style.opacity = "0.25";
-    });
+    app.classList.add("exhibitions-item-fullscreen");
   }
   if (sectionTitle === "Courses") {
     app.classList.add("courses-open");
@@ -901,13 +903,8 @@ function closeItem(wrapper, body, toggle) {
   app.classList.remove("subsection-open");
   document.body.classList.remove("subsection-open");
   stopAppFrame();
-  app.classList.remove("exhibitions-open");
+  app.classList.remove("exhibitions-item-fullscreen");
   app.classList.remove("courses-open");
-  const exOv = document.getElementById("exhibitions-overlay");
-  if (exOv) {
-    exOv.style.opacity = "0";
-    setTimeout(() => exOv.remove(), 800);
-  }
   requestAnimationFrame(updateAppWidthState);
 }
 
@@ -929,13 +926,8 @@ function closeAllItems({ silent = false } = {}) {
     app.classList.remove("subsection-open");
     document.body.classList.remove("subsection-open");
     stopAppFrame();
-    app.classList.remove("exhibitions-open");
+    app.classList.remove("exhibitions-item-fullscreen");
     app.classList.remove("courses-open");
-    const exOv2 = document.getElementById("exhibitions-overlay");
-    if (exOv2) {
-      exOv2.style.opacity = "0";
-      setTimeout(() => exOv2.remove(), 800);
-    }
     requestAnimationFrame(updateAppWidthState);
   }
 }
@@ -1557,9 +1549,6 @@ function renderCollection(items, body, sectionTitle) {
     if (label === "dontLookBack" && item.gifs && item.gifs.length) {
       itemBody.dataset.dlbGifs = JSON.stringify(item.gifs);
     }
-    if (item.short_text) {
-      itemBody.appendChild(createEl("p", "item-short-text", item.short_text));
-    }
 
     if (item.date || item.place) {
       const metaBits = [item.date, item.place].filter(Boolean);
@@ -1567,9 +1556,16 @@ function renderCollection(items, body, sectionTitle) {
         itemBody.appendChild(createEl("p", "", metaBits.join(" — ")));
     }
 
-    // ── short_text: renders as a styled subtitle line ──
+    if (item.short_text) {
+      itemBody.appendChild(createEl("p", "item-short-text", item.short_text));
+    }
 
-    if (item.text) renderParagraphs(item.text, itemBody);
+    // ── CHANGED: exhibitions use span-wrapped paragraphs for the highlight effect ──
+    if (sectionTitle === "exhibitions") {
+      if (item.text) renderParagraphsWithSpans(item.text, itemBody);
+    } else {
+      if (item.text) renderParagraphs(item.text, itemBody);
+    }
 
     if (label === "Time To Space") {
       wrapper.querySelector(".item-toggle").onclick = (e) => {
@@ -1701,7 +1697,7 @@ function bindCloseButton() {
       return;
     }
 
-    // ── Normal item subsection ──
+    // ── Normal item subsection (including exhibitions items) ──
     const openSectionEl = document
       .querySelector(".section-body.open")
       ?.closest(".main-section");

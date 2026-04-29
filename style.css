@@ -81,7 +81,7 @@
 
   /* ─── EXHIBITIONS ──────────────────────────────────────────────────────── */
 
-  --exhibitions-bg: rgba(15, 30, 60, 0.82);
+  --exhibitions-bg: rgba(85, 120, 60, 0.62);
   --exhibitions-content-bg: rgba(0, 5, 20, 0.52);
   --exhibitions-padding: 48px 60px 60px;
   --exhibitions-padding-mobile: 32px 20px 40px;
@@ -89,11 +89,7 @@
 
   --exhibitions-text-color: rgba(200, 230, 255, 0.9);
   --exhibitions-text-font-size: 18px;
-  --exhibitions-text-line-height: 1.6;
   --exhibitions-text-max-width: 62ch;
-
-  --exhibitions-item-title-color: var(--c3);
-  --exhibitions-item-title-size: 32px;
 
   --exhibitions-meta-color: rgba(150, 200, 255, 0.7);
   /* ─────────────────────────────────────────────────────────────────────── */
@@ -503,7 +499,7 @@ body.subsection-open #close-btn {
 
 #app.drawings-fullscreen ~ #close-btn,
 #app.courses-fullscreen ~ #close-btn,
-#app.exhibitions-fullscreen ~ #close-btn {
+#app.exhibitions-item-fullscreen ~ #close-btn {
   left: auto;
   right: 20px;
   transform: none !important;
@@ -568,14 +564,12 @@ body.subsection-open #close-btn {
     --courses-desc-font-size: 13px;
     --courses-desc-max-width: 100%;
     --courses-card-title-size: 22px;
-    --exhibitions-padding: var(--exhibitions-padding-mobile);
     --exhibitions-text-font-size: 13px;
     --exhibitions-text-max-width: 100%;
   }
 
   #app {
-    left: 0;
-    right: 0;
+    left: 0; right: 0;
     width: calc(100vw - 0px) !important;
     top: calc(var(--header-height) + 16px);
     padding: 14px 14px 14px 14px;
@@ -663,12 +657,10 @@ body.subsection-open #close-btn {
 /* ─── Drawings fullscreen ─────────────────────────────────────────────────── */
 
 #app.drawings-fullscreen {
-  left: 0 !important;
-  top: var(--header-height) !important;
+  left: 0 !important; top: var(--header-height) !important;
   width: 100vw !important;
   height: calc(100vh - var(--header-height)) !important;
-  border: none !important;
-  border-radius: 0 !important;
+  border: none !important; border-radius: 0 !important;
   background: rgba(10, 20, 20, 0.9) !important;
   padding: 0 !important;
   transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease, opacity 0.8s ease !important;
@@ -677,13 +669,10 @@ body.subsection-open #close-btn {
 #app.drawings-fullscreen .section-toggle { display: none !important; }
 
 #app.drawings-fullscreen .section-body.open {
-  max-height: none !important;
-  overflow: hidden !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  max-height: none !important; overflow: hidden !important;
+  overflow-y: auto !important; overflow-x: hidden !important;
   height: calc(100vh - var(--header-height)) !important;
-  padding: 40px 28px 28px !important;
-  opacity: 1 !important;
+  padding: 40px 28px 28px !important; opacity: 1 !important;
 }
 
 #app.drawings-fullscreen .section-body.open::-webkit-scrollbar { width: 6px; }
@@ -693,12 +682,10 @@ body.subsection-open #close-btn {
 /* ─── Courses fullscreen ──────────────────────────────────────────────────── */
 
 #app.courses-fullscreen {
-  left: 0 !important;
-  top: var(--header-height) !important;
+  left: 0 !important; top: var(--header-height) !important;
   width: 100vw !important;
   height: calc(100vh - var(--header-height)) !important;
-  border: none !important;
-  border-radius: 0 !important;
+  border: none !important; border-radius: 0 !important;
   background: var(--courses-bg) !important;
   padding: 0 !important;
   transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease, opacity 0.8s ease !important;
@@ -707,13 +694,10 @@ body.subsection-open #close-btn {
 #app.courses-fullscreen .section-toggle { display: none !important; }
 
 #app.courses-fullscreen .section-body.open {
-  max-height: none !important;
-  overflow: hidden !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  max-height: none !important; overflow: hidden !important;
+  overflow-y: auto !important; overflow-x: hidden !important;
   height: calc(100vh - var(--header-height)) !important;
-  padding: var(--courses-padding) !important;
-  opacity: 1 !important;
+  padding: var(--courses-padding) !important; opacity: 1 !important;
 }
 
 #app.courses-fullscreen .section-body.open::-webkit-scrollbar { width: 6px; }
@@ -727,11 +711,9 @@ body.subsection-open #close-btn {
 #app.courses-fullscreen .courses-description p {
   display: block;
   max-width: var(--courses-intro-max-width);
-  margin-left: -8px;
-  margin-right: -8px;
+  margin-left: -8px; margin-right: -8px;
   line-height: 1.85;
-  text-align: justify;
-  text-align-last: left;
+  text-align: justify; text-align-last: left;
 }
 
 #app.courses-fullscreen .courses-intro p span,
@@ -744,9 +726,7 @@ body.subsection-open #close-btn {
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   padding: 0 8px;
-  box-shadow:
-    0  0.45em 0 0 var(--courses-content-bg),
-    0 -0.45em 0 0 var(--courses-content-bg);
+  box-shadow: 0 0.45em 0 0 var(--courses-content-bg), 0 -0.45em 0 0 var(--courses-content-bg);
 }
 
 #app.courses-fullscreen .courses-syllabus-link,
@@ -756,111 +736,93 @@ body.subsection-open #close-btn {
   border-radius: 2px;
 }
 
-/* ─── Exhibitions fullscreen ──────────────────────────────────────────────── */
+/* ─── Exhibitions item fullscreen ─────────────────────────────────────────── */
+/* The section toggle still works as before.
+   When an item inside exhibitions is opened, app gets exhibitions-item-fullscreen
+   and the item-body expands to fill the whole screen with styled bg + text. */
 
-#app.exhibitions-fullscreen {
-  left: 0 !important;
-  top: var(--header-height) !important;
+#app.exhibitions-item-fullscreen {
+  left: 0 !important; top: var(--header-height) !important;
   width: 100vw !important;
   height: calc(100vh - var(--header-height)) !important;
-  border: none !important;
-  border-radius: 0 !important;
+  border: none !important; border-radius: 0 !important;
   background: var(--exhibitions-bg) !important;
   padding: 0 !important;
   transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease, opacity 0.8s ease !important;
 }
 
-#app.exhibitions-fullscreen .section-toggle { display: none !important; }
+#app.exhibitions-item-fullscreen .section-toggle { display: none !important; }
 
-#app.exhibitions-fullscreen .section-body.open {
-  max-height: none !important;
-  overflow: hidden !important;
+#app.exhibitions-item-fullscreen .item-body.open {
+  position: fixed !important;
+  inset: var(--header-height) 0 0 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: calc(100vh - var(--header-height)) !important;
+  margin-left: 0 !important;
+  padding: var(--exhibitions-padding) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  height: calc(100vh - var(--header-height)) !important;
-  padding: var(--exhibitions-padding) !important;
-  opacity: 1 !important;
+  background: transparent !important;
 }
 
-#app.exhibitions-fullscreen .section-body.open::-webkit-scrollbar { width: 6px; }
-#app.exhibitions-fullscreen .section-body.open::-webkit-scrollbar-thumb { background: var(--exhibitions-scrollbar-color); }
-#app.exhibitions-fullscreen .section-body.open::-webkit-scrollbar-track { background: transparent; }
+#app.exhibitions-item-fullscreen .item-body.open::-webkit-scrollbar { width: 6px; }
+#app.exhibitions-item-fullscreen .item-body.open::-webkit-scrollbar-thumb { background: var(--exhibitions-scrollbar-color); }
+#app.exhibitions-item-fullscreen .item-body.open::-webkit-scrollbar-track { background: transparent; }
 
-/* all items and their toggles visible in the list */
-#app.exhibitions-fullscreen .item { display: block !important; }
-#app.exhibitions-fullscreen .item-toggle {
-  display: block !important;
-  color: var(--exhibitions-item-title-color) !important;
-  font-size: var(--exhibitions-item-title-size) !important;
-  font-weight: 700 !important;
-  padding-left: 0 !important;
+/* Subsection title styled as exhibitions header */
+#app.exhibitions-item-fullscreen .subsection-title {
+  font-size: 42px;
+  color: var(--exhibitions-item-title-color, var(--c3));
+  margin-bottom: 24px;
 }
 
-/* when an item is open (subsection-open), hide others — same as normal behaviour */
-#app.exhibitions-fullscreen.subsection-open .item { display: none !important; }
-#app.exhibitions-fullscreen.subsection-open .item.active-item { display: block !important; }
-#app.exhibitions-fullscreen.subsection-open .item-toggle { display: none !important; }
-#app.exhibitions-fullscreen.subsection-open .item.active-item .item-toggle { display: none !important; }
-
-/* text paragraphs in open item — highlighted */
-#app.exhibitions-fullscreen .item-body.open p {
+/* Text paragraphs — highlighted */
+#app.exhibitions-item-fullscreen .item-body.open p {
   display: block;
   max-width: var(--exhibitions-text-max-width);
-  margin-left: -8px;
-  margin-right: -8px;
+  margin-left: -8px; margin-right: -8px;
   line-height: 1.85;
-  text-align: justify;
-  text-align-last: left;
+  text-align: justify; text-align-last: left;
   color: var(--exhibitions-text-color);
   font-size: var(--exhibitions-text-font-size);
+  font-family: Inter, Arial, sans-serif;
   margin-bottom: 14px;
 }
 
-#app.exhibitions-fullscreen .item-body.open p span {
+#app.exhibitions-item-fullscreen .item-body.open p span {
   display: inline;
   background: var(--exhibitions-content-bg);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   padding: 0 8px;
-  box-shadow:
-    0  0.45em 0 0 var(--exhibitions-content-bg),
-    0 -0.45em 0 0 var(--exhibitions-content-bg);
+  box-shadow: 0 0.45em 0 0 var(--exhibitions-content-bg), 0 -0.45em 0 0 var(--exhibitions-content-bg);
 }
 
-#app.exhibitions-fullscreen .item-body.open .item-short-text {
+#app.exhibitions-item-fullscreen .item-body.open .item-short-text {
   color: var(--exhibitions-meta-color) !important;
 }
 
-#app.exhibitions-fullscreen .item-body.open .item-short-text span {
+#app.exhibitions-item-fullscreen .item-body.open .item-short-text span {
   background: var(--exhibitions-content-bg);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   padding: 0 8px;
-  box-shadow:
-    0  0.45em 0 0 var(--exhibitions-content-bg),
-    0 -0.45em 0 0 var(--exhibitions-content-bg);
+  box-shadow: 0 0.45em 0 0 var(--exhibitions-content-bg), 0 -0.45em 0 0 var(--exhibitions-content-bg);
 }
-
-/* corner gif hidden in exhibitions fullscreen */
-body.subsection-open .corner-gif { opacity: 0; pointer-events: none; }
 
 @media (max-width: 700px) {
   #app.courses-fullscreen .section-body.open {
     height: calc(100dvh - var(--header-height)) !important;
     max-height: none !important;
     padding: var(--courses-padding-mobile) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow-y: auto !important; overflow-x: hidden !important;
     opacity: 1 !important;
   }
 
-  #app.exhibitions-fullscreen .section-body.open {
-    height: calc(100dvh - var(--header-height)) !important;
-    max-height: none !important;
+  #app.exhibitions-item-fullscreen .item-body.open {
+    inset: var(--header-height) 0 0 0 !important;
     padding: var(--exhibitions-padding-mobile) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    opacity: 1 !important;
   }
 }
 
@@ -884,11 +846,7 @@ body.subsection-open .corner-gif { opacity: 0; pointer-events: none; }
   margin: 0 0 var(--courses-intro-gap);
 }
 
-.courses-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--courses-list-gap);
-}
+.courses-list { display: flex; flex-direction: column; gap: var(--courses-list-gap); }
 
 .courses-group-title {
   font-family: inherit;
