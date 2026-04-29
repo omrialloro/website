@@ -61,6 +61,10 @@ const data = {
         ],
       },
       {
+        name: "trump&mussolini signatures painter",
+        text: "",
+      },
+      {
         name: "Time To Space",
         text: "A web-based tool for creating and performing pixel animations in real time.",
         images: ["images/pixel-vj/1.png", "images/pixel-vj/2.png"],
@@ -1588,7 +1592,12 @@ function renderCollection(items, body, sectionTitle) {
       if (item.text) renderParagraphs(item.text, itemBody);
     }
 
-    if (label === "Time To Space") {
+    if (label === "trump&mussolini signatures painter") {
+      wrapper.querySelector(".item-toggle").onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = "signature.html";
+      };
+    } else if (label === "Time To Space") {
       wrapper.querySelector(".item-toggle").onclick = (e) => {
         e.stopPropagation();
         window.location.href = "tts.html";

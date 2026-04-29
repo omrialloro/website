@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Megalomanic Art</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: rgb(180,60,60); font-family: Georgia, serif; display: flex; flex-direction: column; align-items: center; }
+
+      #header {
+        width: 100%;
+        background:rgb(30,30,50);
+        padding: 18px 24px 12px;
+        text-align: center;
+      }
+
+      #header h1 {
+        color: #e8d5a0;
+        font-size: 22px;
+        letter-spacing: 0.05em;
+        font-style: italic;
+        margin-bottom: 14px;
+      }
+
+      #toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .brush-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px 6px 10px;
+        border: 1.5px solid #555;
+        border-radius: 6px;
+        background: #2a2a2a;
+        color: #ccc;
+        cursor: pointer;
+        font-family: Georgia, serif;
+        font-size: 13px;
+        transition: all 0.15s;
+      }
+      .brush-btn img { height: 22px; width: 70px; object-fit: contain; filter: invert(1); }
+      .brush-btn.active { border-color: #e8d5a0; color: #e8d5a0; background: #333; }
+      .brush-btn.active img { filter: invert(1) sepia(1) saturate(2) hue-rotate(5deg); }
+
+      .ctrl-btn {
+        padding: 6px 14px;
+        border: 1px solid #555;
+        border-radius: 6px;
+        background: #2a2a2a;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .ctrl-btn:hover { border-color: #aaa; color: #fff; }
+
+      .slider-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #888;
+        font-size: 12px;
+      }
+      input[type=range] { width: 100px; accent-color: #e8d5a0; }
+
+      #canvas-wrap {
+        margin: 16px;
+        border: 8px solid rgb(180,180,0);
+        cursor: none;
+      }
+    </style>
+  </head>
+  <body>
+    <img id="trumpImg" crossorigin="anonymous" src="https://upload.wikimedia.org/wikipedia/en/6/6f/Donald_Trump_%28Presidential_signature%29.svg" style="display:none" />
+    <img id="mussoliniImg" crossorigin="anonymous" src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Benito_Mussolini%27s_Signature%2C_derived_from_Lettramussol.svg" style="display:none" />
+
+    <div id="header">
+      <h1>Make Megalomanic Art with Trump and Mussolini Signatures!</h1>
+      <div id="toolbar">
+        <button class="ctrl-btn" id="clearBtn">Clear</button>
+        <button class="ctrl-btn" id="saveBtn">Save JPG</button>
+
+        <button class="brush-btn active" id="trumpBtn">
+          <img src="https://upload.wikimedia.org/wikipedia/en/6/6f/Donald_Trump_%28Presidential_signature%29.svg" />
+          Trump
+        </button>
+
+        <button class="brush-btn" id="mussBtn">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Benito_Mussolini%27s_Signature%2C_derived_from_Lettramussol.svg" />
+          Mussolini
+        </button>
+
+        <div class="slider-wrap">
+          Size
+          <input type="range" id="sizeSlider" min="20" max="400" value="100" />
+        </div>
+      </div>
+    </div>
+
+    <div id="canvas-wrap"></div>
+
+    <script>
+      let sigImg;
+      let brushSize = 100;
+      let currentBrush = 'trump';
+      let pg;
+      const CW = 1000, CH = 600;
+
+      document.getElementById('clearBtn').onclick = () => { if(pg) pg.background(255); };
+      document.getElementById('saveBtn').onclick = () => saveCanvas("signature_art", "jpg");
+      document.getElementById('sizeSlider').oninput = (e) => brushSize = +e.target.value;
+
+      document.getElementById('trumpBtn').onclick = () => {
+        sigImg = document.getElementById('trumpImg');
+        currentBrush = 'trump';
+        document.getElementById('trumpBtn').classList.add('active');
+        document.getElementById('mussBtn').classList.remove('active');
+      };
+
+      document.getElementById('mussBtn').onclick = () => {
+        sigImg = document.getElementById('mussoliniImg');
+        currentBrush = 'mussolini';
+        document.getElementById('mussBtn').classList.add('active');
+        document.getElementById('trumpBtn').classList.remove('active');
+      };
+
+      function setup() {
+        const cnv = createCanvas(CW, CH);
+        cnv.parent('canvas-wrap');
+        pg = createGraphics(CW, CH);
+        pg.background(255);
+        sigImg = document.getElementById('trumpImg');
+      }
+
+      function draw() {
+        // paint onto offscreen layer when pressed (only inside canvas)
+        if (mouseIsPressed && mouseX > 0 && mouseX < CW && mouseY > 0 && mouseY < CH) {
+          for (let i = 0; i < 10; i++) {
+            let brushW = brushSize;
+            let brushH = brushW * (currentBrush === 'trump' ? 0.3 : 0.5);
+            pg.drawingContext.globalAlpha = 0.3;
+            pg.drawingContext.drawImage(sigImg, mouseX, mouseY, brushW, brushH);
+          }
+          pg.drawingContext.globalAlpha = 1.0;
+        }
+        // composite: paint layer + live cursor preview
+        image(pg, 0, 0);
+        if (mouseX > 0 && mouseX < CW && mouseY > 0 && mouseY < CH) {
+          let brushW = brushSize;
+          let brushH = brushW * (currentBrush === 'trump' ? 0.3 : 0.5);
+          drawingContext.globalAlpha = 0.5;
+          drawingContext.drawImage(sigImg, mouseX, mouseY, brushW, brushH);
+          drawingContext.globalAlpha = 1.0;
+        }
+      }
+    </script>
+  </body>
+</html>
