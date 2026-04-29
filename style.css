@@ -43,53 +43,59 @@
 
   /* ─── COURSES ──────────────────────────────────────────────────────────── */
 
-  /* App frame when courses is open — soft white wash */
   --courses-bg: rgba(155, 105, 25, 0.68);
-
-  /* The dark highlight behind text */
   --courses-content-bg: rgba(4, 4, 0, 0.45);
-
-  /* Section body (the scrollable full page) */
   --courses-padding: 48px 60px 60px;
   --courses-padding-mobile: 32px 20px 40px;
   --courses-scrollbar-color: var(--c1);
 
-  /* Intro text block */
   --courses-intro-color: rgba(255, 245, 200, 0.85);
   --courses-intro-max-width: 62ch;
   --courses-intro-font-size: 18px;
   --courses-intro-line-height: 1.6;
   --courses-intro-gap: 14px;
 
-  /* Course cards */
   --courses-list-gap: 40px;
   --courses-card-border: rgba(212, 183, 12, 0.25);
   --courses-card-border-width: 1px 0 0 0;
   --courses-card-padding: 24px 0 0;
 
-  /* Course group title */
   --courses-group-title-color: rgb(200, 60, 0);
   --courses-group-title-size: 22px;
 
-  /* Course section title (top-level "Code and Art Courses") */
   --courses-section-title-color: rgb(200, 60, 0);
   --courses-section-title-size: 42px;
 
-  /* Course card title */
   --courses-card-title-color: rgb(200, 60, 0);
   --courses-card-title-size: 28px;
   --courses-card-title-gap: 12px;
 
-  /* Course card description */
   --courses-desc-color: rgba(255, 245, 200, 0.85);
   --courses-desc-font-size: 18px;
   --courses-desc-line-height: 1.55;
   --courses-desc-max-width: 62ch;
   --courses-desc-gap: 12px;
 
-  /* Course links */
   --courses-links-gap: 24px;
   --courses-projects-link-color: var(--c3);
+
+  /* ─── EXHIBITIONS ──────────────────────────────────────────────────────── */
+
+  --exhibitions-bg: rgba(15, 30, 60, 0.82);
+  --exhibitions-content-bg: rgba(0, 5, 20, 0.52);
+  --exhibitions-padding: 48px 60px 60px;
+  --exhibitions-padding-mobile: 32px 20px 40px;
+  --exhibitions-scrollbar-color: var(--c3);
+
+  --exhibitions-text-color: rgba(200, 230, 255, 0.9);
+  --exhibitions-text-font-size: 18px;
+  --exhibitions-text-line-height: 1.6;
+  --exhibitions-text-max-width: 62ch;
+
+  --exhibitions-item-title-color: var(--c3);
+  --exhibitions-item-title-size: 32px;
+
+  --exhibitions-meta-color: rgba(150, 200, 255, 0.7);
   /* ─────────────────────────────────────────────────────────────────────── */
 }
 
@@ -254,14 +260,6 @@ body::after {
   width: min(92vw, var(--subsec-width));
 }
 
-/* Exhibitions section */
-#app.exhibitions-open {
-  background: rgba(10, 10, 0, 0.25) !important;
-  border: 6px solid var(--c3) !important;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────── */
-
 .app-hidden {
   opacity: 0;
 }
@@ -364,17 +362,9 @@ body::after {
   margin-left: var(--subsec-left-shift);
 }
 
-.item-body.open::-webkit-scrollbar {
-  width: 6px;
-}
-
-.item-body.open::-webkit-scrollbar-thumb {
-  background: var(--c3);
-}
-
-.item-body.open::-webkit-scrollbar-track {
-  background: transparent;
-}
+.item-body.open::-webkit-scrollbar { width: 6px; }
+.item-body.open::-webkit-scrollbar-thumb { background: var(--c3); }
+.item-body.open::-webkit-scrollbar-track { background: transparent; }
 
 .item-body.open::before {
   content: "";
@@ -451,14 +441,8 @@ body::after {
   object-fit: cover;
 }
 
-.gif-back {
-  opacity: 0.8;
-}
-
-.gif-front {
-  opacity: 0.4;
-  mix-blend-mode: screen;
-}
+.gif-back { opacity: 0.8; }
+.gif-front { opacity: 0.4; mix-blend-mode: screen; }
 
 @keyframes subsecExpand {
   from { transform: scaleY(0); opacity: 0; }
@@ -476,21 +460,10 @@ body.subsection-open .corner-gif {
   pointer-events: none;
 }
 
-/* hide all items when subsection open */
-#app.subsection-open .item {
-  display: none;
-}
+#app.subsection-open .item { display: none; }
+#app.subsection-open .item.active-item { display: block; }
+#app.subsection-open .item.active-item .item-body.open { display: block; }
 
-/* keep only the active item visible */
-#app.subsection-open .item.active-item {
-  display: block;
-}
-
-#app.subsection-open .item.active-item .item-body.open {
-  display: block;
-}
-
-/* title inside opened subsection */
 .subsection-title {
   margin: 0 0 18px;
   color: var(--text);
@@ -513,7 +486,7 @@ body.subsection-open .corner-gif {
   font-size: 32px;
   color: var(--c2);
   cursor: pointer;
-  z-index: 2100;
+  z-index: 2200;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -528,21 +501,16 @@ body.subsection-open #close-btn {
   pointer-events: auto;
 }
 
-/* Drawings + courses fullscreen: anchor close btn to top-right */
 #app.drawings-fullscreen ~ #close-btn,
-#app.courses-fullscreen ~ #close-btn {
+#app.courses-fullscreen ~ #close-btn,
+#app.exhibitions-fullscreen ~ #close-btn {
   left: auto;
   right: 20px;
   transform: none !important;
 }
 
-.video-item {
-  margin-bottom: var(--media-gap);
-}
-
-.video-item:last-child {
-  margin-bottom: 0;
-}
+.video-item { margin-bottom: var(--media-gap); }
+.video-item:last-child { margin-bottom: 0; }
 
 .video-caption {
   margin: 0 0 6px;
@@ -560,43 +528,17 @@ body.subsection-open #close-btn {
   margin-top: 1rem;
 }
 
-.gif-grid img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
+.gif-grid img { width: 100%; height: auto; display: block; }
 
-/* ─── DRAWINGS GRID — CSS columns masonry ────────────────────────────────── */
+/* ─── DRAWINGS GRID ──────────────────────────────────────────────────────── */
 
-.drawings-grid {
-  columns: 4;
-  column-gap: 16px;
-  padding: 8px 0;
-}
-
-.drawing-item {
-  break-inside: avoid;
-  margin-bottom: 16px;
-}
-
+.drawings-grid { columns: 4; column-gap: 16px; padding: 8px 0; }
+.drawing-item { break-inside: avoid; margin-bottom: 16px; }
 .drawing-item img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
+  width: 100%; height: auto; display: block;
+  object-fit: contain; border-radius: 8px; background: rgba(0,0,0,0.2);
 }
-
-.drawing-title {
-  font-size: 13px;
-  color: #888;
-  text-align: center;
-  margin-top: 4px;
-  font-family: Inter, Arial, sans-serif;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────── */
+.drawing-title { font-size: 13px; color: #888; text-align: center; margin-top: 4px; font-family: Inter, Arial, sans-serif; }
 
 .corner-gif {
   position: fixed;
@@ -620,14 +562,15 @@ body.subsection-open #close-btn {
     --subsec-width: calc(100vw - 32px);
     --subsec-left-shift: 0px;
     --subsec-max-height: 75dvh;
-
-    /* Courses mobile overrides */
     --courses-padding: var(--courses-padding-mobile);
     --courses-intro-font-size: 13px;
     --courses-intro-max-width: 100%;
     --courses-desc-font-size: 13px;
     --courses-desc-max-width: 100%;
     --courses-card-title-size: 22px;
+    --exhibitions-padding: var(--exhibitions-padding-mobile);
+    --exhibitions-text-font-size: 13px;
+    --exhibitions-text-max-width: 100%;
   }
 
   #app {
@@ -639,9 +582,7 @@ body.subsection-open #close-btn {
     border-width: 3px;
   }
 
-  #app.expanded {
-    width: 100vw !important;
-  }
+  #app.expanded { width: 100vw !important; }
 
   .item-body.open {
     width: 100% !important;
@@ -651,9 +592,7 @@ body.subsection-open #close-btn {
     height: var(--subsec-max-height);
   }
 
-  .section-toggle {
-    font-size: 28px;
-  }
+  .section-toggle { font-size: 28px; }
 
   .item-body {
     font-size: var(--content-font-size);
@@ -667,34 +606,17 @@ body.subsection-open #close-btn {
     font-family: Inter, Arial, sans-serif;
   }
 
-  .media-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-top: 16px;
-  }
+  .media-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 16px; }
 
   .item-body img,
   .item-body video,
-  .item-body iframe {
-    max-width: 100%;
-  }
+  .item-body iframe { max-width: 100%; }
 
-  .gif-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
+  .gif-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .drawings-grid { columns: 2; column-gap: 12px; }
+  .drawing-item { margin-bottom: 12px; }
 
-  .drawings-grid {
-    columns: 2;
-    column-gap: 12px;
-  }
-
-  .drawing-item {
-    margin-bottom: 12px;
-  }
-
-  #app.drawings-fullscreen .section-body.open {
-    padding: 40px 14px 20px;
-  }
+  #app.drawings-fullscreen .section-body.open { padding: 40px 14px 20px; }
 
   .corner-gif {
     width: 130px;
@@ -714,14 +636,8 @@ body.subsection-open #close-btn {
     border-radius: 50%;
   }
 
-  .site-bio {
-    max-width: 100%;
-  }
-
-  .subsection-title {
-    font-size: 24px;
-    margin-bottom: 12px;
-  }
+  .site-bio { max-width: 100%; }
+  .subsection-title { font-size: 24px; margin-bottom: 12px; }
 }
 
 /* Moodboard button */
@@ -738,13 +654,10 @@ body.subsection-open #close-btn {
   padding: 0;
   transition: opacity 0.15s;
 }
-.moodboard-btn:hover {
-  opacity: 1;
-}
+.moodboard-btn:hover { opacity: 1; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    FULLSCREEN SECTION OVERRIDES
-   These MUST live at the end of the file so they beat .section-body.open
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─── Drawings fullscreen ─────────────────────────────────────────────────── */
@@ -758,17 +671,10 @@ body.subsection-open #close-btn {
   border-radius: 0 !important;
   background: rgba(10, 20, 20, 0.9) !important;
   padding: 0 !important;
-  transition:
-    left 0.5s ease,
-    top 0.5s ease,
-    width 0.5s ease,
-    height 0.5s ease,
-    opacity 0.8s ease !important;
+  transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease, opacity 0.8s ease !important;
 }
 
-#app.drawings-fullscreen .section-toggle {
-  display: none !important;
-}
+#app.drawings-fullscreen .section-toggle { display: none !important; }
 
 #app.drawings-fullscreen .section-body.open {
   max-height: none !important;
@@ -795,17 +701,10 @@ body.subsection-open #close-btn {
   border-radius: 0 !important;
   background: var(--courses-bg) !important;
   padding: 0 !important;
-  transition:
-    left 0.5s ease,
-    top 0.5s ease,
-    width 0.5s ease,
-    height 0.5s ease,
-    opacity 0.8s ease !important;
+  transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease, opacity 0.8s ease !important;
 }
 
-#app.courses-fullscreen .section-toggle {
-  display: none !important;
-}
+#app.courses-fullscreen .section-toggle { display: none !important; }
 
 #app.courses-fullscreen .section-body.open {
   max-height: none !important;
@@ -821,7 +720,6 @@ body.subsection-open #close-btn {
 #app.courses-fullscreen .section-body.open::-webkit-scrollbar-thumb { background: var(--courses-scrollbar-color); }
 #app.courses-fullscreen .section-body.open::-webkit-scrollbar-track { background: transparent; }
 
-/* Parent blocks — justified so bg fills flush on both left and right */
 #app.courses-fullscreen .courses-intro p,
 #app.courses-fullscreen .courses-section-title,
 #app.courses-fullscreen .courses-group-title,
@@ -836,7 +734,6 @@ body.subsection-open #close-btn {
   text-align-last: left;
 }
 
-/* Span: horizontal padding cloned per line, vertical gap closed by shadow */
 #app.courses-fullscreen .courses-intro p span,
 #app.courses-fullscreen .courses-section-title span,
 #app.courses-fullscreen .courses-group-title span,
@@ -857,6 +754,114 @@ body.subsection-open #close-btn {
   background: var(--courses-content-bg);
   padding: 2px 6px;
   border-radius: 2px;
+}
+
+/* ─── Exhibitions fullscreen ──────────────────────────────────────────────── */
+
+#app.exhibitions-fullscreen {
+  left: 0 !important;
+  top: var(--header-height) !important;
+  width: 100vw !important;
+  height: calc(100vh - var(--header-height)) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: var(--exhibitions-bg) !important;
+  padding: 0 !important;
+  transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease, opacity 0.8s ease !important;
+}
+
+#app.exhibitions-fullscreen .section-toggle { display: none !important; }
+
+#app.exhibitions-fullscreen .section-body.open {
+  max-height: none !important;
+  overflow: hidden !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: calc(100vh - var(--header-height)) !important;
+  padding: var(--exhibitions-padding) !important;
+  opacity: 1 !important;
+}
+
+#app.exhibitions-fullscreen .section-body.open::-webkit-scrollbar { width: 6px; }
+#app.exhibitions-fullscreen .section-body.open::-webkit-scrollbar-thumb { background: var(--exhibitions-scrollbar-color); }
+#app.exhibitions-fullscreen .section-body.open::-webkit-scrollbar-track { background: transparent; }
+
+/* all items and their toggles visible in the list */
+#app.exhibitions-fullscreen .item { display: block !important; }
+#app.exhibitions-fullscreen .item-toggle {
+  display: block !important;
+  color: var(--exhibitions-item-title-color) !important;
+  font-size: var(--exhibitions-item-title-size) !important;
+  font-weight: 700 !important;
+  padding-left: 0 !important;
+}
+
+/* when an item is open (subsection-open), hide others — same as normal behaviour */
+#app.exhibitions-fullscreen.subsection-open .item { display: none !important; }
+#app.exhibitions-fullscreen.subsection-open .item.active-item { display: block !important; }
+#app.exhibitions-fullscreen.subsection-open .item-toggle { display: none !important; }
+#app.exhibitions-fullscreen.subsection-open .item.active-item .item-toggle { display: none !important; }
+
+/* text paragraphs in open item — highlighted */
+#app.exhibitions-fullscreen .item-body.open p {
+  display: block;
+  max-width: var(--exhibitions-text-max-width);
+  margin-left: -8px;
+  margin-right: -8px;
+  line-height: 1.85;
+  text-align: justify;
+  text-align-last: left;
+  color: var(--exhibitions-text-color);
+  font-size: var(--exhibitions-text-font-size);
+  margin-bottom: 14px;
+}
+
+#app.exhibitions-fullscreen .item-body.open p span {
+  display: inline;
+  background: var(--exhibitions-content-bg);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 8px;
+  box-shadow:
+    0  0.45em 0 0 var(--exhibitions-content-bg),
+    0 -0.45em 0 0 var(--exhibitions-content-bg);
+}
+
+#app.exhibitions-fullscreen .item-body.open .item-short-text {
+  color: var(--exhibitions-meta-color) !important;
+}
+
+#app.exhibitions-fullscreen .item-body.open .item-short-text span {
+  background: var(--exhibitions-content-bg);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 8px;
+  box-shadow:
+    0  0.45em 0 0 var(--exhibitions-content-bg),
+    0 -0.45em 0 0 var(--exhibitions-content-bg);
+}
+
+/* corner gif hidden in exhibitions fullscreen */
+body.subsection-open .corner-gif { opacity: 0; pointer-events: none; }
+
+@media (max-width: 700px) {
+  #app.courses-fullscreen .section-body.open {
+    height: calc(100dvh - var(--header-height)) !important;
+    max-height: none !important;
+    padding: var(--courses-padding-mobile) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    opacity: 1 !important;
+  }
+
+  #app.exhibitions-fullscreen .section-body.open {
+    height: calc(100dvh - var(--header-height)) !important;
+    max-height: none !important;
+    padding: var(--exhibitions-padding-mobile) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    opacity: 1 !important;
+  }
 }
 
 /* ─── Courses content styles ─────────────────────────────────────────────── */
@@ -920,9 +925,7 @@ body.subsection-open #close-btn {
   margin: 0 0 var(--courses-desc-gap);
 }
 
-.courses-description p:last-child {
-  margin-bottom: 0;
-}
+.courses-description p:last-child { margin-bottom: 0; }
 
 /* ─── Course links row ───────────────────────────────────────────────────── */
 
@@ -946,9 +949,7 @@ body.subsection-open #close-btn {
   transition: opacity 0.15s ease;
 }
 
-.courses-syllabus-link:hover {
-  opacity: 1;
-}
+.courses-syllabus-link:hover { opacity: 1; }
 
 .courses-projects-link {
   display: inline-block;
@@ -962,22 +963,4 @@ body.subsection-open #close-btn {
   transition: opacity 0.15s ease;
 }
 
-.courses-projects-link:hover {
-  opacity: 1;
-}
-.item-short-text {
-  color: var(--text-sub) !important;
-  font-style: italic;
-  margin-bottom: 12px !important;
-}
- 
-@media (max-width: 700px) {
-  #app.courses-fullscreen .section-body.open {
-    height: calc(100dvh - var(--header-height)) !important;
-    max-height: none !important;
-    padding: var(--courses-padding-mobile) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    opacity: 1 !important;
-  }
-}
+.courses-projects-link:hover { opacity: 1; }
