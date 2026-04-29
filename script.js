@@ -98,7 +98,18 @@ const data = {
         date: "2025",
         place: "Hamachbesa Gallery, Gesher Haziv",
         text: "Group exhibition exploring data-driven artistic practices.",
-        images: ["Acid Knobs/1.png", "Acid Knobs/2.png", "Acid Knobs/3.png"],
+        images: [
+          "Acid Knobs/1.png",
+          "Acid Knobs/2.png",
+          "Acid Knobs/3.png",
+          "Acid Knobs/machbesa.jpg",
+          "Acid Knobs/machbesa2.jpg",
+          "Acid Knobs/machbesa3.jpg",
+          "Acid Knobs/machbesa4.jpg",
+          "Acid Knobs/machbesa5.jpg",
+          "Acid Knobs/machbesa6.jpg",
+        ],
+
         videos: [],
       },
       {
