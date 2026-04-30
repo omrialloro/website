@@ -438,6 +438,55 @@ function removeSubsectionTitle(container) {
   container.querySelector(".subsection-title")?.remove();
 }
 
+// ─── About overlay ────────────────────────────────────────────────────────────
+
+function openAbout() {
+  if (document.getElementById("about-overlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "about-overlay";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.id = "about-close";
+  closeBtn.textContent = "✕";
+  closeBtn.onclick = closeAbout;
+
+  const inner = document.createElement("div");
+  inner.id = "about-inner";
+
+  const imgWrap = document.createElement("div");
+  imgWrap.id = "about-img-wrap";
+  const img = document.createElement("img");
+  img.src = "omri.png";
+  img.alt = "Omri Alloro";
+  img.id = "about-img";
+  imgWrap.appendChild(img);
+
+  const textWrap = document.createElement("div");
+  textWrap.id = "about-text";
+  renderParagraphs(data.sections.bio.text, textWrap);
+
+  inner.appendChild(imgWrap);
+  inner.appendChild(textWrap);
+  overlay.appendChild(closeBtn);
+  overlay.appendChild(inner);
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => overlay.classList.add("open"));
+
+  // close on backdrop click
+  overlay.onclick = (e) => {
+    if (e.target === overlay) closeAbout();
+  };
+}
+
+function closeAbout() {
+  const overlay = document.getElementById("about-overlay");
+  if (!overlay) return;
+  overlay.classList.remove("open");
+  setTimeout(() => overlay.remove(), 400);
+}
+
 // ─── Section shell ────────────────────────────────────────────────────────────
 
 function createSectionShell(title) {
@@ -864,7 +913,6 @@ function openItem(wrapper, body, toggle, title, sectionTitle = "") {
   app.classList.add("subsection-open");
   document.body.classList.add("subsection-open");
   if (title === "dontLookBack") startAppFrame();
-  // ── CHANGED: exhibitions items go fullscreen instead of the old white overlay ──
   if (sectionTitle === "exhibitions") {
     app.classList.add("exhibitions-item-fullscreen");
   }
@@ -877,20 +925,17 @@ function openItem(wrapper, body, toggle, title, sectionTitle = "") {
 // ─── Kill media + reset scroll ────────────────────────────────────────────────
 
 function killAllMedia() {
-  // Stop iframes (YouTube etc) by blanking and restoring src
   document
     .querySelectorAll(".item-body iframe, .section-body iframe")
     .forEach((iframe) => {
       iframe.src = iframe.src;
     });
-  // Pause all HTML5 videos
   document
     .querySelectorAll(".item-body video, .section-body video")
     .forEach((video) => {
       video.pause();
       video.currentTime = 0;
     });
-  // Reset scroll on any open body
   document
     .querySelectorAll(".item-body.open, .section-body.open")
     .forEach((el) => {
@@ -965,10 +1010,7 @@ function applyURLState({ section, item, img }) {
     return;
   }
 
-  // Hard reset ALL state — must happen before rebuilding from URL.
-  // We skip the animated close and force everything off immediately so
-  // CSS classes like "expanded" and "exhibitions-item-fullscreen" are
-  // gone before the new state is applied.
+  // Hard reset ALL state
   killAllMedia();
   document
     .querySelectorAll(".item.active-item")
@@ -1396,15 +1438,11 @@ function renderHeader() {
   siteHeader.innerHTML = "";
   siteHeader.className = "site-header";
   const inner = createEl("div", "header-inner");
+
+  // ── CHANGED: title now opens the about overlay instead of toggling bio ──
   const title = createEl("button", "site-title-toggle", "Omri Alloro");
-  const bio = createEl("div", "site-bio");
-  renderParagraphs(data.sections.bio.text, bio);
-  title.onclick = () => {
-    bio.classList.toggle("open");
-    bio.style.maxHeight = bio.classList.contains("open")
-      ? bio.scrollHeight + "px"
-      : "0px";
-  };
+  title.onclick = openAbout;
+
   const socials = createEl("div", "header-socials");
   Object.entries(data.sections.social).forEach(([k, v]) => {
     const a = document.createElement("a");
@@ -1421,7 +1459,7 @@ function renderHeader() {
   inner.appendChild(moodboardBtn);
   inner.appendChild(socials);
   siteHeader.appendChild(inner);
-  siteHeader.appendChild(bio);
+  // Note: .site-bio is no longer appended — about overlay replaces it
 }
 
 // ─── Drawings grid ────────────────────────────────────────────────────────────
@@ -1429,7 +1467,6 @@ function renderHeader() {
 function renderDrawingsGrid(items, body, sectionTitle) {
   const grid = document.createElement("div");
   grid.className = "drawings-grid";
-
   items.forEach((item) => {
     const cell = document.createElement("div");
     cell.className = "drawing-item";
@@ -1439,7 +1476,6 @@ function renderDrawingsGrid(items, body, sectionTitle) {
     }
     grid.appendChild(cell);
   });
-
   body.appendChild(grid);
 }
 
@@ -1482,7 +1518,6 @@ function renderCourseParagraphs(text, container) {
 }
 
 function renderCourses(coursesData, body) {
-  // Section title
   const sectionTitle = document.createElement("h2");
   sectionTitle.className = "courses-section-title";
   const sectionTitleSpan = document.createElement("span");
@@ -1496,7 +1531,6 @@ function renderCourses(coursesData, body) {
     body.appendChild(createCanvasDivider());
   }
 
-  // Groups
   coursesData.groups.forEach((group, groupIndex) => {
     const groupTitle = document.createElement("h3");
     groupTitle.className = "courses-group-title";
@@ -1508,7 +1542,6 @@ function renderCourses(coursesData, body) {
     const coursesList = createEl("div", "courses-list");
     group.courses.forEach((course) => {
       const card = createEl("div", "courses-card");
-
       const titleEl = document.createElement("h4");
       titleEl.className = "courses-card-title";
       const titleSpan = document.createElement("span");
@@ -1522,10 +1555,8 @@ function renderCourses(coursesData, body) {
         card.appendChild(descWrap);
       }
 
-      // ── Links row: syllabus + optional courseProjects ──
       if (course.syllabus || course.courseProjects) {
         const linksRow = createEl("div", "courses-links-row");
-
         if (course.syllabus) {
           const syllabusLink = document.createElement("a");
           syllabusLink.href = course.syllabus;
@@ -1535,7 +1566,6 @@ function renderCourses(coursesData, body) {
           syllabusLink.textContent = "syllabus →";
           linksRow.appendChild(syllabusLink);
         }
-
         if (course.courseProjects) {
           const projectsLink = document.createElement("a");
           projectsLink.href = course.courseProjects;
@@ -1545,7 +1575,6 @@ function renderCourses(coursesData, body) {
           projectsLink.textContent = "course projects →";
           linksRow.appendChild(projectsLink);
         }
-
         card.appendChild(linksRow);
       }
 
@@ -1585,7 +1614,6 @@ function renderCollection(items, body, sectionTitle) {
       itemBody.appendChild(createEl("p", "item-short-text", item.short_text));
     }
 
-    // ── CHANGED: exhibitions use span-wrapped paragraphs for the highlight effect ──
     if (sectionTitle === "exhibitions") {
       if (item.text) renderParagraphsWithSpans(item.text, itemBody);
     } else {
@@ -1693,7 +1721,6 @@ function bindCloseButton() {
   const btn = document.getElementById("close-btn");
   if (!btn) return;
   btn.onclick = () => {
-    // ── Drawings fullscreen ──
     const drawingsSectionEl = document.querySelector(
       '[data-section-slug="selected-drawings"]',
     );
@@ -1710,7 +1737,6 @@ function bindCloseButton() {
       return;
     }
 
-    // ── Courses fullscreen ──
     const coursesSectionEl = document.querySelector(
       '[data-section-slug="courses"]',
     );
@@ -1727,7 +1753,6 @@ function bindCloseButton() {
       return;
     }
 
-    // ── Normal item subsection (including exhibitions items) ──
     const openSectionEl = document
       .querySelector(".section-body.open")
       ?.closest(".main-section");
@@ -1746,8 +1771,6 @@ function bindCornerGifReturn() {
   const cornerGif = document.querySelector(".corner-gif");
   if (!cornerGif) return;
   cornerGif.onclick = (e) => {
-    // Ignore clicks when a fullscreen section is open — the gif is invisible
-    // and the close button occupies the same screen area
     if (
       app.classList.contains("drawings-fullscreen") ||
       app.classList.contains("courses-fullscreen")
