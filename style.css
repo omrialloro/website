@@ -3,10 +3,10 @@
 
   --c1: rgb(212, 183, 12);
   --c2: rgb(235, 90, 12);
-  --c3: rgb(15, 123, 167);
+  --c3: rgb(25, 123, 167);
 
   /* --text: rgb(245, 220, 120); */
-    --text: rgb(245, 240, 160);
+    --text: rgb(245, 240, 180);
 
   --text-sub: rgb(200, 160, 60);
   --text-content: rgba(255, 245, 200, 0.9);
@@ -85,17 +85,17 @@
 
   /* ─── EXHIBITIONS ──────────────────────────────────────────────────────── */
 
-  --exhibitions-bg: rgba(85, 120, 60, 0.62);
-  --exhibitions-content-bg: rgba(0, 5, 20, 0.52);
+  --exhibitions-bg: rgba(95, 120, 80, 0.66);
+  --exhibitions-content-bg: rgba(20, 10, 0, 0.62);
   --exhibitions-padding: 48px 60px 60px;
   --exhibitions-padding-mobile: 32px 20px 40px;
   --exhibitions-scrollbar-color: var(--c3);
 
-  --exhibitions-text-color: rgba(200, 230, 255, 0.9);
+  --exhibitions-text-color: rgba(250, 230, 225, 0.9);
   --exhibitions-text-font-size: 18px;
   --exhibitions-text-max-width: 62ch;
 
-  --exhibitions-meta-color: rgba(150, 200, 255, 0.7);
+  --exhibitions-meta-color: rgba(50, 200, 255, 0.7);
   /* ─────────────────────────────────────────────────────────────────────── */
 }
 
@@ -381,7 +381,7 @@ body::after {
   max-width: 62ch;
   margin: 0 0 16px;
   color: var(--text-content);
-  font-family: Inter, Arial, sans-serif;
+  font-family: Inter, "Bebas", sans-serif;
   line-height: 1.45;
 }
 
@@ -515,7 +515,7 @@ body.subsection-open #close-btn {
 .video-caption {
   margin: 0 0 6px;
   color: var(--text-sub);
-  font-family: Inter, Arial, sans-serif;
+  font-family: Inter, "Bebas", sans-serif;
   font-size: 13px;
   line-height: 1.4;
   max-width: var(--media-max-width);
@@ -538,7 +538,7 @@ body.subsection-open #close-btn {
   width: 100%; height: auto; display: block;
   object-fit: contain; border-radius: 8px; background: rgba(0,0,0,0.2);
 }
-.drawing-title { font-size: 13px; color: #888; text-align: center; margin-top: 4px; font-family: Inter, Arial, sans-serif; }
+.drawing-title { font-size: 13px; color: #888; text-align: center; margin-top: 4px; font-family: Inter, "Bebas", sans-serif; }
 
 .corner-gif {
   position: fixed;
@@ -601,7 +601,7 @@ body.subsection-open #close-btn {
     max-width: 100%;
     margin: 0 0 var(--content-gap-y);
     color: var(--text-content);
-    font-family: Inter, Arial, sans-serif;
+    font-family: Inter, "Bebas", sans-serif;
   }
 
   .media-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 16px; }
@@ -773,7 +773,7 @@ body.subsection-open #close-btn {
 
 #app.exhibitions-item-fullscreen .subsection-title {
   font-size: 42px;
-  color: var(--exhibitions-item-title-color, var(--c3));
+  color: var(--exhibitions-item-title-color, var(--c2));
   margin-bottom: 24px;
 }
 
@@ -785,7 +785,7 @@ body.subsection-open #close-btn {
   text-align: justify; text-align-last: left;
   color: var(--exhibitions-text-color);
   font-size: var(--exhibitions-text-font-size);
-  font-family: Inter, Arial, sans-serif;
+  font-family: Inter, "Bebas", sans-serif;
   margin-bottom: 14px;
 }
 
@@ -839,7 +839,7 @@ body.subsection-open #close-btn {
 .courses-intro p {
   max-width: var(--courses-intro-max-width);
   color: var(--courses-intro-color);
-  font-family: Inter, Arial, sans-serif;
+  font-family: Inter, "Bebas", sans-serif;
   font-size: var(--courses-intro-font-size);
   line-height: var(--courses-intro-line-height);
   margin: 0 0 var(--courses-intro-gap);
@@ -876,7 +876,7 @@ body.subsection-open #close-btn {
 .courses-description p {
   max-width: var(--courses-desc-max-width);
   color: var(--courses-desc-color);
-  font-family: Inter, Arial, sans-serif;
+  font-family: Inter, "Bebas", sans-serif;
   font-size: var(--courses-desc-font-size);
   line-height: var(--courses-desc-line-height);
   margin: 0 0 var(--courses-desc-gap);

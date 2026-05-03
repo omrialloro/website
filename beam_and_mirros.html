@@ -1,0 +1,471 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  #app {
+    display: flex; flex-direction: column;
+    height: 100vh; min-height: 520px;
+    background: #0d0d0d; font-family: monospace; color: #ccc;
+  }
+  #toolbar {
+    display: flex; align-items: center;
+    background: #111; border-bottom: 0.5px solid #222;
+    flex-shrink: 0; flex-wrap: wrap;
+  }
+  .obj-tab {
+    padding: 10px 18px; font-size: 11px; letter-spacing: 0.08em;
+    cursor: pointer; border-bottom: 2px solid transparent; color: #555;
+    transition: color 0.15s; white-space: nowrap;
+  }
+  .obj-tab:hover { color: #999; }
+  .obj-tab.active { color: #fff; border-bottom-color: var(--tc); }
+  #tab-spinner { --tc: #00ffcc; }
+  #tab-beam { --tc: #39ff14; }
+  .tab-sep { width: 0.5px; background: #222; align-self: stretch; }
+  #controls {
+    display: flex; align-items: center; gap: 12px;
+    padding: 7px 16px; background: #0f0f0f; border-bottom: 0.5px solid #1a1a1a;
+    flex-shrink: 0; flex-wrap: wrap; min-height: 38px;
+  }
+  #adv-controls {
+    display: none;
+    align-items: center; gap: 12px;
+    padding: 7px 16px; background: #0a0a0a; border-bottom: 0.5px solid #1a1a1a;
+    flex-shrink: 0; flex-wrap: wrap; min-height: 36px;
+  }
+  #adv-controls.visible { display: flex; }
+  .ctrl { display: flex; align-items: center; gap: 7px; }
+  .lbl { font-size: 10px; color: #555; letter-spacing: 0.08em; }
+  .val { font-size: 11px; min-width: 44px; font-variant-numeric: tabular-nums; }
+  .sep { width: 0.5px; height: 16px; background: #1e1e1e; }
+  #sl-speed { accent-color: #00ffcc; width: 120px; }
+  #sl-length { accent-color: #00ffcc; width: 80px; }
+  #sl-opacity { accent-color: #ff9944; width: 80px; }
+  #sl-brightness { accent-color: #888; width: 80px; }
+  #sl-dir { accent-color: #39ff14; width: 100px; }
+  .rgb-row { display: flex; align-items: center; gap: 6px; }
+  .rgb-lbl { font-size: 10px; font-weight: 500; min-width: 10px; }
+  .rl { color: #ff4444; }
+  .gl { color: #44ff44; }
+  .bl { color: #4488ff; }
+  input.sr { accent-color: #ff4444; width: 72px; }
+  input.sg { accent-color: #44ff44; width: 72px; }
+  input.sb { accent-color: #4488ff; width: 72px; }
+  .rv { font-size: 11px; min-width: 28px; font-variant-numeric: tabular-nums; }
+  #countEl { font-size: 11px; color: #444; margin-left: auto; }
+  .btn {
+    background: transparent; border: 0.5px solid #333; color: #777;
+    font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-family: monospace;
+  }
+  .btn:hover { border-color: #555; color: #ccc; }
+  .btn.save { border-color: #aaa4; color: #aaa; }
+  .btn.adv { border-color: #444; color: #666; }
+  .btn.adv.on { border-color: #aa88ff; color: #aa88ff; background: #1a1530; }
+  #canvas { display: block; flex: 1; cursor: none; }
+  .adv-section-lbl {
+    font-size: 9px; color: #444; letter-spacing: 0.12em; padding-right: 4px; white-space: nowrap;
+  }
+</style>
+
+<div id="app">
+  <div id="toolbar">
+    <div class="obj-tab active" id="tab-spinner" data-obj="spinner">&#9675; SPINNER</div>
+    <div class="tab-sep"></div>
+    <div class="obj-tab" id="tab-beam" data-obj="beam">&#9135; LASER BEAM</div>
+    <div class="tab-sep"></div>
+    <span style="padding:0 14px;font-size:10px;color:#333;">click canvas to spawn</span>
+    <div style="margin-left:auto;display:flex;gap:8px;padding-right:12px;">
+      <button class="btn adv" id="advBtn">ADV</button>
+      <button class="btn" id="clearBtn">clear</button>
+      <button class="btn save" id="saveBtn">save PNG</button>
+    </div>
+  </div>
+
+  <div id="controls">
+    <div id="ctrl-spinner" class="ctrl">
+      <span class="lbl">CCW</span>
+      <input type="range" id="sl-speed" min="-10" max="10" step="0.1" value="2">
+      <span class="lbl">CW</span>
+      <span class="val" id="v-speed" style="color:#00ffcc;">7.2°/s</span>
+      <div class="sep"></div>
+      <span class="lbl">LENGTH</span>
+      <input type="range" id="sl-length" min="5" max="120" step="1" value="20">
+      <span class="val" id="v-length" style="color:#00ffcc;">20px</span>
+      <div class="sep"></div>
+      <span class="lbl">LEAK</span>
+      <input type="range" id="sl-opacity" min="0" max="1" step="0.01" value="0">
+      <span class="val" id="v-opacity" style="color:#ff9944;">0%</span>
+    </div>
+    <div id="ctrl-beam" class="ctrl" style="display:none;">
+      <span class="lbl">DIRECTION</span>
+      <div id="dir-dial"></div>
+      <input type="range" id="sl-dir" min="0" max="359" step="1" value="45">
+      <span class="val" id="v-dir" style="color:#39ff14;">45°</span>
+    </div>
+    <div class="sep"></div>
+    <div class="ctrl">
+      <span class="lbl">MIRROR VIS</span>
+      <input type="range" id="sl-brightness" min="0" max="1" step="0.01" value="1">
+      <span class="val" id="v-brightness" style="color:#aaa;">100%</span>
+    </div>
+    <span id="countEl">0 objects</span>
+  </div>
+
+  <div id="adv-controls">
+    <div id="adv-spinner" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span class="adv-section-lbl">MIRROR RGB LEAK</span>
+      <div class="rgb-row">
+        <span class="rgb-lbl rl">R</span>
+        <input type="range" class="sr" id="sl-lr" min="0" max="1" step="0.01" value="0">
+        <span class="rv rl" id="v-lr">0%</span>
+      </div>
+      <div class="rgb-row">
+        <span class="rgb-lbl gl">G</span>
+        <input type="range" class="sg" id="sl-lg" min="0" max="1" step="0.01" value="0">
+        <span class="rv gl" id="v-lg">0%</span>
+      </div>
+      <div class="rgb-row">
+        <span class="rgb-lbl bl">B</span>
+        <input type="range" class="sb" id="sl-lb" min="0" max="1" step="0.01" value="0">
+        <span class="rv bl" id="v-lb">0%</span>
+      </div>
+    </div>
+    <div id="adv-beam" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span class="adv-section-lbl">BEAM RGB</span>
+      <div class="rgb-row">
+        <span class="rgb-lbl rl">R</span>
+        <input type="range" class="sr" id="sl-br" min="0" max="1" step="0.01" value="0">
+        <span class="rv rl" id="v-br">0%</span>
+      </div>
+      <div class="rgb-row">
+        <span class="rgb-lbl gl">G</span>
+        <input type="range" class="sg" id="sl-bg" min="0" max="1" step="0.01" value="1">
+        <span class="rv gl" id="v-bg">100%</span>
+      </div>
+      <div class="rgb-row">
+        <span class="rgb-lbl bl">B</span>
+        <input type="range" class="sb" id="sl-bb" min="0" max="1" step="0.01" value="0">
+        <span class="rv bl" id="v-bb">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const clearBtn = document.getElementById('clearBtn');
+const saveBtn = document.getElementById('saveBtn');
+const advBtn = document.getElementById('advBtn');
+const advControls = document.getElementById('adv-controls');
+const advSpinner = document.getElementById('adv-spinner');
+const advBeam = document.getElementById('adv-beam');
+const countEl = document.getElementById('countEl');
+const tabs = document.querySelectorAll('.obj-tab');
+const ctrlSpinner = document.getElementById('ctrl-spinner');
+const ctrlBeam = document.getElementById('ctrl-beam');
+
+const slSpeed = document.getElementById('sl-speed'), vSpeed = document.getElementById('v-speed');
+const slLength = document.getElementById('sl-length'), vLength = document.getElementById('v-length');
+const slOpacity = document.getElementById('sl-opacity'), vOpacity = document.getElementById('v-opacity');
+const slBrightness = document.getElementById('sl-brightness'), vBrightness = document.getElementById('v-brightness');
+const slDir = document.getElementById('sl-dir'), vDir = document.getElementById('v-dir');
+const dirDial = document.getElementById('dir-dial');
+
+const slLR = document.getElementById('sl-lr'), vLR = document.getElementById('v-lr');
+const slLG = document.getElementById('sl-lg'), vLG = document.getElementById('v-lg');
+const slLB = document.getElementById('sl-lb'), vLB = document.getElementById('v-lb');
+const slBR = document.getElementById('sl-br'), vBR = document.getElementById('v-br');
+const slBG = document.getElementById('sl-bg'), vBG = document.getElementById('v-bg');
+const slBB = document.getElementById('sl-bb'), vBB = document.getElementById('v-bb');
+
+let selectedObj = 'spinner';
+let spinnerSpeed = 2.0, spinnerLength = 20, spinnerOpacity = 0.0, mirrorBrightness = 1.0;
+let beamDir = 45;
+let advMode = false;
+let spinnerLeakR = 0, spinnerLeakG = 0, spinnerLeakB = 0;
+let beamR = 0, beamG = 1, beamB = 0;
+const objects = [];
+const SPEED_SCALE = 0.01, MIN_ENERGY = 0.04;
+let mouseX = -9999, mouseY = -9999, mouseOnCanvas = false, previewAngle = 0;
+
+function resize() { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
+resize(); window.addEventListener('resize', resize);
+
+advBtn.addEventListener('click', () => {
+  advMode = !advMode;
+  advBtn.classList.toggle('on', advMode);
+  advControls.classList.toggle('visible', advMode);
+  if (advMode) {
+    advSpinner.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
+    advBeam.style.display = selectedObj === 'beam' ? 'flex' : 'none';
+  }
+});
+
+tabs.forEach(tab => tab.addEventListener('click', () => {
+  tabs.forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  selectedObj = tab.dataset.obj;
+  ctrlSpinner.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
+  ctrlBeam.style.display = selectedObj === 'beam' ? 'flex' : 'none';
+  if (advMode) {
+    advSpinner.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
+    advBeam.style.display = selectedObj === 'beam' ? 'flex' : 'none';
+  }
+}));
+
+slSpeed.addEventListener('input', () => {
+  spinnerSpeed = parseFloat(slSpeed.value);
+  const d = (Math.abs(spinnerSpeed) * SPEED_SCALE * 360).toFixed(1);
+  vSpeed.textContent = spinnerSpeed === 0 ? 'stopped' : d + '°/s';
+  vSpeed.style.color = spinnerSpeed === 0 ? '#555' : (spinnerSpeed > 0 ? '#00ffcc' : '#ff9944');
+});
+slLength.addEventListener('input', () => { spinnerLength = parseInt(slLength.value); vLength.textContent = spinnerLength + 'px'; });
+slOpacity.addEventListener('input', () => { spinnerOpacity = parseFloat(slOpacity.value); vOpacity.textContent = Math.round(spinnerOpacity * 100) + '%'; });
+slBrightness.addEventListener('input', () => { mirrorBrightness = parseFloat(slBrightness.value); vBrightness.textContent = Math.round(mirrorBrightness * 100) + '%'; });
+
+slLR.addEventListener('input', () => { spinnerLeakR = parseFloat(slLR.value); vLR.textContent = Math.round(spinnerLeakR * 100) + '%'; });
+slLG.addEventListener('input', () => { spinnerLeakG = parseFloat(slLG.value); vLG.textContent = Math.round(spinnerLeakG * 100) + '%'; });
+slLB.addEventListener('input', () => { spinnerLeakB = parseFloat(slLB.value); vLB.textContent = Math.round(spinnerLeakB * 100) + '%'; });
+slBR.addEventListener('input', () => { beamR = parseFloat(slBR.value); vBR.textContent = Math.round(beamR * 100) + '%'; });
+slBG.addEventListener('input', () => { beamG = parseFloat(slBG.value); vBG.textContent = Math.round(beamG * 100) + '%'; });
+slBB.addEventListener('input', () => { beamB = parseFloat(slBB.value); vBB.textContent = Math.round(beamB * 100) + '%'; });
+
+function updateDial(deg) {
+  const r = deg * Math.PI / 180;
+  dirDial.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" style="display:block;">
+    <circle cx="14" cy="14" r="12" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="14" y1="14" x2="${14 + Math.sin(r)*10}" y2="${14 - Math.cos(r)*10}" stroke="#39ff14" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="14" cy="14" r="2" fill="#39ff14"/>
+  </svg>`;
+}
+slDir.addEventListener('input', () => { beamDir = parseInt(slDir.value); vDir.textContent = beamDir + '°'; updateDial(beamDir); });
+updateDial(45);
+
+function updateCount() { countEl.textContent = objects.length + ' object' + (objects.length !== 1 ? 's' : ''); }
+
+canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; });
+canvas.addEventListener('mouseenter', () => { mouseOnCanvas = true; });
+canvas.addEventListener('mouseleave', () => { mouseOnCanvas = false; });
+
+canvas.addEventListener('click', e => {
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  if (selectedObj === 'spinner') {
+    objects.push({ type: 'spinner', x, y, speed: spinnerSpeed, angle: previewAngle, length: spinnerLength,
+      opacity: spinnerOpacity, hue: Math.random() * 360,
+      leakR: spinnerLeakR, leakG: spinnerLeakG, leakB: spinnerLeakB });
+  } else {
+    objects.push({ type: 'beam', x, y, dir: beamDir, phase: Math.random() * Math.PI * 2,
+      r: beamR, g: beamG, b: beamB });
+  }
+  updateCount();
+});
+
+clearBtn.addEventListener('click', () => { objects.length = 0; updateCount(); });
+saveBtn.addEventListener('click', () => {
+  const tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  const tc = tmp.getContext('2d');
+  tc.fillStyle = '#0d0d0d'; tc.fillRect(0, 0, tmp.width, tmp.height);
+  tc.drawImage(canvas, 0, 0);
+  const a = document.createElement('a');
+  a.href = tmp.toDataURL('image/png'); a.download = 'creative-coding.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+function segIntersect(px, py, dx, dy, ax, ay, bx, by) {
+  const ex = bx - ax, ey = by - ay;
+  const denom = dx * ey - dy * ex;
+  if (Math.abs(denom) < 1e-10) return null;
+  const tx = ax - px, ty = ay - py;
+  const t = (tx * ey - ty * ex) / denom;
+  const u = (tx * dy - ty * dx) / denom;
+  if (t > 1e-4 && u >= 0 && u <= 1) return { t, ix: px + dx * t, iy: py + dy * t };
+  return null;
+}
+
+function reflect(dx, dy, nx, ny) {
+  const len = Math.sqrt(nx * nx + ny * ny);
+  const nnx = nx / len, nny = ny / len;
+  const dot = dx * nnx + dy * nny;
+  return { dx: dx - 2 * dot * nnx, dy: dy - 2 * dot * nny };
+}
+
+function edgeEnd(ox, oy, dx, dy) {
+  const W = canvas.width, H = canvas.height;
+  let t = Infinity;
+  if (dx > 0) t = Math.min(t, (W - ox) / dx);
+  if (dx < 0) t = Math.min(t, (0 - ox) / dx);
+  if (dy > 0) t = Math.min(t, (H - oy) / dy);
+  if (dy < 0) t = Math.min(t, (0 - oy) / dy);
+  return t;
+}
+
+function traceRay(ox, oy, dirDeg, spinners, excludeIdx, er, eg, eb, depth, segments) {
+  if (depth > 24 || (er < MIN_ENERGY && eg < MIN_ENERGY && eb < MIN_ENERGY)) return;
+  const rad = (dirDeg - 90) * Math.PI / 180;
+  const dx = Math.cos(rad), dy = Math.sin(rad);
+  let nearest = null, nearestIdx = -1;
+  for (let i = 0; i < spinners.length; i++) {
+    if (i === excludeIdx) continue;
+    const s = spinners[i];
+    const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
+    const half = s.length / 2;
+    const hit = segIntersect(ox, oy, dx, dy,
+      s.x - cos * half, s.y - sin * half,
+      s.x + cos * half, s.y + sin * half);
+    if (hit && (!nearest || hit.t < nearest.t)) { nearest = hit; nearestIdx = i; }
+  }
+  const tEdge = edgeEnd(ox, oy, dx, dy);
+  if (!nearest || nearest.t >= tEdge) {
+    segments.push({ x1: ox, y1: oy, x2: ox + dx * tEdge, y2: oy + dy * tEdge, er, eg, eb, last: true });
+    return;
+  }
+  segments.push({ x1: ox, y1: oy, x2: nearest.ix, y2: nearest.iy, er, eg, eb, last: false });
+  const s = spinners[nearestIdx];
+  const lR = s.leakR !== undefined ? s.leakR : s.opacity;
+  const lG = s.leakG !== undefined ? s.leakG : s.opacity;
+  const lB = s.leakB !== undefined ? s.leakB : s.opacity;
+  const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
+  const ref = reflect(dx, dy, -sin, cos);
+  const reflectAngle = (Math.atan2(ref.dy, ref.dx) * 180 / Math.PI + 90 + 360) % 360;
+  traceRay(nearest.ix, nearest.iy, reflectAngle, spinners, nearestIdx,
+    er * (1 - lR), eg * (1 - lG), eb * (1 - lB), depth + 1, segments);
+  if (lR > 0 || lG > 0 || lB > 0) {
+    const throughAngle = (Math.atan2(dy, dx) * 180 / Math.PI + 90 + 360) % 360;
+    traceRay(nearest.ix, nearest.iy, throughAngle, spinners, nearestIdx,
+      er * lR, eg * lG, eb * lB, depth + 1, segments);
+  }
+}
+
+function drawBeamSegments(segs, baseAlpha, ghost) {
+  for (const seg of segs) {
+    const scale = ghost ? 0.45 : baseAlpha;
+    const r = Math.round(seg.er * 255), g = Math.round(seg.eg * 255), b = Math.round(seg.eb * 255);
+    const bright = Math.max(seg.er, seg.eg, seg.eb);
+    if (bright < 0.01) continue;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = `rgba(${r},${g},${b},${scale * bright * 0.15})`;
+    ctx.lineWidth = 7; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.moveTo(seg.x1, seg.y1); ctx.lineTo(seg.x2, seg.y2); ctx.stroke();
+    ctx.strokeStyle = `rgba(${r},${g},${b},${scale * bright * 0.6})`;
+    ctx.lineWidth = 1.2; ctx.shadowColor = `rgb(${r},${g},${b})`; ctx.shadowBlur = ghost ? 2 : 5;
+    ctx.beginPath(); ctx.moveTo(seg.x1, seg.y1); ctx.lineTo(seg.x2, seg.y2); ctx.stroke();
+    ctx.strokeStyle = `rgba(${Math.min(255,r+80)},${Math.min(255,g+80)},${Math.min(255,b+80)},${scale * bright * 0.7})`;
+    ctx.lineWidth = 0.5; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.moveTo(seg.x1, seg.y1); ctx.lineTo(seg.x2, seg.y2); ctx.stroke();
+    if (!seg.last) {
+      ctx.shadowColor = `rgb(${r},${g},${b})`; ctx.shadowBlur = ghost ? 4 : 8;
+      ctx.fillStyle = `rgba(${r},${g},${b},${scale * bright * 0.85})`;
+      ctx.beginPath(); ctx.arc(seg.x2, seg.y2, 2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function drawSpinnerShape(x, y, angle, length, hue, opacity, alpha, leakR, leakG, leakB) {
+  if (mirrorBrightness <= 0) return;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  const half = length / 2;
+  ctx.save();
+  ctx.globalAlpha = alpha * mirrorBrightness;
+  ctx.strokeStyle = `hsl(${hue},100%,70%)`;
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = `hsl(${hue},100%,70%)`; ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(x - cos * half, y - sin * half);
+  ctx.lineTo(x + cos * half, y + sin * half);
+  ctx.stroke();
+  const maxLeak = Math.max(leakR || 0, leakG || 0, leakB || 0, opacity || 0);
+  if (maxLeak > 0) {
+    const lr = leakR !== undefined ? leakR : opacity;
+    const lg = leakG !== undefined ? leakG : opacity;
+    const lb = leakB !== undefined ? leakB : opacity;
+    ctx.globalAlpha = alpha * mirrorBrightness * maxLeak * 0.5;
+    ctx.strokeStyle = `rgb(${Math.round(lr*220+35)},${Math.round(lg*220+35)},${Math.round(lb*220+35)})`;
+    ctx.lineWidth = 3; ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.moveTo(x - cos * half, y - sin * half);
+    ctx.lineTo(x + cos * half, y + sin * half);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = alpha * mirrorBrightness;
+  ctx.fillStyle = `hsl(${hue},100%,85%)`;
+  ctx.shadowBlur = 0;
+  ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+let last = performance.now();
+
+function draw(now) {
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  const t = now / 1000;
+  previewAngle += spinnerSpeed * SPEED_SCALE * dt * Math.PI * 2;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const spinners = objects.filter(o => o.type === 'spinner');
+
+  for (const o of objects) {
+    if (o.type !== 'spinner') continue;
+    o.angle += o.speed * SPEED_SCALE * dt * Math.PI * 2;
+    drawSpinnerShape(o.x, o.y, o.angle, o.length, o.hue, o.opacity, 1.0, o.leakR, o.leakG, o.leakB);
+  }
+
+  for (const o of objects) {
+    if (o.type !== 'beam') continue;
+    const flicker = 0.92 + 0.05 * Math.sin(t * 18 + o.phase) + 0.03 * (Math.random() - 0.5);
+    const alpha = Math.max(0.8, Math.min(1.0, flicker));
+    const br = o.r !== undefined ? o.r : 0;
+    const bg = o.g !== undefined ? o.g : 1;
+    const bb = o.b !== undefined ? o.b : 0;
+    const pr = Math.round(br * 255), pg = Math.round(bg * 255), pb = Math.round(bb * 255);
+    ctx.save();
+    ctx.shadowColor = `rgb(${pr},${pg},${pb})`; ctx.shadowBlur = 6;
+    ctx.fillStyle = `rgba(${pr},${pg},${pb},${alpha * 0.9})`;
+    ctx.beginPath(); ctx.arc(o.x, o.y, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    const segs = [];
+    traceRay(o.x, o.y, o.dir, spinners, -1, br, bg, bb, 0, segs);
+    drawBeamSegments(segs, alpha, false);
+  }
+
+  if (mouseOnCanvas) {
+    if (selectedObj === 'spinner') {
+      drawSpinnerShape(mouseX, mouseY, previewAngle, spinnerLength, 180, spinnerOpacity, 0.35, spinnerLeakR, spinnerLeakG, spinnerLeakB);
+      const ghostSpinners = [...spinners, {
+        type: 'spinner', x: mouseX, y: mouseY,
+        angle: previewAngle, length: spinnerLength,
+        opacity: spinnerOpacity, speed: spinnerSpeed,
+        leakR: spinnerLeakR, leakG: spinnerLeakG, leakB: spinnerLeakB
+      }];
+      for (const o of objects) {
+        if (o.type !== 'beam') continue;
+        const br = o.r !== undefined ? o.r : 0;
+        const bg2 = o.g !== undefined ? o.g : 1;
+        const bb = o.b !== undefined ? o.b : 0;
+        const segs = [];
+        traceRay(o.x, o.y, o.dir, ghostSpinners, -1, br, bg2, bb, 0, segs);
+        drawBeamSegments(segs, 0.5, true);
+      }
+    } else {
+      const pr = Math.round(beamR * 255), pg = Math.round(beamG * 255), pb = Math.round(beamB * 255);
+      ctx.save();
+      ctx.shadowColor = `rgb(${pr},${pg},${pb})`; ctx.shadowBlur = 4;
+      ctx.fillStyle = `rgba(${pr},${pg},${pb},0.4)`;
+      ctx.beginPath(); ctx.arc(mouseX, mouseY, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      const segs = [];
+      traceRay(mouseX, mouseY, beamDir, spinners, -1, beamR, beamG, beamB, 0, segs);
+      drawBeamSegments(segs, 1.0, true);
+    }
+  }
+
+  requestAnimationFrame(draw);
+}
+
+requestAnimationFrame(draw);
+</script>

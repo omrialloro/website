@@ -65,6 +65,11 @@ const data = {
         text: "",
       },
       {
+        name: "beams&mirrors",
+        text: "",
+      },
+
+      {
         name: "Time To Space",
         text: "A web-based tool for creating and performing pixel animations in real time.",
         images: ["images/pixel-vj/1.png", "images/pixel-vj/2.png"],
@@ -85,7 +90,7 @@ const data = {
         name: "The RGB Of The Smoothie",
         date: "2025",
         place: "Petach Tikva Art Museum",
-        text: "Group exhibition exploring data-driven artistic practices.",
+        text: "The body of the sculpture, created by Korman and Alloro specifically for the exhibition, is dismantled as if on an assembly line, integrating synchronized vibrations of light and sound. It is a hybrid body made of flexible silicone, with a texture suspended between exposed flesh and congealed jelly. At its core is the shake—the smoothie—a programmed mixer of light, movement, and sound. The body parts are arranged like displays in a science museum, forming a kind of internal dialogue of a disassembled body with and about itself, through philosophical, psychological, and scientific texts, alongside sound that processes a meditative, New Age discourse of soothing and therapy. The complete audio-visual sculpture, with its vibrating textures and flickering lights, becomes a kind of deceptive theatrical spectacle of fictional triggers—a sensual digital space of artificial desire, blending an intimate experience of communion with sensations of horror, anxiety, and confinement.",
         images: [
           "The RGB Of The Smoothie/1.jpg",
           "The RGB Of The Smoothie/2.jpeg",
@@ -106,12 +111,11 @@ const data = {
           "Acid Knobs/1.png",
           "Acid Knobs/2.png",
           "Acid Knobs/3.png",
-          "Acid Knobs/machbesa.jpg",
+          "Acid Knobs/machbesa6.jpg",
           "Acid Knobs/machbesa2.jpg",
-          "Acid Knobs/machbesa3.jpg",
           "Acid Knobs/machbesa4.jpg",
           "Acid Knobs/machbesa5.jpg",
-          "Acid Knobs/machbesa6.jpg",
+          "Acid Knobs/machbesa.jpg",
         ],
         videos: [],
       },
@@ -1151,7 +1155,7 @@ function createCanvasDivider(sectionTitle = "") {
   const FILL_R = 240,
     FILL_G = 70,
     FILL_B = 23;
-  const FILL_DELTA = 35;
+  const FILL_DELTA = 10;
   const GAP = 2;
 
   let raf = null;
@@ -1629,6 +1633,11 @@ function renderCollection(items, body, sectionTitle) {
       wrapper.querySelector(".item-toggle").onclick = (e) => {
         e.stopPropagation();
         window.location.href = "tts.html";
+      };
+    } else if (label === "beams&mirrors") {
+      wrapper.querySelector(".item-toggle").onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = "beam_and_mirros.html";
       };
     } else {
       const hasMedia =
