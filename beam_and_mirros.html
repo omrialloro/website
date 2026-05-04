@@ -27,8 +27,7 @@
     flex-shrink: 0; flex-wrap: wrap; min-height: 38px;
   }
   #adv-controls {
-    display: none;
-    align-items: center; gap: 12px;
+    display: none; align-items: center; gap: 12px;
     padding: 7px 16px; background: #0a0a0a; border-bottom: 0.5px solid #1a1a1a;
     flex-shrink: 0; flex-wrap: wrap; min-height: 36px;
   }
@@ -44,9 +43,7 @@
   #sl-dir { accent-color: #39ff14; width: 100px; }
   .rgb-row { display: flex; align-items: center; gap: 6px; }
   .rgb-lbl { font-size: 10px; font-weight: 500; min-width: 10px; }
-  .rl { color: #ff4444; }
-  .gl { color: #44ff44; }
-  .bl { color: #4488ff; }
+  .rl { color: #ff4444; } .gl { color: #44ff44; } .bl { color: #4488ff; }
   input.sr { accent-color: #ff4444; width: 72px; }
   input.sg { accent-color: #44ff44; width: 72px; }
   input.sb { accent-color: #4488ff; width: 72px; }
@@ -61,9 +58,7 @@
   .btn.adv { border-color: #444; color: #666; }
   .btn.adv.on { border-color: #aa88ff; color: #aa88ff; background: #1a1530; }
   #canvas { display: block; flex: 1; cursor: none; }
-  .adv-section-lbl {
-    font-size: 9px; color: #444; letter-spacing: 0.12em; padding-right: 4px; white-space: nowrap;
-  }
+  .adv-section-lbl { font-size: 9px; color: #444; letter-spacing: 0.12em; padding-right: 4px; white-space: nowrap; }
 </style>
 
 <div id="app">
@@ -79,7 +74,6 @@
       <button class="btn save" id="saveBtn">save PNG</button>
     </div>
   </div>
-
   <div id="controls">
     <div id="ctrl-spinner" class="ctrl">
       <span class="lbl">CCW</span>
@@ -109,46 +103,20 @@
     </div>
     <span id="countEl">0 objects</span>
   </div>
-
   <div id="adv-controls">
     <div id="adv-spinner" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span class="adv-section-lbl">MIRROR RGB LEAK</span>
-      <div class="rgb-row">
-        <span class="rgb-lbl rl">R</span>
-        <input type="range" class="sr" id="sl-lr" min="0" max="1" step="0.01" value="0">
-        <span class="rv rl" id="v-lr">0%</span>
-      </div>
-      <div class="rgb-row">
-        <span class="rgb-lbl gl">G</span>
-        <input type="range" class="sg" id="sl-lg" min="0" max="1" step="0.01" value="0">
-        <span class="rv gl" id="v-lg">0%</span>
-      </div>
-      <div class="rgb-row">
-        <span class="rgb-lbl bl">B</span>
-        <input type="range" class="sb" id="sl-lb" min="0" max="1" step="0.01" value="0">
-        <span class="rv bl" id="v-lb">0%</span>
-      </div>
+      <div class="rgb-row"><span class="rgb-lbl rl">R</span><input type="range" class="sr" id="sl-lr" min="0" max="1" step="0.01" value="0"><span class="rv rl" id="v-lr">0%</span></div>
+      <div class="rgb-row"><span class="rgb-lbl gl">G</span><input type="range" class="sg" id="sl-lg" min="0" max="1" step="0.01" value="0"><span class="rv gl" id="v-lg">0%</span></div>
+      <div class="rgb-row"><span class="rgb-lbl bl">B</span><input type="range" class="sb" id="sl-lb" min="0" max="1" step="0.01" value="0"><span class="rv bl" id="v-lb">0%</span></div>
     </div>
     <div id="adv-beam" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;">
       <span class="adv-section-lbl">BEAM RGB</span>
-      <div class="rgb-row">
-        <span class="rgb-lbl rl">R</span>
-        <input type="range" class="sr" id="sl-br" min="0" max="1" step="0.01" value="0">
-        <span class="rv rl" id="v-br">0%</span>
-      </div>
-      <div class="rgb-row">
-        <span class="rgb-lbl gl">G</span>
-        <input type="range" class="sg" id="sl-bg" min="0" max="1" step="0.01" value="1">
-        <span class="rv gl" id="v-bg">100%</span>
-      </div>
-      <div class="rgb-row">
-        <span class="rgb-lbl bl">B</span>
-        <input type="range" class="sb" id="sl-bb" min="0" max="1" step="0.01" value="0">
-        <span class="rv bl" id="v-bb">0%</span>
-      </div>
+      <div class="rgb-row"><span class="rgb-lbl rl">R</span><input type="range" class="sr" id="sl-br" min="0" max="1" step="0.01" value="0"><span class="rv rl" id="v-br">0%</span></div>
+      <div class="rgb-row"><span class="rgb-lbl gl">G</span><input type="range" class="sg" id="sl-bg" min="0" max="1" step="0.01" value="1"><span class="rv gl" id="v-bg">100%</span></div>
+      <div class="rgb-row"><span class="rgb-lbl bl">B</span><input type="range" class="sb" id="sl-bb" min="0" max="1" step="0.01" value="0"><span class="rv bl" id="v-bb">0%</span></div>
     </div>
   </div>
-
   <canvas id="canvas"></canvas>
 </div>
 
@@ -159,8 +127,8 @@ const clearBtn = document.getElementById('clearBtn');
 const saveBtn = document.getElementById('saveBtn');
 const advBtn = document.getElementById('advBtn');
 const advControls = document.getElementById('adv-controls');
-const advSpinner = document.getElementById('adv-spinner');
-const advBeam = document.getElementById('adv-beam');
+const advSpinnerEl = document.getElementById('adv-spinner');
+const advBeamEl = document.getElementById('adv-beam');
 const countEl = document.getElementById('countEl');
 const tabs = document.querySelectorAll('.obj-tab');
 const ctrlSpinner = document.getElementById('ctrl-spinner');
@@ -172,7 +140,6 @@ const slOpacity = document.getElementById('sl-opacity'), vOpacity = document.get
 const slBrightness = document.getElementById('sl-brightness'), vBrightness = document.getElementById('v-brightness');
 const slDir = document.getElementById('sl-dir'), vDir = document.getElementById('v-dir');
 const dirDial = document.getElementById('dir-dial');
-
 const slLR = document.getElementById('sl-lr'), vLR = document.getElementById('v-lr');
 const slLG = document.getElementById('sl-lg'), vLG = document.getElementById('v-lg');
 const slLB = document.getElementById('sl-lb'), vLB = document.getElementById('v-lb');
@@ -182,8 +149,7 @@ const slBB = document.getElementById('sl-bb'), vBB = document.getElementById('v-
 
 let selectedObj = 'spinner';
 let spinnerSpeed = 2.0, spinnerLength = 20, spinnerOpacity = 0.0, mirrorBrightness = 1.0;
-let beamDir = 45;
-let advMode = false;
+let beamDir = 45, advMode = false;
 let spinnerLeakR = 0, spinnerLeakG = 0, spinnerLeakB = 0;
 let beamR = 0, beamG = 1, beamB = 0;
 const objects = [];
@@ -198,8 +164,8 @@ advBtn.addEventListener('click', () => {
   advBtn.classList.toggle('on', advMode);
   advControls.classList.toggle('visible', advMode);
   if (advMode) {
-    advSpinner.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
-    advBeam.style.display = selectedObj === 'beam' ? 'flex' : 'none';
+    advSpinnerEl.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
+    advBeamEl.style.display = selectedObj === 'beam' ? 'flex' : 'none';
   }
 });
 
@@ -210,8 +176,8 @@ tabs.forEach(tab => tab.addEventListener('click', () => {
   ctrlSpinner.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
   ctrlBeam.style.display = selectedObj === 'beam' ? 'flex' : 'none';
   if (advMode) {
-    advSpinner.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
-    advBeam.style.display = selectedObj === 'beam' ? 'flex' : 'none';
+    advSpinnerEl.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
+    advBeamEl.style.display = selectedObj === 'beam' ? 'flex' : 'none';
   }
 }));
 
@@ -222,7 +188,15 @@ slSpeed.addEventListener('input', () => {
   vSpeed.style.color = spinnerSpeed === 0 ? '#555' : (spinnerSpeed > 0 ? '#00ffcc' : '#ff9944');
 });
 slLength.addEventListener('input', () => { spinnerLength = parseInt(slLength.value); vLength.textContent = spinnerLength + 'px'; });
-slOpacity.addEventListener('input', () => { spinnerOpacity = parseFloat(slOpacity.value); vOpacity.textContent = Math.round(spinnerOpacity * 100) + '%'; });
+slOpacity.addEventListener('input', () => {
+  spinnerOpacity = parseFloat(slOpacity.value);
+  vOpacity.textContent = Math.round(spinnerOpacity * 100) + '%';
+  if (!advMode) {
+    spinnerLeakR = spinnerOpacity;
+    spinnerLeakG = spinnerOpacity;
+    spinnerLeakB = spinnerOpacity;
+  }
+});
 slBrightness.addEventListener('input', () => { mirrorBrightness = parseFloat(slBrightness.value); vBrightness.textContent = Math.round(mirrorBrightness * 100) + '%'; });
 
 slLR.addEventListener('input', () => { spinnerLeakR = parseFloat(slLR.value); vLR.textContent = Math.round(spinnerLeakR * 100) + '%'; });
@@ -236,7 +210,7 @@ function updateDial(deg) {
   const r = deg * Math.PI / 180;
   dirDial.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" style="display:block;">
     <circle cx="14" cy="14" r="12" fill="none" stroke="#2a2a2a" stroke-width="1"/>
-    <line x1="14" y1="14" x2="${14 + Math.sin(r)*10}" y2="${14 - Math.cos(r)*10}" stroke="#39ff14" stroke-width="2" stroke-linecap="round"/>
+    <line x1="14" y1="14" x2="${14+Math.sin(r)*10}" y2="${14-Math.cos(r)*10}" stroke="#39ff14" stroke-width="2" stroke-linecap="round"/>
     <circle cx="14" cy="14" r="2" fill="#39ff14"/>
   </svg>`;
 }
@@ -253,8 +227,8 @@ canvas.addEventListener('click', e => {
   const r = canvas.getBoundingClientRect();
   const x = e.clientX - r.left, y = e.clientY - r.top;
   if (selectedObj === 'spinner') {
-    objects.push({ type: 'spinner', x, y, speed: spinnerSpeed, angle: previewAngle, length: spinnerLength,
-      opacity: spinnerOpacity, hue: Math.random() * 360,
+    objects.push({ type: 'spinner', x, y, speed: spinnerSpeed, angle: previewAngle,
+      length: spinnerLength, hue: Math.random() * 360,
       leakR: spinnerLeakR, leakG: spinnerLeakG, leakB: spinnerLeakB });
   } else {
     objects.push({ type: 'beam', x, y, dir: beamDir, phase: Math.random() * Math.PI * 2,
@@ -325,9 +299,7 @@ function traceRay(ox, oy, dirDeg, spinners, excludeIdx, er, eg, eb, depth, segme
   }
   segments.push({ x1: ox, y1: oy, x2: nearest.ix, y2: nearest.iy, er, eg, eb, last: false });
   const s = spinners[nearestIdx];
-  const lR = s.leakR !== undefined ? s.leakR : s.opacity;
-  const lG = s.leakG !== undefined ? s.leakG : s.opacity;
-  const lB = s.leakB !== undefined ? s.leakB : s.opacity;
+  const lR = s.leakR, lG = s.leakG, lB = s.leakB;
   const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
   const ref = reflect(dx, dy, -sin, cos);
   const reflectAngle = (Math.atan2(ref.dy, ref.dx) * 180 / Math.PI + 90 + 360) % 360;
@@ -343,9 +315,9 @@ function traceRay(ox, oy, dirDeg, spinners, excludeIdx, er, eg, eb, depth, segme
 function drawBeamSegments(segs, baseAlpha, ghost) {
   for (const seg of segs) {
     const scale = ghost ? 0.45 : baseAlpha;
-    const r = Math.round(seg.er * 255), g = Math.round(seg.eg * 255), b = Math.round(seg.eb * 255);
     const bright = Math.max(seg.er, seg.eg, seg.eb);
     if (bright < 0.01) continue;
+    const r = Math.round(seg.er * 255), g = Math.round(seg.eg * 255), b = Math.round(seg.eb * 255);
     ctx.save();
     ctx.lineCap = 'round';
     ctx.strokeStyle = `rgba(${r},${g},${b},${scale * bright * 0.15})`;
@@ -366,7 +338,7 @@ function drawBeamSegments(segs, baseAlpha, ghost) {
   }
 }
 
-function drawSpinnerShape(x, y, angle, length, hue, opacity, alpha, leakR, leakG, leakB) {
+function drawSpinnerShape(x, y, angle, length, hue, leakR, leakG, leakB, alpha) {
   if (mirrorBrightness <= 0) return;
   const cos = Math.cos(angle), sin = Math.sin(angle);
   const half = length / 2;
@@ -379,13 +351,10 @@ function drawSpinnerShape(x, y, angle, length, hue, opacity, alpha, leakR, leakG
   ctx.moveTo(x - cos * half, y - sin * half);
   ctx.lineTo(x + cos * half, y + sin * half);
   ctx.stroke();
-  const maxLeak = Math.max(leakR || 0, leakG || 0, leakB || 0, opacity || 0);
+  const maxLeak = Math.max(leakR, leakG, leakB);
   if (maxLeak > 0) {
-    const lr = leakR !== undefined ? leakR : opacity;
-    const lg = leakG !== undefined ? leakG : opacity;
-    const lb = leakB !== undefined ? leakB : opacity;
     ctx.globalAlpha = alpha * mirrorBrightness * maxLeak * 0.5;
-    ctx.strokeStyle = `rgb(${Math.round(lr*220+35)},${Math.round(lg*220+35)},${Math.round(lb*220+35)})`;
+    ctx.strokeStyle = `rgb(${Math.round(leakR*220+35)},${Math.round(leakG*220+35)},${Math.round(leakB*220+35)})`;
     ctx.lineWidth = 3; ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.moveTo(x - cos * half, y - sin * half);
@@ -412,43 +381,35 @@ function draw(now) {
   for (const o of objects) {
     if (o.type !== 'spinner') continue;
     o.angle += o.speed * SPEED_SCALE * dt * Math.PI * 2;
-    drawSpinnerShape(o.x, o.y, o.angle, o.length, o.hue, o.opacity, 1.0, o.leakR, o.leakG, o.leakB);
+    drawSpinnerShape(o.x, o.y, o.angle, o.length, o.hue, o.leakR, o.leakG, o.leakB, 1.0);
   }
 
   for (const o of objects) {
     if (o.type !== 'beam') continue;
     const flicker = 0.92 + 0.05 * Math.sin(t * 18 + o.phase) + 0.03 * (Math.random() - 0.5);
     const alpha = Math.max(0.8, Math.min(1.0, flicker));
-    const br = o.r !== undefined ? o.r : 0;
-    const bg = o.g !== undefined ? o.g : 1;
-    const bb = o.b !== undefined ? o.b : 0;
-    const pr = Math.round(br * 255), pg = Math.round(bg * 255), pb = Math.round(bb * 255);
+    const pr = Math.round(o.r * 255), pg = Math.round(o.g * 255), pb = Math.round(o.b * 255);
     ctx.save();
     ctx.shadowColor = `rgb(${pr},${pg},${pb})`; ctx.shadowBlur = 6;
     ctx.fillStyle = `rgba(${pr},${pg},${pb},${alpha * 0.9})`;
     ctx.beginPath(); ctx.arc(o.x, o.y, 2.5, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
     const segs = [];
-    traceRay(o.x, o.y, o.dir, spinners, -1, br, bg, bb, 0, segs);
+    traceRay(o.x, o.y, o.dir, spinners, -1, o.r, o.g, o.b, 0, segs);
     drawBeamSegments(segs, alpha, false);
   }
 
   if (mouseOnCanvas) {
     if (selectedObj === 'spinner') {
-      drawSpinnerShape(mouseX, mouseY, previewAngle, spinnerLength, 180, spinnerOpacity, 0.35, spinnerLeakR, spinnerLeakG, spinnerLeakB);
+      drawSpinnerShape(mouseX, mouseY, previewAngle, spinnerLength, 180, spinnerLeakR, spinnerLeakG, spinnerLeakB, 0.35);
       const ghostSpinners = [...spinners, {
-        type: 'spinner', x: mouseX, y: mouseY,
-        angle: previewAngle, length: spinnerLength,
-        opacity: spinnerOpacity, speed: spinnerSpeed,
+        x: mouseX, y: mouseY, angle: previewAngle, length: spinnerLength,
         leakR: spinnerLeakR, leakG: spinnerLeakG, leakB: spinnerLeakB
       }];
       for (const o of objects) {
         if (o.type !== 'beam') continue;
-        const br = o.r !== undefined ? o.r : 0;
-        const bg2 = o.g !== undefined ? o.g : 1;
-        const bb = o.b !== undefined ? o.b : 0;
         const segs = [];
-        traceRay(o.x, o.y, o.dir, ghostSpinners, -1, br, bg2, bb, 0, segs);
+        traceRay(o.x, o.y, o.dir, ghostSpinners, -1, o.r, o.g, o.b, 0, segs);
         drawBeamSegments(segs, 0.5, true);
       }
     } else {
