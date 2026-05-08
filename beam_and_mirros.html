@@ -1,243 +1,540 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Laser Mirror</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  #app {
-    display: flex; flex-direction: column;
-    height: 100vh; min-height: 520px;
-    background: #0d0d0d; font-family: monospace; color: #ccc;
-  }
-  #toolbar {
-    display: flex; align-items: center;
-    background: #111; border-bottom: 0.5px solid #222;
-    flex-shrink: 0; flex-wrap: wrap;
-  }
-  .obj-tab {
-    padding: 10px 18px; font-size: 11px; letter-spacing: 0.08em;
-    cursor: pointer; border-bottom: 2px solid transparent; color: #555;
-    transition: color 0.15s; white-space: nowrap;
-  }
-  .obj-tab:hover { color: #999; }
-  .obj-tab.active { color: #fff; border-bottom-color: var(--tc); }
-  #tab-spinner { --tc: #00ffcc; }
-  #tab-beam { --tc: #39ff14; }
-  .tab-sep { width: 0.5px; background: #222; align-self: stretch; }
-  #controls {
-    display: flex; align-items: center; gap: 12px;
-    padding: 7px 16px; background: #0f0f0f; border-bottom: 0.5px solid #1a1a1a;
-    flex-shrink: 0; flex-wrap: wrap; min-height: 38px;
-  }
-  #adv-controls {
-    display: none; align-items: center; gap: 12px;
-    padding: 7px 16px; background: #0a0a0a; border-bottom: 0.5px solid #1a1a1a;
-    flex-shrink: 0; flex-wrap: wrap; min-height: 36px;
-  }
-  #adv-controls.visible { display: flex; }
-  .ctrl { display: flex; align-items: center; gap: 7px; }
-  .lbl { font-size: 10px; color: #555; letter-spacing: 0.08em; }
-  .val { font-size: 11px; min-width: 44px; font-variant-numeric: tabular-nums; }
-  .sep { width: 0.5px; height: 16px; background: #1e1e1e; }
-  #sl-speed { accent-color: #00ffcc; width: 120px; }
-  #sl-length { accent-color: #00ffcc; width: 80px; }
-  #sl-opacity { accent-color: #ff9944; width: 80px; }
-  #sl-brightness { accent-color: #888; width: 80px; }
-  #sl-dir { accent-color: #39ff14; width: 100px; }
-  .rgb-row { display: flex; align-items: center; gap: 6px; }
-  .rgb-lbl { font-size: 10px; font-weight: 500; min-width: 10px; }
-  .rl { color: #ff4444; } .gl { color: #44ff44; } .bl { color: #4488ff; }
-  input.sr { accent-color: #ff4444; width: 72px; }
-  input.sg { accent-color: #44ff44; width: 72px; }
-  input.sb { accent-color: #4488ff; width: 72px; }
-  .rv { font-size: 11px; min-width: 28px; font-variant-numeric: tabular-nums; }
-  #countEl { font-size: 11px; color: #444; margin-left: auto; }
-  .btn {
-    background: transparent; border: 0.5px solid #333; color: #777;
-    font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-family: monospace;
-  }
-  .btn:hover { border-color: #555; color: #ccc; }
-  .btn.save { border-color: #aaa4; color: #aaa; }
-  .btn.adv { border-color: #444; color: #666; }
-  .btn.adv.on { border-color: #aa88ff; color: #aa88ff; background: #1a1530; }
-  #canvas { display: block; flex: 1; cursor: none; }
-  .adv-section-lbl { font-size: 9px; color: #444; letter-spacing: 0.12em; padding-right: 4px; white-space: nowrap; }
-</style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+#app {
+  display: flex; flex-direction: column;
+  height: 100vh; min-height: 520px;
+  background: #0d0d0d; font-family: monospace; color: #ccc;
+}
 
+/* ── toolbar ── */
+#toolbar {
+  display: flex; align-items: center;
+  background: #111; border-bottom: 0.5px solid #222;
+  flex-shrink: 0; flex-wrap: wrap;
+}
+.obj-tab {
+  padding: 10px 18px; font-size: 11px; letter-spacing: 0.08em;
+  cursor: pointer; border-bottom: 2px solid transparent; color: #555;
+  transition: color 0.15s, border-color 0.15s; white-space: nowrap;
+  user-select: none;
+}
+.obj-tab:hover { color: #999; }
+.obj-tab.active { color: #fff; border-bottom-color: var(--tc); }
+#tab-select  { --tc: #aa88ff; }
+#tab-spinner { --tc: #00ffcc; }
+#tab-beam    { --tc: #39ff14; }
+.tab-sep { width: 0.5px; background: #222; align-self: stretch; }
+
+/* ── single controls bar ── */
+#controls {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 14px; border-bottom: 0.5px solid #1a1a1a;
+  flex-shrink: 0; flex-wrap: wrap; min-height: 38px;
+  transition: background 0.2s;
+}
+#controls.mode-default  { background: #0f0f0f; }
+#controls.mode-selected { background: #110f1a; border-bottom-color: #2a1f44; }
+
+/* adv row — second bar only when needed */
+#adv-controls {
+  display: none; align-items: center; gap: 10px;
+  padding: 6px 14px; background: #0a0a0a; border-bottom: 0.5px solid #1a1a1a;
+  flex-shrink: 0; flex-wrap: wrap; min-height: 34px;
+}
+#adv-controls.visible { display: flex; }
+
+.ctrl { display: flex; align-items: center; gap: 7px; }
+.lbl  { font-size: 10px; color: #555; letter-spacing: 0.08em; white-space: nowrap; }
+.lbl.sel { color: #aa88ff; }
+.val  { font-size: 11px; min-width: 38px; font-variant-numeric: tabular-nums; }
+.sep  { width: 0.5px; height: 16px; background: #1e1e1e; flex-shrink: 0; }
+
+/* accent values */
+.vc  { color: #00ffcc; }
+.vg  { color: #39ff14; }
+.vp  { color: #aa88ff; }
+.vo  { color: #ff9944; }
+
+/* sliders — base */
+input[type=range] { cursor: pointer; }
+.sl-c  { accent-color: #00ffcc; width: 100px; }
+.sl-g  { accent-color: #39ff14; width: 90px;  }
+.sl-p  { accent-color: #aa88ff; width: 90px;  }
+.sl-o  { accent-color: #ff9944; width: 70px;  }
+.sl-w  { accent-color: #888;    width: 70px;  }
+.sl-sm { width: 60px !important; }
+
+.rgb-row { display: flex; align-items: center; gap: 5px; }
+.rgb-lbl { font-size: 10px; font-weight: 600; min-width: 9px; }
+.rl { color: #ff4444; } .gl { color: #44ff44; } .bl { color: #4488ff; }
+input.sr { accent-color: #ff4444; width: 60px; }
+input.sg { accent-color: #44ff44; width: 60px; }
+input.sb { accent-color: #4488ff; width: 60px; }
+.rv { font-size: 11px; min-width: 26px; font-variant-numeric: tabular-nums; }
+
+/* sel-label chip */
+#sel-label {
+  font-size: 10px; color: #aa88ff; letter-spacing: 0.12em;
+  text-transform: uppercase; white-space: nowrap; padding-right: 4px;
+  border-right: 0.5px solid #2a1f44;
+}
+
+.del-btn {
+  background: transparent; border: 0.5px solid #552222; color: #ff4444;
+  font-size: 11px; padding: 3px 9px; border-radius: 4px; cursor: pointer;
+  font-family: monospace;
+}
+.del-btn:hover { background: #2a0000; border-color: #ff4444; }
+
+#countEl { font-size: 11px; color: #444; margin-left: auto; white-space: nowrap; }
+.btn {
+  background: transparent; border: 0.5px solid #333; color: #777;
+  font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-family: monospace;
+  white-space: nowrap;
+}
+.btn:hover { border-color: #555; color: #ccc; }
+.btn.save { border-color: #aaa4; color: #aaa; }
+.btn.adv  { border-color: #444; color: #666; }
+.btn.adv.on { border-color: #aa88ff; color: #aa88ff; background: #1a1530; }
+
+.adv-lbl { font-size: 9px; color: #444; letter-spacing: 0.12em; white-space: nowrap; padding-right: 2px; }
+
+#canvas { display: block; flex: 1; touch-action: none; }
+</style>
+</head>
+<body>
 <div id="app">
+
+  <!-- toolbar -->
   <div id="toolbar">
-    <div class="obj-tab active" id="tab-spinner" data-obj="spinner">&#9675; SPINNER</div>
+    <div class="obj-tab active" id="tab-select"  data-obj="select">&#8982; SELECT</div>
     <div class="tab-sep"></div>
-    <div class="obj-tab" id="tab-beam" data-obj="beam">&#9135; LASER BEAM</div>
+    <div class="obj-tab" id="tab-spinner" data-obj="spinner">&#9675; SPINNER</div>
     <div class="tab-sep"></div>
-    <span style="padding:0 14px;font-size:10px;color:#333;">click canvas to spawn</span>
+    <div class="obj-tab" id="tab-beam"    data-obj="beam">&#9135; BEAM</div>
+    <div class="tab-sep"></div>
+    <span style="padding:0 12px;font-size:10px;color:#2e2e2e;" id="hint-txt">click to select · drag to move</span>
     <div style="margin-left:auto;display:flex;gap:8px;padding-right:12px;">
       <button class="btn adv" id="advBtn">ADV</button>
       <button class="btn" id="clearBtn">clear</button>
       <button class="btn save" id="saveBtn">save PNG</button>
     </div>
   </div>
-  <div id="controls">
-    <div id="ctrl-spinner" class="ctrl">
+
+  <!-- ══ SINGLE CONTROLS BAR ══════════════════════════════════════════════ -->
+  <div id="controls" class="mode-default">
+
+    <!-- SELECT idle -->
+    <div id="ctx-select-idle" class="ctrl">
+      <span style="font-size:10px;color:#333;letter-spacing:0.1em;">click an object to edit</span>
+    </div>
+
+    <!-- SELECT + spinner selected -->
+    <div id="ctx-sel-spinner" style="display:none;" class="ctrl">
+      <span id="sel-label">⊙ SPINNER</span>
+      <span class="lbl sel">SPEED</span>
+      <input type="range" class="sl-p" id="sl-ss-speed" min="-10" max="10" step="0.1" value="2">
+      <span class="val vp" id="v-ss-speed">7.2°/s</span>
+      <div class="sep"></div>
+      <span class="lbl sel">LENGTH</span>
+      <input type="range" class="sl-p" id="sl-ss-len" min="5" max="120" step="1" value="20">
+      <span class="val vp" id="v-ss-len">20px</span>
+      <div class="sep"></div>
+      <span class="lbl sel">LEAK</span>
+      <input type="range" class="sl-o sl-sm" id="sl-ss-leak" min="0" max="1" step="0.01" value="0">
+      <span class="val vo" id="v-ss-leak">0%</span>
+      <div class="sep"></div>
+      <span class="adv-lbl">LEAK RGB</span>
+      <div class="rgb-row"><span class="rgb-lbl rl">R</span><input type="range" class="sr sl-sm" id="sl-ss-lr" min="0" max="1" step="0.01" value="0"><span class="rv rl" id="v-ss-lr">0%</span></div>
+      <div class="rgb-row"><span class="rgb-lbl gl">G</span><input type="range" class="sg sl-sm" id="sl-ss-lg" min="0" max="1" step="0.01" value="0"><span class="rv gl" id="v-ss-lg">0%</span></div>
+      <div class="rgb-row"><span class="rgb-lbl bl">B</span><input type="range" class="sb sl-sm" id="sl-ss-lb" min="0" max="1" step="0.01" value="0"><span class="rv bl" id="v-ss-lb">0%</span></div>
+    </div>
+
+    <!-- SELECT + beam selected -->
+    <div id="ctx-sel-beam" style="display:none;" class="ctrl">
+      <span id="sel-label-b">— BEAM</span>
+      <span class="lbl sel">DIR</span>
+      <input type="range" class="sl-p" id="sl-sb-dir" min="0" max="359" step="1" value="45">
+      <span class="val vp" id="v-sb-dir">45°</span>
+      <div class="sep"></div>
+      <span class="lbl sel">WIDTH</span>
+      <input type="range" class="sl-p" id="sl-sb-width" min="1" max="10" step="0.1" value="1">
+      <span class="val vp" id="v-sb-width">1×</span>
+      <div class="sep"></div>
+      <span class="adv-lbl">RGB</span>
+      <div class="rgb-row"><span class="rgb-lbl rl">R</span><input type="range" class="sr sl-sm" id="sl-sb-r" min="0" max="1" step="0.01" value="0"><span class="rv rl" id="v-sb-r">0%</span></div>
+      <div class="rgb-row"><span class="rgb-lbl gl">G</span><input type="range" class="sg sl-sm" id="sl-sb-g" min="0" max="1" step="0.01" value="1"><span class="rv gl" id="v-sb-g">100%</span></div>
+      <div class="rgb-row"><span class="rgb-lbl bl">B</span><input type="range" class="sb sl-sm" id="sl-sb-b" min="0" max="1" step="0.01" value="0"><span class="rv bl" id="v-sb-b">0%</span></div>
+    </div>
+
+    <!-- SPINNER create -->
+    <div id="ctx-spinner" style="display:none;" class="ctrl">
       <span class="lbl">CCW</span>
-      <input type="range" id="sl-speed" min="-10" max="10" step="0.1" value="2">
+      <input type="range" class="sl-c" id="sl-speed" min="-10" max="10" step="0.1" value="2">
       <span class="lbl">CW</span>
-      <span class="val" id="v-speed" style="color:#00ffcc;">7.2°/s</span>
+      <span class="val vc" id="v-speed">7.2°/s</span>
       <div class="sep"></div>
       <span class="lbl">LENGTH</span>
-      <input type="range" id="sl-length" min="5" max="120" step="1" value="20">
-      <span class="val" id="v-length" style="color:#00ffcc;">20px</span>
+      <input type="range" class="sl-c" id="sl-length" min="5" max="240" step="1" value="20">
+      <span class="val vc" id="v-length">20px</span>
       <div class="sep"></div>
       <span class="lbl">LEAK</span>
-      <input type="range" id="sl-opacity" min="0" max="1" step="0.01" value="0">
-      <span class="val" id="v-opacity" style="color:#ff9944;">0%</span>
+      <input type="range" class="sl-o" id="sl-opacity" min="0" max="1" step="0.01" value="0">
+      <span class="val vo" id="v-opacity">0%</span>
     </div>
-    <div id="ctrl-beam" class="ctrl" style="display:none;">
+
+    <!-- BEAM create -->
+    <div id="ctx-beam" style="display:none;" class="ctrl">
       <span class="lbl">DIRECTION</span>
       <div id="dir-dial"></div>
-      <input type="range" id="sl-dir" min="0" max="359" step="1" value="45">
-      <span class="val" id="v-dir" style="color:#39ff14;">45°</span>
+      <input type="range" class="sl-g" id="sl-dir" min="0" max="359" step="1" value="45">
+      <span class="val vg" id="v-dir">45°</span>
+      <div class="sep"></div>
+      <span class="lbl">WIDTH</span>
+      <input type="range" class="sl-g" id="sl-beam-width" min="1" max="10" step="0.1" value="1">
+      <span class="val vg" id="v-beam-width">1×</span>
     </div>
-    <div class="sep"></div>
+
+    <!-- always-visible right side -->
+    <div class="sep" id="sep-right"></div>
     <div class="ctrl">
-      <span class="lbl">MIRROR VIS</span>
-      <input type="range" id="sl-brightness" min="0" max="1" step="0.01" value="1">
-      <span class="val" id="v-brightness" style="color:#aaa;">100%</span>
+      <span class="lbl">VIS</span>
+      <input type="range" class="sl-w" id="sl-brightness" min="0" max="1" step="0.01" value="1">
+      <span class="val" id="v-brightness">100%</span>
     </div>
+
+    <!-- delete btn — only visible when selected -->
+    <button class="del-btn" id="delBtn" style="display:none;">✕</button>
+
     <span id="countEl">0 objects</span>
   </div>
+
+  <!-- adv row — only for CREATE modes (shown via ADV button) -->
   <div id="adv-controls">
     <div id="adv-spinner" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span class="adv-section-lbl">MIRROR RGB LEAK</span>
+      <span class="adv-lbl">MIRROR RGB LEAK</span>
       <div class="rgb-row"><span class="rgb-lbl rl">R</span><input type="range" class="sr" id="sl-lr" min="0" max="1" step="0.01" value="0"><span class="rv rl" id="v-lr">0%</span></div>
       <div class="rgb-row"><span class="rgb-lbl gl">G</span><input type="range" class="sg" id="sl-lg" min="0" max="1" step="0.01" value="0"><span class="rv gl" id="v-lg">0%</span></div>
       <div class="rgb-row"><span class="rgb-lbl bl">B</span><input type="range" class="sb" id="sl-lb" min="0" max="1" step="0.01" value="0"><span class="rv bl" id="v-lb">0%</span></div>
     </div>
     <div id="adv-beam" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span class="adv-section-lbl">BEAM RGB</span>
+      <span class="adv-lbl">BEAM RGB</span>
       <div class="rgb-row"><span class="rgb-lbl rl">R</span><input type="range" class="sr" id="sl-br" min="0" max="1" step="0.01" value="0"><span class="rv rl" id="v-br">0%</span></div>
       <div class="rgb-row"><span class="rgb-lbl gl">G</span><input type="range" class="sg" id="sl-bg" min="0" max="1" step="0.01" value="1"><span class="rv gl" id="v-bg">100%</span></div>
       <div class="rgb-row"><span class="rgb-lbl bl">B</span><input type="range" class="sb" id="sl-bb" min="0" max="1" step="0.01" value="0"><span class="rv bl" id="v-bb">0%</span></div>
     </div>
   </div>
+
   <canvas id="canvas"></canvas>
 </div>
 
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const clearBtn = document.getElementById('clearBtn');
-const saveBtn = document.getElementById('saveBtn');
-const advBtn = document.getElementById('advBtn');
+
+// ── DOM ────────────────────────────────────────────────────────────────────
+const clearBtn    = document.getElementById('clearBtn');
+const saveBtn     = document.getElementById('saveBtn');
+const advBtn      = document.getElementById('advBtn');
+const delBtn      = document.getElementById('delBtn');
 const advControls = document.getElementById('adv-controls');
-const advSpinnerEl = document.getElementById('adv-spinner');
-const advBeamEl = document.getElementById('adv-beam');
-const countEl = document.getElementById('countEl');
-const tabs = document.querySelectorAll('.obj-tab');
-const ctrlSpinner = document.getElementById('ctrl-spinner');
-const ctrlBeam = document.getElementById('ctrl-beam');
+const advSpinnerEl= document.getElementById('adv-spinner');
+const advBeamEl   = document.getElementById('adv-beam');
+const countEl     = document.getElementById('countEl');
+const hintTxt     = document.getElementById('hint-txt');
+const controlsBar = document.getElementById('controls');
+const tabs        = document.querySelectorAll('.obj-tab');
 
-const slSpeed = document.getElementById('sl-speed'), vSpeed = document.getElementById('v-speed');
-const slLength = document.getElementById('sl-length'), vLength = document.getElementById('v-length');
-const slOpacity = document.getElementById('sl-opacity'), vOpacity = document.getElementById('v-opacity');
-const slBrightness = document.getElementById('sl-brightness'), vBrightness = document.getElementById('v-brightness');
-const slDir = document.getElementById('sl-dir'), vDir = document.getElementById('v-dir');
-const dirDial = document.getElementById('dir-dial');
-const slLR = document.getElementById('sl-lr'), vLR = document.getElementById('v-lr');
-const slLG = document.getElementById('sl-lg'), vLG = document.getElementById('v-lg');
-const slLB = document.getElementById('sl-lb'), vLB = document.getElementById('v-lb');
-const slBR = document.getElementById('sl-br'), vBR = document.getElementById('v-br');
-const slBG = document.getElementById('sl-bg'), vBG = document.getElementById('v-bg');
-const slBB = document.getElementById('sl-bb'), vBB = document.getElementById('v-bb');
+// context panels
+const ctxSelectIdle = document.getElementById('ctx-select-idle');
+const ctxSelSpinner = document.getElementById('ctx-sel-spinner');
+const ctxSelBeam    = document.getElementById('ctx-sel-beam');
+const ctxSpinner    = document.getElementById('ctx-spinner');
+const ctxBeam       = document.getElementById('ctx-beam');
 
-let selectedObj = 'spinner';
+// create sliders
+const slSpeed  = document.getElementById('sl-speed'),     vSpeed  = document.getElementById('v-speed');
+const slLength = document.getElementById('sl-length'),    vLength = document.getElementById('v-length');
+const slOpacity= document.getElementById('sl-opacity'),   vOpacity= document.getElementById('v-opacity');
+const slBright = document.getElementById('sl-brightness'),vBright = document.getElementById('v-brightness');
+const slDir    = document.getElementById('sl-dir'),       vDir    = document.getElementById('v-dir');
+const dirDial  = document.getElementById('dir-dial');
+const slLR=document.getElementById('sl-lr'),vLR=document.getElementById('v-lr');
+const slLG=document.getElementById('sl-lg'),vLG=document.getElementById('v-lg');
+const slLB=document.getElementById('sl-lb'),vLB=document.getElementById('v-lb');
+const slBR=document.getElementById('sl-br'),vBR=document.getElementById('v-br');
+const slBG=document.getElementById('sl-bg'),vBG=document.getElementById('v-bg');
+const slBB=document.getElementById('sl-bb'),vBB=document.getElementById('v-bb');
+
+// selection sliders — spinner
+const slSsSpeed = document.getElementById('sl-ss-speed'), vSsSpeed = document.getElementById('v-ss-speed');
+const slSsLen   = document.getElementById('sl-ss-len'),   vSsLen   = document.getElementById('v-ss-len');
+const slSsLeak  = document.getElementById('sl-ss-leak'),  vSsLeak  = document.getElementById('v-ss-leak');
+const slSsLR=document.getElementById('sl-ss-lr'),vSsLR=document.getElementById('v-ss-lr');
+const slSsLG=document.getElementById('sl-ss-lg'),vSsLG=document.getElementById('v-ss-lg');
+const slSsLB=document.getElementById('sl-ss-lb'),vSsLB=document.getElementById('v-ss-lb');
+// selection sliders — beam
+const slSbDir=document.getElementById('sl-sb-dir'),vSbDir=document.getElementById('v-sb-dir');
+const slSbWidth=document.getElementById('sl-sb-width'),vSbWidth=document.getElementById('v-sb-width');
+const slSbR=document.getElementById('sl-sb-r'),vSbR=document.getElementById('v-sb-r');
+const slSbG=document.getElementById('sl-sb-g'),vSbG=document.getElementById('v-sb-g');
+const slSbB=document.getElementById('sl-sb-b'),vSbB=document.getElementById('v-sb-b');
+
+// ── state ──────────────────────────────────────────────────────────────────
+let selectedObj = 'select';
 let spinnerSpeed = 2.0, spinnerLength = 20, spinnerOpacity = 0.0, mirrorBrightness = 1.0;
-let beamDir = 45, advMode = false;
+let beamDir = 45, advMode = false, beamWidth = 1.0;
 let spinnerLeakR = 0, spinnerLeakG = 0, spinnerLeakB = 0;
 let beamR = 0, beamG = 1, beamB = 0;
 const objects = [];
 const SPEED_SCALE = 0.01, MIN_ENERGY = 0.04;
 let mouseX = -9999, mouseY = -9999, mouseOnCanvas = false, previewAngle = 0;
+let selectedIdx = -1, isDragging = false, dragOffX = 0, dragOffY = 0;
+const HIT_RADIUS = 18;
 
 function resize() { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
 resize(); window.addEventListener('resize', resize);
 
-advBtn.addEventListener('click', () => {
-  advMode = !advMode;
-  advBtn.classList.toggle('on', advMode);
-  advControls.classList.toggle('visible', advMode);
-  if (advMode) {
-    advSpinnerEl.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
-    advBeamEl.style.display = selectedObj === 'beam' ? 'flex' : 'none';
+// ── helpers ────────────────────────────────────────────────────────────────
+function speedLabel(s) {
+  if (s === 0) return 'stopped';
+  return (Math.abs(s) * SPEED_SCALE * 360).toFixed(1) + '°/s';
+}
+function updateCount() {
+  countEl.textContent = objects.length + ' obj' + (objects.length !== 1 ? 's' : '');
+}
+
+// ── context switching — controls bar ──────────────────────────────────────
+function showContext(ctx) {
+  ctxSelectIdle.style.display = 'none';
+  ctxSelSpinner.style.display = 'none';
+  ctxSelBeam.style.display    = 'none';
+  ctxSpinner.style.display    = 'none';
+  ctxBeam.style.display       = 'none';
+  delBtn.style.display        = 'none';
+  controlsBar.classList.remove('mode-selected');
+  if (ctx === 'select-idle')   { ctxSelectIdle.style.display = 'flex'; }
+  if (ctx === 'sel-spinner')   { ctxSelSpinner.style.display = 'flex'; delBtn.style.display = 'inline-block'; controlsBar.classList.add('mode-selected'); }
+  if (ctx === 'sel-beam')      { ctxSelBeam.style.display    = 'flex'; delBtn.style.display = 'inline-block'; controlsBar.classList.add('mode-selected'); }
+  if (ctx === 'create-spinner'){ ctxSpinner.style.display    = 'flex'; }
+  if (ctx === 'create-beam')   { ctxBeam.style.display       = 'flex'; }
+}
+
+// ── hit testing ───────────────────────────────────────────────────────────
+function hitTest(ox, oy, obj) {
+  if (obj.type === 'spinner') {
+    const cos = Math.cos(obj.angle), sin = Math.sin(obj.angle);
+    const half = obj.length / 2;
+    const ax = obj.x - cos * half, ay = obj.y - sin * half;
+    const bx = obj.x + cos * half, by = obj.y + sin * half;
+    const dx = bx - ax, dy = by - ay;
+    const len2 = dx*dx + dy*dy;
+    const t = Math.max(0, Math.min(1, ((ox-ax)*dx + (oy-ay)*dy) / len2));
+    const px = ax + t*dx - ox, py = ay + t*dy - oy;
+    return Math.sqrt(px*px + py*py) < HIT_RADIUS;
   }
+  const dx = ox - obj.x, dy = oy - obj.y;
+  return Math.sqrt(dx*dx + dy*dy) < HIT_RADIUS;
+}
+function findHit(ox, oy) {
+  for (let i = objects.length - 1; i >= 0; i--)
+    if (hitTest(ox, oy, objects[i])) return i;
+  return -1;
+}
+
+// ── select object → populate inspector ────────────────────────────────────
+function selectObject(idx) {
+  selectedIdx = idx;
+  if (idx === -1) { showContext('select-idle'); return; }
+  const o = objects[idx];
+  if (o.type === 'spinner') {
+    showContext('sel-spinner');
+    document.getElementById('sel-label').textContent = `⊙ SPINNER #${idx+1}`;
+    slSsSpeed.value = o.speed;   vSsSpeed.textContent = speedLabel(o.speed);
+    slSsLen.value   = o.length;  vSsLen.textContent   = o.length + 'px';
+    const avgLeak = (o.leakR + o.leakG + o.leakB) / 3;
+    slSsLeak.value  = avgLeak;   vSsLeak.textContent  = Math.round(avgLeak * 100) + '%';
+    slSsLR.value = o.leakR; vSsLR.textContent = Math.round(o.leakR*100)+'%';
+    slSsLG.value = o.leakG; vSsLG.textContent = Math.round(o.leakG*100)+'%';
+    slSsLB.value = o.leakB; vSsLB.textContent = Math.round(o.leakB*100)+'%';
+  } else {
+    showContext('sel-beam');
+    document.getElementById('sel-label-b').textContent = `— BEAM #${idx+1}`;
+    slSbDir.value = o.dir; vSbDir.textContent = o.dir + '°';
+    const w = o.width || 1;
+    slSbWidth.value = w; vSbWidth.textContent = w.toFixed(1) + '×';
+    slSbR.value = o.r; vSbR.textContent = Math.round(o.r*100)+'%';
+    slSbG.value = o.g; vSbG.textContent = Math.round(o.g*100)+'%';
+    slSbB.value = o.b; vSbB.textContent = Math.round(o.b*100)+'%';
+  }
+}
+
+// ── inspector sliders → object ─────────────────────────────────────────────
+slSsSpeed.addEventListener('input', () => {
+  if (selectedIdx < 0) return;
+  objects[selectedIdx].speed = parseFloat(slSsSpeed.value);
+  vSsSpeed.textContent = speedLabel(objects[selectedIdx].speed);
+});
+slSsLen.addEventListener('input', () => {
+  if (selectedIdx < 0) return;
+  objects[selectedIdx].length = parseInt(slSsLen.value);
+  vSsLen.textContent = objects[selectedIdx].length + 'px';
+});
+slSsLeak.addEventListener('input', () => {
+  if (selectedIdx < 0) return;
+  const v = parseFloat(slSsLeak.value);
+  objects[selectedIdx].leakR = v; objects[selectedIdx].leakG = v; objects[selectedIdx].leakB = v;
+  vSsLeak.textContent = Math.round(v*100)+'%';
+  slSsLR.value = v; vSsLR.textContent = Math.round(v*100)+'%';
+  slSsLG.value = v; vSsLG.textContent = Math.round(v*100)+'%';
+  slSsLB.value = v; vSsLB.textContent = Math.round(v*100)+'%';
+});
+slSsLR.addEventListener('input', () => { if (selectedIdx<0) return; objects[selectedIdx].leakR=parseFloat(slSsLR.value); vSsLR.textContent=Math.round(objects[selectedIdx].leakR*100)+'%'; });
+slSsLG.addEventListener('input', () => { if (selectedIdx<0) return; objects[selectedIdx].leakG=parseFloat(slSsLG.value); vSsLG.textContent=Math.round(objects[selectedIdx].leakG*100)+'%'; });
+slSsLB.addEventListener('input', () => { if (selectedIdx<0) return; objects[selectedIdx].leakB=parseFloat(slSsLB.value); vSsLB.textContent=Math.round(objects[selectedIdx].leakB*100)+'%'; });
+slSbDir.addEventListener('input', () => { if (selectedIdx<0) return; objects[selectedIdx].dir=parseInt(slSbDir.value); vSbDir.textContent=objects[selectedIdx].dir+'°'; });
+slSbWidth.addEventListener('input', () => { if (selectedIdx<0) return; objects[selectedIdx].width=parseFloat(slSbWidth.value); vSbWidth.textContent=objects[selectedIdx].width.toFixed(1)+'×'; });
+slSbR.addEventListener('input', () => { if (selectedIdx<0) return; objects[selectedIdx].r=parseFloat(slSbR.value); vSbR.textContent=Math.round(objects[selectedIdx].r*100)+'%'; });
+slSbG.addEventListener('input', () => { if (selectedIdx<0) return; objects[selectedIdx].g=parseFloat(slSbG.value); vSbG.textContent=Math.round(objects[selectedIdx].g*100)+'%'; });
+slSbB.addEventListener('input', () => { if (selectedIdx<0) return; objects[selectedIdx].b=parseFloat(slSbB.value); vSbB.textContent=Math.round(objects[selectedIdx].b*100)+'%'; });
+
+// ── delete ─────────────────────────────────────────────────────────────────
+delBtn.addEventListener('click', () => {
+  if (selectedIdx < 0) return;
+  objects.splice(selectedIdx, 1);
+  selectObject(-1); updateCount();
 });
 
+// ── tab switching ──────────────────────────────────────────────────────────
 tabs.forEach(tab => tab.addEventListener('click', () => {
   tabs.forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
   selectedObj = tab.dataset.obj;
-  ctrlSpinner.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
-  ctrlBeam.style.display = selectedObj === 'beam' ? 'flex' : 'none';
-  if (advMode) {
-    advSpinnerEl.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
-    advBeamEl.style.display = selectedObj === 'beam' ? 'flex' : 'none';
+  hintTxt.textContent = selectedObj === 'select' ? 'click to select · drag to move' : 'click canvas to spawn';
+  if (selectedObj === 'select') {
+    showContext(selectedIdx >= 0 ? (objects[selectedIdx]?.type === 'spinner' ? 'sel-spinner' : 'sel-beam') : 'select-idle');
+    advControls.classList.remove('visible');
+  } else if (selectedObj === 'spinner') {
+    showContext('create-spinner');
+    selectedIdx = -1; delBtn.style.display = 'none'; // deselect without triggering showContext
+    if (advMode) { advSpinnerEl.style.display='flex'; advBeamEl.style.display='none'; advControls.classList.add('visible'); }
+    else { advControls.classList.remove('visible'); }
+  } else {
+    showContext('create-beam');
+    selectedIdx = -1; delBtn.style.display = 'none'; // deselect without triggering showContext
+    if (advMode) { advSpinnerEl.style.display='none'; advBeamEl.style.display='flex'; advControls.classList.add('visible'); }
+    else { advControls.classList.remove('visible'); }
   }
+  canvas.style.cursor = selectedObj === 'select' ? 'default' : 'none';
 }));
 
+// ── adv toggle ─────────────────────────────────────────────────────────────
+advBtn.addEventListener('click', () => {
+  advMode = !advMode;
+  advBtn.classList.toggle('on', advMode);
+  if (advMode && selectedObj !== 'select') {
+    advSpinnerEl.style.display = selectedObj === 'spinner' ? 'flex' : 'none';
+    advBeamEl.style.display    = selectedObj === 'beam'    ? 'flex' : 'none';
+    advControls.classList.add('visible');
+  } else {
+    advControls.classList.remove('visible');
+  }
+});
+
+// ── create controls ────────────────────────────────────────────────────────
 slSpeed.addEventListener('input', () => {
   spinnerSpeed = parseFloat(slSpeed.value);
-  const d = (Math.abs(spinnerSpeed) * SPEED_SCALE * 360).toFixed(1);
-  vSpeed.textContent = spinnerSpeed === 0 ? 'stopped' : d + '°/s';
+  vSpeed.textContent = speedLabel(spinnerSpeed);
   vSpeed.style.color = spinnerSpeed === 0 ? '#555' : (spinnerSpeed > 0 ? '#00ffcc' : '#ff9944');
 });
-slLength.addEventListener('input', () => { spinnerLength = parseInt(slLength.value); vLength.textContent = spinnerLength + 'px'; });
+slLength.addEventListener('input',  () => { spinnerLength  = parseInt(slLength.value);   vLength.textContent  = spinnerLength + 'px'; });
 slOpacity.addEventListener('input', () => {
   spinnerOpacity = parseFloat(slOpacity.value);
   vOpacity.textContent = Math.round(spinnerOpacity * 100) + '%';
-  if (!advMode) {
-    spinnerLeakR = spinnerOpacity;
-    spinnerLeakG = spinnerOpacity;
-    spinnerLeakB = spinnerOpacity;
-  }
+  if (!advMode) { spinnerLeakR = spinnerOpacity; spinnerLeakG = spinnerOpacity; spinnerLeakB = spinnerOpacity; }
 });
-slBrightness.addEventListener('input', () => { mirrorBrightness = parseFloat(slBrightness.value); vBrightness.textContent = Math.round(mirrorBrightness * 100) + '%'; });
-
-slLR.addEventListener('input', () => { spinnerLeakR = parseFloat(slLR.value); vLR.textContent = Math.round(spinnerLeakR * 100) + '%'; });
-slLG.addEventListener('input', () => { spinnerLeakG = parseFloat(slLG.value); vLG.textContent = Math.round(spinnerLeakG * 100) + '%'; });
-slLB.addEventListener('input', () => { spinnerLeakB = parseFloat(slLB.value); vLB.textContent = Math.round(spinnerLeakB * 100) + '%'; });
-slBR.addEventListener('input', () => { beamR = parseFloat(slBR.value); vBR.textContent = Math.round(beamR * 100) + '%'; });
-slBG.addEventListener('input', () => { beamG = parseFloat(slBG.value); vBG.textContent = Math.round(beamG * 100) + '%'; });
-slBB.addEventListener('input', () => { beamB = parseFloat(slBB.value); vBB.textContent = Math.round(beamB * 100) + '%'; });
+slBright.addEventListener('input',  () => { mirrorBrightness = parseFloat(slBright.value); vBright.textContent = Math.round(mirrorBrightness * 100) + '%'; });
+slDir.addEventListener('input',     () => { beamDir = parseInt(slDir.value); vDir.textContent = beamDir + '°'; updateDial(beamDir); });
+const slBeamWidth = document.getElementById('sl-beam-width'), vBeamWidth = document.getElementById('v-beam-width');
+slBeamWidth.addEventListener('input', () => { beamWidth = parseFloat(slBeamWidth.value); vBeamWidth.textContent = beamWidth.toFixed(1) + '×'; });
+slLR.addEventListener('input', () => { spinnerLeakR = parseFloat(slLR.value); vLR.textContent = Math.round(spinnerLeakR*100)+'%'; });
+slLG.addEventListener('input', () => { spinnerLeakG = parseFloat(slLG.value); vLG.textContent = Math.round(spinnerLeakG*100)+'%'; });
+slLB.addEventListener('input', () => { spinnerLeakB = parseFloat(slLB.value); vLB.textContent = Math.round(spinnerLeakB*100)+'%'; });
+slBR.addEventListener('input', () => { beamR = parseFloat(slBR.value); vBR.textContent = Math.round(beamR*100)+'%'; });
+slBG.addEventListener('input', () => { beamG = parseFloat(slBG.value); vBG.textContent = Math.round(beamG*100)+'%'; });
+slBB.addEventListener('input', () => { beamB = parseFloat(slBB.value); vBB.textContent = Math.round(beamB*100)+'%'; });
 
 function updateDial(deg) {
   const r = deg * Math.PI / 180;
-  dirDial.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" style="display:block;">
-    <circle cx="14" cy="14" r="12" fill="none" stroke="#2a2a2a" stroke-width="1"/>
-    <line x1="14" y1="14" x2="${14+Math.sin(r)*10}" y2="${14-Math.cos(r)*10}" stroke="#39ff14" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="14" cy="14" r="2" fill="#39ff14"/>
+  dirDial.innerHTML = `<svg width="26" height="26" viewBox="0 0 26 26" style="display:block;">
+    <circle cx="13" cy="13" r="11" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="13" y1="13" x2="${13+Math.sin(r)*9}" y2="${13-Math.cos(r)*9}" stroke="#39ff14" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="13" cy="13" r="2" fill="#39ff14"/>
   </svg>`;
 }
-slDir.addEventListener('input', () => { beamDir = parseInt(slDir.value); vDir.textContent = beamDir + '°'; updateDial(beamDir); });
 updateDial(45);
 
-function updateCount() { countEl.textContent = objects.length + ' object' + (objects.length !== 1 ? 's' : ''); }
-
-canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; });
+// ── mouse events ───────────────────────────────────────────────────────────
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+  if (isDragging && selectedIdx >= 0) {
+    objects[selectedIdx].x = mouseX - dragOffX;
+    objects[selectedIdx].y = mouseY - dragOffY;
+    canvas.style.cursor = 'grabbing';
+  } else if (selectedObj === 'select') {
+    canvas.style.cursor = findHit(mouseX, mouseY) >= 0 ? 'grab' : 'default';
+  }
+});
 canvas.addEventListener('mouseenter', () => { mouseOnCanvas = true; });
-canvas.addEventListener('mouseleave', () => { mouseOnCanvas = false; });
+canvas.addEventListener('mouseleave', () => { mouseOnCanvas = false; isDragging = false; });
+
+canvas.addEventListener('mousedown', e => {
+  if (selectedObj !== 'select') return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const hit = findHit(x, y);
+  if (hit >= 0) {
+    selectObject(hit);
+    isDragging = true;
+    dragOffX = x - objects[hit].x;
+    dragOffY = y - objects[hit].y;
+    canvas.style.cursor = 'grabbing';
+  } else {
+    selectObject(-1);
+  }
+  e.preventDefault();
+});
+document.addEventListener('mouseup', () => {
+  if (isDragging) { isDragging = false; canvas.style.cursor = selectedObj === 'select' ? 'default' : 'none'; }
+});
+
+let lastTouchEnd = 0;
 
 canvas.addEventListener('click', e => {
-  const r = canvas.getBoundingClientRect();
-  const x = e.clientX - r.left, y = e.clientY - r.top;
+  if (selectedObj === 'select') return;
+  if (Date.now() - lastTouchEnd < 400) return; // suppress click fired after touchend
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
   if (selectedObj === 'spinner') {
     objects.push({ type: 'spinner', x, y, speed: spinnerSpeed, angle: previewAngle,
       length: spinnerLength, hue: Math.random() * 360,
       leakR: spinnerLeakR, leakG: spinnerLeakG, leakB: spinnerLeakB });
   } else {
     objects.push({ type: 'beam', x, y, dir: beamDir, phase: Math.random() * Math.PI * 2,
-      r: beamR, g: beamG, b: beamB });
+      r: beamR, g: beamG, b: beamB, width: beamWidth });
   }
   updateCount();
 });
 
-clearBtn.addEventListener('click', () => { objects.length = 0; updateCount(); });
+// ── save/clear ─────────────────────────────────────────────────────────────
+clearBtn.addEventListener('click', () => { objects.length = 0; selectObject(-1); updateCount(); });
 saveBtn.addEventListener('click', () => {
   const tmp = document.createElement('canvas');
   tmp.width = canvas.width; tmp.height = canvas.height;
@@ -245,188 +542,239 @@ saveBtn.addEventListener('click', () => {
   tc.fillStyle = '#0d0d0d'; tc.fillRect(0, 0, tmp.width, tmp.height);
   tc.drawImage(canvas, 0, 0);
   const a = document.createElement('a');
-  a.href = tmp.toDataURL('image/png'); a.download = 'creative-coding.png';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  a.href = tmp.toDataURL('image/png'); a.download = 'laser-mirror.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
 
-function segIntersect(px, py, dx, dy, ax, ay, bx, by) {
-  const ex = bx - ax, ey = by - ay;
-  const denom = dx * ey - dy * ex;
-  if (Math.abs(denom) < 1e-10) return null;
-  const tx = ax - px, ty = ay - py;
-  const t = (tx * ey - ty * ex) / denom;
-  const u = (tx * dy - ty * dx) / denom;
-  if (t > 1e-4 && u >= 0 && u <= 1) return { t, ix: px + dx * t, iy: py + dy * t };
-  return null;
+// ── document-level touch test ──────────────────────────────────────────────
+document.addEventListener('touchstart', e => {
+  console.log(`DOCUMENT touchstart: target=${e.target.id||e.target.tagName} touches=${e.touches.length}`);
+}, { passive: true });
+
+// ── two-finger touch: hold + spin/rotate ──────────────────────────────────
+let pinnedIdx    = -1;
+let pinFingerId  = -1;
+let spinFingerId = -1;
+
+function getTouchPos(touch) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
 }
 
-function reflect(dx, dy, nx, ny) {
-  const len = Math.sqrt(nx * nx + ny * ny);
-  const nnx = nx / len, nny = ny / len;
-  const dot = dx * nnx + dy * nny;
-  return { dx: dx - 2 * dot * nnx, dy: dy - 2 * dot * nny };
-}
-
-function edgeEnd(ox, oy, dx, dy) {
-  const W = canvas.width, H = canvas.height;
-  let t = Infinity;
-  if (dx > 0) t = Math.min(t, (W - ox) / dx);
-  if (dx < 0) t = Math.min(t, (0 - ox) / dx);
-  if (dy > 0) t = Math.min(t, (H - oy) / dy);
-  if (dy < 0) t = Math.min(t, (0 - oy) / dy);
-  return t;
-}
-
-function traceRay(ox, oy, dirDeg, spinners, excludeIdx, er, eg, eb, depth, segments) {
-  if (depth > 24 || (er < MIN_ENERGY && eg < MIN_ENERGY && eb < MIN_ENERGY)) return;
-  const rad = (dirDeg - 90) * Math.PI / 180;
-  const dx = Math.cos(rad), dy = Math.sin(rad);
-  let nearest = null, nearestIdx = -1;
-  for (let i = 0; i < spinners.length; i++) {
-    if (i === excludeIdx) continue;
-    const s = spinners[i];
-    const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
-    const half = s.length / 2;
-    const hit = segIntersect(ox, oy, dx, dy,
-      s.x - cos * half, s.y - sin * half,
-      s.x + cos * half, s.y + sin * half);
-    if (hit && (!nearest || hit.t < nearest.t)) { nearest = hit; nearestIdx = i; }
+function nearestObject(x, y) {
+  let best = -1, bestDist = Infinity;
+  for (let i = 0; i < objects.length; i++) {
+    const o = objects[i];
+    const d = Math.hypot(x - o.x, y - o.y);
+    if (d < bestDist) { bestDist = d; best = i; }
   }
-  const tEdge = edgeEnd(ox, oy, dx, dy);
-  if (!nearest || nearest.t >= tEdge) {
-    segments.push({ x1: ox, y1: oy, x2: ox + dx * tEdge, y2: oy + dy * tEdge, er, eg, eb, last: true });
+  return best;
+}
+
+canvas.addEventListener('touchstart', e => {
+  lastTouchEnd = Date.now();
+  console.log(`touchstart FIRED: mode=${selectedObj} objs=${objects.length} total=${e.touches.length}`);
+  if (selectedObj === 'select') return;
+  e.preventDefault();
+
+  for (const t of e.changedTouches) {
+    console.log(`  changed touch id=${t.identifier} pinFingerId=${pinFingerId}`);
+    if (pinFingerId === -1) {
+      const pos = getTouchPos(t);
+      pinnedIdx   = objects.length > 0 ? nearestObject(pos.x, pos.y) : -1;
+      pinFingerId = t.identifier;
+      pinTapX = pos.x; pinTapY = pos.y;
+      pinTapTime = Date.now();
+      console.log(`  → first finger: pinnedIdx=${pinnedIdx} at (${pos.x.toFixed(0)},${pos.y.toFixed(0)})`);
+    } else if (spinFingerId === -1 && t.identifier !== pinFingerId) {
+      spinFingerId = t.identifier;
+      console.log(`  → second finger registered: spinFingerId=${spinFingerId}`);
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (selectedObj === 'select') return;
+  e.preventDefault();
+
+  console.log(`touchmove: pinnedIdx=${pinnedIdx} spinFingerId=${spinFingerId} changedTouches=${e.changedTouches.length}`);
+
+  if (pinnedIdx < 0 || spinFingerId === -1) {
+    console.log(`  → skipped: pinnedIdx=${pinnedIdx} spinFingerId=${spinFingerId}`);
     return;
   }
-  segments.push({ x1: ox, y1: oy, x2: nearest.ix, y2: nearest.iy, er, eg, eb, last: false });
-  const s = spinners[nearestIdx];
-  const lR = s.leakR, lG = s.leakG, lB = s.leakB;
-  const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
-  const ref = reflect(dx, dy, -sin, cos);
-  const reflectAngle = (Math.atan2(ref.dy, ref.dx) * 180 / Math.PI + 90 + 360) % 360;
-  traceRay(nearest.ix, nearest.iy, reflectAngle, spinners, nearestIdx,
-    er * (1 - lR), eg * (1 - lG), eb * (1 - lB), depth + 1, segments);
-  if (lR > 0 || lG > 0 || lB > 0) {
-    const throughAngle = (Math.atan2(dy, dx) * 180 / Math.PI + 90 + 360) % 360;
-    traceRay(nearest.ix, nearest.iy, throughAngle, spinners, nearestIdx,
-      er * lR, eg * lG, eb * lB, depth + 1, segments);
+
+  for (const t of e.changedTouches) {
+    console.log(`  touch id=${t.identifier} (looking for spinFingerId=${spinFingerId})`);
+    if (t.identifier !== spinFingerId) continue;
+    const pos = getTouchPos(t);
+    const o   = objects[pinnedIdx];
+    const dx  = pos.x - o.x;
+    const dy  = pos.y - o.y;
+    const angle = Math.atan2(dy, dx);
+    console.log(`  → pos=(${pos.x.toFixed(0)},${pos.y.toFixed(0)}) obj=(${o.x.toFixed(0)},${o.y.toFixed(0)}) dx=${dx.toFixed(0)} dy=${dy.toFixed(0)} angle=${(angle*180/Math.PI).toFixed(1)}°`);
+
+    if (o.type === 'spinner') {
+      o.angle = angle;
+      console.log(`  → spinner angle set to ${(angle*180/Math.PI).toFixed(1)}°`);
+    } else if (o.type === 'beam') {
+      o.dir = (angle * 180 / Math.PI + 90 + 360) % 360;
+      console.log(`  → beam dir set to ${o.dir.toFixed(1)}°`);
+    }
   }
+}, { passive: false });
+
+let pinTapX = 0, pinTapY = 0, pinTapTime = 0;
+
+canvas.addEventListener('touchend', e => {
+  lastTouchEnd = Date.now();
+  for (const t of e.changedTouches) {
+    if (t.identifier === spinFingerId) {
+      spinFingerId = -1;
+    }
+    if (t.identifier === pinFingerId) {
+      // if no second finger was ever used and tap was quick → spawn
+      if (spinFingerId === -1 && Date.now() - pinTapTime < 300 && selectedObj !== 'select') {
+        if (selectedObj === 'spinner') {
+          objects.push({ type: 'spinner', x: pinTapX, y: pinTapY, speed: spinnerSpeed,
+            angle: previewAngle, length: spinnerLength, hue: Math.random() * 360,
+            leakR: spinnerLeakR, leakG: spinnerLeakG, leakB: spinnerLeakB });
+        } else {
+          objects.push({ type: 'beam', x: pinTapX, y: pinTapY, dir: beamDir,
+            phase: Math.random() * Math.PI * 2, r: beamR, g: beamG, b: beamB, width: beamWidth });
+        }
+        updateCount();
+      }
+      pinFingerId  = -1;
+      pinnedIdx    = -1;
+      spinFingerId = -1;
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', () => {
+  lastTouchEnd = Date.now();
+  pinnedIdx = -1; pinFingerId = -1; spinFingerId = -1;
+}, { passive: false });
+function segIntersect(px, py, dx, dy, ax, ay, bx, by) {
+  const ex=bx-ax,ey=by-ay,denom=dx*ey-dy*ex;
+  if (Math.abs(denom)<1e-10) return null;
+  const tx=ax-px,ty=ay-py,t=(tx*ey-ty*ex)/denom,u=(tx*dy-ty*dx)/denom;
+  if (t>1e-4&&u>=0&&u<=1) return {t,ix:px+dx*t,iy:py+dy*t};
+  return null;
+}
+function reflect(dx,dy,nx,ny){const l=Math.sqrt(nx*nx+ny*ny),nnx=nx/l,nny=ny/l,d=dx*nnx+dy*nny;return{dx:dx-2*d*nnx,dy:dy-2*d*nny};}
+function edgeEnd(ox,oy,dx,dy){const W=canvas.width,H=canvas.height;let t=Infinity;if(dx>0)t=Math.min(t,(W-ox)/dx);if(dx<0)t=Math.min(t,(0-ox)/dx);if(dy>0)t=Math.min(t,(H-oy)/dy);if(dy<0)t=Math.min(t,(0-oy)/dy);return t;}
+function traceRay(ox,oy,dirDeg,spinners,excl,er,eg,eb,depth,segs){
+  if(depth>24||(er<MIN_ENERGY&&eg<MIN_ENERGY&&eb<MIN_ENERGY))return;
+  const rad=(dirDeg-90)*Math.PI/180,dx=Math.cos(rad),dy=Math.sin(rad);
+  let nearest=null,ni=-1;
+  for(let i=0;i<spinners.length;i++){
+    if(i===excl)continue;
+    const s=spinners[i],cos=Math.cos(s.angle),sin=Math.sin(s.angle),half=s.length/2;
+    const h=segIntersect(ox,oy,dx,dy,s.x-cos*half,s.y-sin*half,s.x+cos*half,s.y+sin*half);
+    if(h&&(!nearest||h.t<nearest.t)){nearest=h;ni=i;}
+  }
+  const te=edgeEnd(ox,oy,dx,dy);
+  if(!nearest||nearest.t>=te){segs.push({x1:ox,y1:oy,x2:ox+dx*te,y2:oy+dy*te,er,eg,eb,last:true});return;}
+  segs.push({x1:ox,y1:oy,x2:nearest.ix,y2:nearest.iy,er,eg,eb,last:false});
+  const s=spinners[ni],lR=s.leakR,lG=s.leakG,lB=s.leakB,cos=Math.cos(s.angle),sin=Math.sin(s.angle);
+  const ref=reflect(dx,dy,-sin,cos);
+  traceRay(nearest.ix,nearest.iy,(Math.atan2(ref.dy,ref.dx)*180/Math.PI+90+360)%360,spinners,ni,er*(1-lR),eg*(1-lG),eb*(1-lB),depth+1,segs);
+  if(lR>0||lG>0||lB>0)traceRay(nearest.ix,nearest.iy,(Math.atan2(dy,dx)*180/Math.PI+90+360)%360,spinners,ni,er*lR,eg*lG,eb*lB,depth+1,segs);
 }
 
-function drawBeamSegments(segs, baseAlpha, ghost) {
-  for (const seg of segs) {
-    const scale = ghost ? 0.45 : baseAlpha;
-    const bright = Math.max(seg.er, seg.eg, seg.eb);
-    if (bright < 0.01) continue;
-    const r = Math.round(seg.er * 255), g = Math.round(seg.eg * 255), b = Math.round(seg.eb * 255);
-    ctx.save();
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = `rgba(${r},${g},${b},${scale * bright * 0.15})`;
-    ctx.lineWidth = 7; ctx.shadowBlur = 0;
-    ctx.beginPath(); ctx.moveTo(seg.x1, seg.y1); ctx.lineTo(seg.x2, seg.y2); ctx.stroke();
-    ctx.strokeStyle = `rgba(${r},${g},${b},${scale * bright * 0.6})`;
-    ctx.lineWidth = 1.2; ctx.shadowColor = `rgb(${r},${g},${b})`; ctx.shadowBlur = ghost ? 2 : 5;
-    ctx.beginPath(); ctx.moveTo(seg.x1, seg.y1); ctx.lineTo(seg.x2, seg.y2); ctx.stroke();
-    ctx.strokeStyle = `rgba(${Math.min(255,r+80)},${Math.min(255,g+80)},${Math.min(255,b+80)},${scale * bright * 0.7})`;
-    ctx.lineWidth = 0.5; ctx.shadowBlur = 0;
-    ctx.beginPath(); ctx.moveTo(seg.x1, seg.y1); ctx.lineTo(seg.x2, seg.y2); ctx.stroke();
-    if (!seg.last) {
-      ctx.shadowColor = `rgb(${r},${g},${b})`; ctx.shadowBlur = ghost ? 4 : 8;
-      ctx.fillStyle = `rgba(${r},${g},${b},${scale * bright * 0.85})`;
-      ctx.beginPath(); ctx.arc(seg.x2, seg.y2, 2, 0, Math.PI * 2); ctx.fill();
-    }
+// ── draw ───────────────────────────────────────────────────────────────────
+function drawSegs(segs,base,ghost,wMult){
+  wMult = wMult || 1;
+  for(const seg of segs){
+    const sc=ghost?0.45:base,bright=Math.max(seg.er,seg.eg,seg.eb);
+    if(bright<0.01)continue;
+    const r=Math.round(seg.er*255),g=Math.round(seg.eg*255),b=Math.round(seg.eb*255);
+    ctx.save();ctx.lineCap='round';
+    ctx.strokeStyle=`rgba(${r},${g},${b},${sc*bright*0.15})`;ctx.lineWidth=7;ctx.shadowBlur=0;
+    ctx.beginPath();ctx.moveTo(seg.x1,seg.y1);ctx.lineTo(seg.x2,seg.y2);ctx.stroke();
+    ctx.strokeStyle=`rgba(${r},${g},${b},${sc*bright*0.6})`;ctx.lineWidth=1.2*wMult;ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=(ghost?2:5)*wMult;
+    ctx.beginPath();ctx.moveTo(seg.x1,seg.y1);ctx.lineTo(seg.x2,seg.y2);ctx.stroke();
+    ctx.strokeStyle=`rgba(${Math.min(255,r+80)},${Math.min(255,g+80)},${Math.min(255,b+80)},${sc*bright*0.7})`;ctx.lineWidth=0.5*wMult;ctx.shadowBlur=0;
+    ctx.beginPath();ctx.moveTo(seg.x1,seg.y1);ctx.lineTo(seg.x2,seg.y2);ctx.stroke();
+    if(!seg.last){ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=(ghost?4:8)*wMult;ctx.fillStyle=`rgba(${r},${g},${b},${sc*bright*0.85})`;ctx.beginPath();ctx.arc(seg.x2,seg.y2,2,0,Math.PI*2);ctx.fill();}
     ctx.restore();
   }
 }
 
-function drawSpinnerShape(x, y, angle, length, hue, leakR, leakG, leakB, alpha) {
-  if (mirrorBrightness <= 0) return;
-  const cos = Math.cos(angle), sin = Math.sin(angle);
-  const half = length / 2;
-  ctx.save();
-  ctx.globalAlpha = alpha * mirrorBrightness;
-  ctx.strokeStyle = `hsl(${hue},100%,70%)`;
-  ctx.lineWidth = 1.5;
-  ctx.shadowColor = `hsl(${hue},100%,70%)`; ctx.shadowBlur = 6;
-  ctx.beginPath();
-  ctx.moveTo(x - cos * half, y - sin * half);
-  ctx.lineTo(x + cos * half, y + sin * half);
-  ctx.stroke();
-  const maxLeak = Math.max(leakR, leakG, leakB);
-  if (maxLeak > 0) {
-    ctx.globalAlpha = alpha * mirrorBrightness * maxLeak * 0.5;
-    ctx.strokeStyle = `rgb(${Math.round(leakR*220+35)},${Math.round(leakG*220+35)},${Math.round(leakB*220+35)})`;
-    ctx.lineWidth = 3; ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.moveTo(x - cos * half, y - sin * half);
-    ctx.lineTo(x + cos * half, y + sin * half);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = alpha * mirrorBrightness;
-  ctx.fillStyle = `hsl(${hue},100%,85%)`;
-  ctx.shadowBlur = 0;
-  ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill();
+function drawMirror(x,y,angle,length,hue,leakR,leakG,leakB,alpha,sel){
+  if(mirrorBrightness<=0)return;
+  const cos=Math.cos(angle),sin=Math.sin(angle),half=length/2;
+  ctx.save();ctx.globalAlpha=alpha*mirrorBrightness;
+  if(sel){ctx.strokeStyle='rgba(170,136,255,0.5)';ctx.lineWidth=10;ctx.shadowBlur=0;ctx.beginPath();ctx.moveTo(x-cos*half,y-sin*half);ctx.lineTo(x+cos*half,y+sin*half);ctx.stroke();}
+  ctx.strokeStyle=`hsl(${hue},100%,70%)`;ctx.lineWidth=1.5;ctx.shadowColor=`hsl(${hue},100%,70%)`;ctx.shadowBlur=6;
+  ctx.beginPath();ctx.moveTo(x-cos*half,y-sin*half);ctx.lineTo(x+cos*half,y+sin*half);ctx.stroke();
+  const ml=Math.max(leakR,leakG,leakB);
+  if(ml>0){ctx.globalAlpha=alpha*mirrorBrightness*ml*0.5;ctx.strokeStyle=`rgb(${Math.round(leakR*220+35)},${Math.round(leakG*220+35)},${Math.round(leakB*220+35)})`;ctx.lineWidth=3;ctx.shadowBlur=0;ctx.beginPath();ctx.moveTo(x-cos*half,y-sin*half);ctx.lineTo(x+cos*half,y+sin*half);ctx.stroke();}
+  ctx.globalAlpha=alpha*mirrorBrightness;ctx.fillStyle=sel?'#aa88ff':`hsl(${hue},100%,85%)`;ctx.shadowBlur=0;
+  ctx.beginPath();ctx.arc(x,y,sel?3:1.5,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
 
+function drawBeamDot(o,sel){
+  const pr=Math.round(o.r*255),pg=Math.round(o.g*255),pb=Math.round(o.b*255);
+  ctx.save();
+  if(sel){ctx.strokeStyle='rgba(170,136,255,0.6)';ctx.lineWidth=1;ctx.shadowBlur=0;ctx.beginPath();ctx.arc(o.x,o.y,HIT_RADIUS*0.7,0,Math.PI*2);ctx.stroke();}
+  ctx.shadowColor=`rgb(${pr},${pg},${pb})`;ctx.shadowBlur=6;ctx.fillStyle=`rgba(${pr},${pg},${pb},0.9)`;
+  ctx.beginPath();ctx.arc(o.x,o.y,2.5,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+
 let last = performance.now();
-
 function draw(now) {
-  const dt = Math.min((now - last) / 1000, 0.05);
-  last = now;
-  const t = now / 1000;
-  previewAngle += spinnerSpeed * SPEED_SCALE * dt * Math.PI * 2;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const spinners = objects.filter(o => o.type === 'spinner');
+  const dt = Math.min((now-last)/1000,0.05); last=now; const t=now/1000;
+  previewAngle += spinnerSpeed*SPEED_SCALE*dt*Math.PI*2;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const spinners = objects.filter(o=>o.type==='spinner');
 
-  for (const o of objects) {
-    if (o.type !== 'spinner') continue;
-    o.angle += o.speed * SPEED_SCALE * dt * Math.PI * 2;
-    drawSpinnerShape(o.x, o.y, o.angle, o.length, o.hue, o.leakR, o.leakG, o.leakB, 1.0);
+  for(let i=0;i<objects.length;i++){
+    const o=objects[i];if(o.type!=='spinner')continue;
+    o.angle+=o.speed*SPEED_SCALE*dt*Math.PI*2;
+    drawMirror(o.x,o.y,o.angle,o.length,o.hue,o.leakR,o.leakG,o.leakB,1.0,i===selectedIdx);
+  }
+  for(let i=0;i<objects.length;i++){
+    const o=objects[i];if(o.type!=='beam')continue;
+    const fl=0.92+0.05*Math.sin(t*18+o.phase)+0.03*(Math.random()-0.5);
+    const al=Math.max(0.8,Math.min(1.0,fl));
+    drawBeamDot(o,i===selectedIdx);
+    const segs=[];traceRay(o.x,o.y,o.dir,spinners,-1,o.r,o.g,o.b,0,segs);
+    drawSegs(segs,al,false, o.width || 1);
   }
 
-  for (const o of objects) {
-    if (o.type !== 'beam') continue;
-    const flicker = 0.92 + 0.05 * Math.sin(t * 18 + o.phase) + 0.03 * (Math.random() - 0.5);
-    const alpha = Math.max(0.8, Math.min(1.0, flicker));
-    const pr = Math.round(o.r * 255), pg = Math.round(o.g * 255), pb = Math.round(o.b * 255);
-    ctx.save();
-    ctx.shadowColor = `rgb(${pr},${pg},${pb})`; ctx.shadowBlur = 6;
-    ctx.fillStyle = `rgba(${pr},${pg},${pb},${alpha * 0.9})`;
-    ctx.beginPath(); ctx.arc(o.x, o.y, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-    const segs = [];
-    traceRay(o.x, o.y, o.dir, spinners, -1, o.r, o.g, o.b, 0, segs);
-    drawBeamSegments(segs, alpha, false);
-  }
-
-  if (mouseOnCanvas) {
-    if (selectedObj === 'spinner') {
-      drawSpinnerShape(mouseX, mouseY, previewAngle, spinnerLength, 180, spinnerLeakR, spinnerLeakG, spinnerLeakB, 0.35);
-      const ghostSpinners = [...spinners, {
-        x: mouseX, y: mouseY, angle: previewAngle, length: spinnerLength,
-        leakR: spinnerLeakR, leakG: spinnerLeakG, leakB: spinnerLeakB
-      }];
-      for (const o of objects) {
-        if (o.type !== 'beam') continue;
-        const segs = [];
-        traceRay(o.x, o.y, o.dir, ghostSpinners, -1, o.r, o.g, o.b, 0, segs);
-        drawBeamSegments(segs, 0.5, true);
-      }
-    } else {
-      const pr = Math.round(beamR * 255), pg = Math.round(beamG * 255), pb = Math.round(beamB * 255);
-      ctx.save();
-      ctx.shadowColor = `rgb(${pr},${pg},${pb})`; ctx.shadowBlur = 4;
-      ctx.fillStyle = `rgba(${pr},${pg},${pb},0.4)`;
-      ctx.beginPath(); ctx.arc(mouseX, mouseY, 2.5, 0, Math.PI * 2); ctx.fill();
+  // hover glow
+  if(mouseOnCanvas&&selectedObj==='select'&&!isDragging){
+    const hi=findHit(mouseX,mouseY);
+    if(hi>=0&&hi!==selectedIdx){
+      const ho=objects[hi];ctx.save();ctx.strokeStyle='rgba(170,136,255,0.22)';ctx.lineWidth=8;ctx.shadowBlur=0;
+      if(ho.type==='spinner'){const cos=Math.cos(ho.angle),sin=Math.sin(ho.angle),half=ho.length/2;ctx.beginPath();ctx.moveTo(ho.x-cos*half,ho.y-sin*half);ctx.lineTo(ho.x+cos*half,ho.y+sin*half);ctx.stroke();}
+      else{ctx.beginPath();ctx.arc(ho.x,ho.y,HIT_RADIUS*0.7,0,Math.PI*2);ctx.stroke();}
       ctx.restore();
-      const segs = [];
-      traceRay(mouseX, mouseY, beamDir, spinners, -1, beamR, beamG, beamB, 0, segs);
-      drawBeamSegments(segs, 1.0, true);
     }
   }
 
+  // ghost preview
+  if(mouseOnCanvas&&selectedObj!=='select'){
+    if(selectedObj==='spinner'){
+      drawMirror(mouseX,mouseY,previewAngle,spinnerLength,180,spinnerLeakR,spinnerLeakG,spinnerLeakB,0.35,false);
+      const gs=[...spinners,{x:mouseX,y:mouseY,angle:previewAngle,length:spinnerLength,leakR:spinnerLeakR,leakG:spinnerLeakG,leakB:spinnerLeakB}];
+      for(const o of objects){if(o.type!=='beam')continue;const s=[];traceRay(o.x,o.y,o.dir,gs,-1,o.r,o.g,o.b,0,s);drawSegs(s,0.5,true,o.width||1);}
+    } else {
+      const pr=Math.round(beamR*255),pg=Math.round(beamG*255),pb=Math.round(beamB*255);
+      ctx.save();ctx.shadowColor=`rgb(${pr},${pg},${pb})`;ctx.shadowBlur=4;ctx.fillStyle=`rgba(${pr},${pg},${pb},0.4)`;ctx.beginPath();ctx.arc(mouseX,mouseY,2.5,0,Math.PI*2);ctx.fill();ctx.restore();
+      const s=[];traceRay(mouseX,mouseY,beamDir,spinners,-1,beamR,beamG,beamB,0,s);drawSegs(s,1.0,true,beamWidth);
+    }
+  }
   requestAnimationFrame(draw);
 }
 
+// init
+showContext('select-idle');
+canvas.style.cursor = 'default';
 requestAnimationFrame(draw);
 </script>
+</body>
+</html>
