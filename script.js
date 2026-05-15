@@ -68,6 +68,10 @@ const data = {
         name: "beams&mirrors",
         text: "",
       },
+      {
+        name: "sigma algebra",
+        text: "",
+      },
 
       {
         name: "Time To Space",
@@ -1638,6 +1642,11 @@ function renderCollection(items, body, sectionTitle) {
       wrapper.querySelector(".item-toggle").onclick = (e) => {
         e.stopPropagation();
         window.location.href = "beam_and_mirros.html";
+      };
+    } else if (label === "sigma algebra") {
+      wrapper.querySelector(".item-toggle").onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = "sigma_algebra.html";
       };
     } else {
       const hasMedia =

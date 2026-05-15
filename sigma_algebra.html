@@ -1,0 +1,2975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>σ-ALGEBRA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Unbounded:wght@700&display=swap');
+
+:root {
+  --bg:     #0d0d0d;
+  --panel:  #141414;
+  --border: rgba(255,255,255,0.08);
+  --dim:    #555;
+  --text:   #bbb;
+  --accent: #e8ff47;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'DM Mono', monospace;
+  height: 100vh; display: flex; flex-direction: column;
+  overflow: hidden; user-select: none;
+}
+
+header {
+  height: 42px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel); flex-shrink: 0; padding: 0 14px;
+}
+.logo {
+  font-family: 'Unbounded', sans-serif; font-weight: 700;
+  font-size: 12px; letter-spacing: 0.06em; color: var(--accent);
+  padding-right: 14px; border-right: 1px solid var(--border);
+}
+.t-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+.lbl { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim); white-space: nowrap; }
+.val { font-size: 10px; color: var(--text); min-width: 28px; font-variant-numeric: tabular-nums; }
+
+.tool-btn {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; background: transparent;
+  border: 1px solid var(--border); border-radius: 3px;
+  color: var(--dim); cursor: pointer; transition: all 0.12s; white-space: nowrap;
+}
+.tool-btn:hover { border-color: #444; color: var(--text); }
+.tool-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 500; }
+
+input[type=range] { cursor: pointer; accent-color: var(--accent); width: 72px; vertical-align: middle; }
+input[type=color] { width: 26px; height: 22px; border: none; background: none; cursor: pointer; padding: 0; }
+
+.btn {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; background: transparent;
+  border: 1px solid var(--border); border-radius: 3px;
+  color: var(--dim); cursor: pointer; transition: all 0.12s;
+}
+.btn:hover { border-color: #555; color: var(--text); }
+.btn.danger:hover { border-color: #ff4444; color: #ff4444; }
+.ml { margin-left: auto; }
+
+#workspace { flex: 1; position: relative; overflow: hidden; }
+canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+#cv-curves  { z-index: 1; }
+#cv-trace   { z-index: 2; pointer-events: none; }
+#cv-spin    { z-index: 3; pointer-events: none; }
+#cv-live    { z-index: 4; pointer-events: none; }
+#cv-inter   { z-index: 5; cursor: crosshair; }
+#cv-inter.tool-spinner { cursor: cell; }
+
+#status {
+  height: 24px; display: flex; align-items: center; gap: 20px;
+  padding: 0 14px; border-top: 1px solid var(--border);
+  background: var(--panel); flex-shrink: 0;
+  font-size: 9px; letter-spacing: 0.12em; color: var(--dim); text-transform: uppercase;
+}
+.acc { color: var(--accent); }
+/* ── controller strip ── */
+#controllers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 160px;
+  min-height: 160px;
+  max-height: 160px;
+  position: relative;
+}
+#controllers:empty { min-height: 0; padding: 0; border: none; }
+
+.ctrl-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: #1a1a1a;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 6px 5px;
+  flex-shrink: 0;
+  width: 76px;
+  height: 138px;
+  position: relative;
+  transition: border-color 0.15s;
+  justify-content: center;
+}
+.ctrl-card:hover { border-color: #444; }
+
+.ctrl-card .card-label {
+  font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--dim); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 68px; text-align: center;
+}
+
+.ctrl-card .del-btn {
+  position: absolute; top: 3px; right: 4px;
+  font-size: 9px; color: #444; background: none; border: none;
+  cursor: pointer; padding: 0; line-height: 1;
+}
+.ctrl-card .del-btn:hover { color: #ff4444; }
+
+/* circular knob */
+.knob-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.knob-lbl {
+  font-size: 7px; letter-spacing: 0.1em; text-transform: uppercase; color: #444;
+}
+.knob-val {
+  font-size: 9px; color: var(--text); font-variant-numeric: tabular-nums;
+  min-width: 32px; text-align: center; line-height: 1;
+}
+.knob-svg { cursor: ew-resize; touch-action: none; display: block; }
+.knob-svg:active { cursor: none; }
+
+/* ── automation panel ── */
+/* ── controller card expanded / collapsed ── */
+.ctrl-card.expanded {
+  width: 440px !important;
+  height: 148px !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+.card-knobs { display: none; }   /* always hidden — knobs live in pairs */
+
+/* pairs container */
+.auto-panels {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* each pair: knob (fixed 70px) + graph (fills rest) */
+.auto-pair {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+/* collapsed: only show knob, hide graph */
+.ctrl-card:not(.expanded) .auto-pair { flex: 0 0 70px; }
+.ctrl-card:not(.expanded) .auto-pair + .auto-pair { flex: 0 0 70px; }
+
+.auto-pair-knob {
+  width: 70px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 20px 4px 6px;
+}
+
+/* graph hidden unless expanded */
+.auto-pair .auto-graph { display: none !important; }
+.ctrl-card.expanded .auto-pair .auto-graph {
+  display: flex !important;
+  flex-direction: column;
+  flex: 1 1 0;
+  width: 0;          /* flexbox will expand it */
+  min-width: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--border);
+  padding: 4px 4px 4px 6px;
+  gap: 2px;
+  height: 148px;
+}
+
+.auto-graph-title {
+  font-size: 7px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #555; text-align: center; flex-shrink: 0;
+}
+
+/* main graph area: dc-slider | canvas | amp-slider */
+.auto-mid {
+  display: flex;
+  height: 90px;
+  gap: 2px;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+.auto-canvas {
+  flex: 1;
+  border-radius: 2px;
+  background: #111;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* shared style for both vertical slider columns (dc left, amp right) */
+.auto-vsl-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+  width: 16px;
+}
+.auto-vsl-lbl { font-size: 5px; color: #444; letter-spacing: 0.06em; text-transform: uppercase; flex-shrink: 0; }
+.auto-vsl-val { font-size: 5px; color: #666; flex-shrink: 0; }
+.auto-vsl-wrap {
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  overflow: hidden;
+}
+input.auto-vsl {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 72px;
+  height: 3px;
+  background: #2a2a2a;
+  border-radius: 2px;
+  cursor: pointer;
+  transform: rotate(-90deg);
+  transform-origin: center center;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+input.auto-vsl.amp-sl { accent-color: var(--accent); }
+input.auto-vsl.amp-sl::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 9px; height: 9px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+input.auto-vsl.dc-sl  { accent-color: #60aaff; }
+input.auto-vsl.dc-sl::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 9px; height: 9px;
+  border-radius: 50%; background: #60aaff; cursor: pointer;
+}
+
+/* freq row at bottom — inside the graph box */
+.auto-freq-row {
+  display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+  margin-top: 2px;
+}
+.auto-freq-lbl { font-size: 6px; color: #444; letter-spacing: 0.06em; white-space: nowrap; }
+.auto-freq-val { font-size: 7px; color: #777; min-width: 20px; text-align: right; flex-shrink: 0; }
+.auto-freq-sl  { flex: 1; cursor: pointer; accent-color: var(--accent); height: 2px; }
+
+/* mini circular knob — for brush cards */
+.mini-knob {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+.mini-knob svg { cursor: ew-resize; display: block; }
+.mini-knob-lbl { font-size: 6px; color: #444; letter-spacing: 0.08em; text-transform: uppercase; }
+.mini-knob-val { font-size: 7px; color: #888; font-variant-numeric: tabular-nums; }
+
+.auto-btn {
+  position: absolute; top: 3px; left: 4px;
+  font-size: 8px; color: #555; background: none; border: 1px solid #333;
+  cursor: pointer; padding: 1px 4px; line-height: 1.4; border-radius: 2px;
+  font-family: 'DM Mono', monospace; letter-spacing: 0.05em;
+  transition: all 0.12s;
+}
+.auto-btn:hover { border-color: var(--accent); color: var(--accent); }
+.auto-btn.on { border-color: var(--accent); color: #000; background: var(--accent); }
+
+/* wave shape selector */
+.wave-btn-row {
+  display: flex; gap: 3px; align-items: center; flex-shrink: 0; margin-top: 2px;
+}
+.wave-btn {
+  font-family: 'DM Mono', monospace; font-size: 7px; letter-spacing: 0.06em;
+  padding: 1px 5px; background: transparent;
+  border: 1px solid #333; border-radius: 2px;
+  color: #555; cursor: pointer; transition: all 0.1s; line-height: 1.5;
+}
+.wave-btn:hover { border-color: #555; color: #999; }
+.wave-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(232,255,71,0.07); }
+
+/* recording */
+.rec-btn {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; background: transparent;
+  border: 1px solid #444; border-radius: 3px;
+  color: #888; cursor: pointer; transition: all 0.12s;
+  display: flex; align-items: center; gap: 5px;
+}
+.rec-btn:hover { border-color: #ff4444; color: #ff4444; }
+.rec-btn.recording {
+  border-color: #ff4444; color: #ff4444;
+  background: rgba(255,68,68,0.08);
+  animation: rec-pulse 1.2s ease-in-out infinite;
+}
+@keyframes rec-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+.rec-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor; flex-shrink: 0;
+}
+#st-rec {
+  color: #ff4444; font-size: 9px; letter-spacing: 0.12em;
+  display: none; align-items: center; gap: 5px;
+}
+#st-rec.on { display: flex; }
+#st-rec-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #ff4444;
+  animation: rec-pulse 1.2s ease-in-out infinite;
+}
+
+
+/* ── guide drawer ── */
+#guide-drawer {
+  position: fixed;
+  top: 0; right: 0;
+  width: 340px;
+  height: 100vh;
+  background: #111;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  z-index: 1000;
+  overflow: hidden;
+}
+#guide-drawer.open { transform: translateX(0); }
+
+.guide-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px;
+  height: 42px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.guide-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 11px; letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.guide-close {
+  font-size: 16px; color: #555; background: none; border: none;
+  cursor: pointer; padding: 0; line-height: 1; transition: color 0.12s;
+}
+.guide-close:hover { color: #bbb; }
+
+.guide-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #333 transparent;
+}
+.guide-body::-webkit-scrollbar { width: 4px; }
+.guide-body::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+/* section */
+.guide-section { border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+.guide-section-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+.guide-section-hd:hover { background: rgba(255,255,255,0.03); }
+
+.guide-section-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #bbb;
+}
+.guide-section-icon {
+  font-size: 13px; color: var(--accent); width: 16px; text-align: center;
+}
+.guide-chevron {
+  font-size: 10px; color: #444; transition: transform 0.2s;
+}
+.guide-section.expanded .guide-chevron { transform: rotate(180deg); }
+
+.guide-section-body {
+  display: none;
+  padding: 0 16px 14px;
+  flex-direction: column;
+  gap: 10px;
+}
+.guide-section.expanded .guide-section-body { display: flex; }
+
+.guide-desc {
+  font-size: 10px; line-height: 1.7;
+  color: #888; letter-spacing: 0.02em;
+}
+.guide-desc strong { color: #bbb; font-weight: 500; }
+
+.guide-video-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #0a0a0a;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.07);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.guide-video-wrap video {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.guide-video-placeholder {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.guide-video-placeholder-icon {
+  font-size: 24px; color: #2a2a2a;
+}
+.guide-video-placeholder-lbl {
+  font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: #2a2a2a;
+}
+
+.guide-tips { display: flex; flex-direction: column; gap: 5px; margin-top: 2px; }
+.guide-tip {
+  display: flex; gap: 8px; align-items: flex-start;
+  font-size: 10px; line-height: 1.5; color: #666;
+}
+.guide-tip-key {
+  font-size: 8px; background: #1e1e1e; border: 1px solid #333;
+  border-radius: 2px; padding: 1px 5px; color: #888;
+  white-space: nowrap; flex-shrink: 0; margin-top: 1px;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.05em;
+}
+
+/* dim overlay */
+#guide-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+#guide-overlay.on { opacity: 1; pointer-events: all; }
+
+.guide-btn { color: var(--accent) !important; border-color: rgba(232,255,71,0.3) !important; }
+.guide-btn:hover { border-color: var(--accent) !important; background: rgba(232,255,71,0.07) !important; }
+
+
+/* ── brush selection + grouping ── */
+.ctrl-card.selected {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.ctrl-card.selected::after {
+  content: '✓';
+  position: absolute; top: 3px; left: 4px;
+  font-size: 8px; color: var(--accent);
+  pointer-events: none;
+}
+
+/* group action bar — appears above strip when brushes selected */
+#grp-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: rgba(232,255,71,0.06);
+  border-top: 1px solid rgba(232,255,71,0.2);
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+#grp-bar.on { display: flex; }
+.grp-bar-label { color: #666; }
+.grp-bar-btn {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 10px; background: transparent;
+  border: 1px solid rgba(232,255,71,0.4); border-radius: 3px;
+  color: var(--accent); cursor: pointer; transition: all 0.12s;
+}
+.grp-bar-btn:hover { background: rgba(232,255,71,0.12); }
+.grp-bar-cancel {
+  font-size: 9px; color: #444; background: none; border: none;
+  cursor: pointer; padding: 0 4px; letter-spacing: 0.1em;
+  text-transform: uppercase; font-family: 'DM Mono', monospace;
+  transition: color 0.12s;
+}
+.grp-bar-cancel:hover { color: #888; }
+
+/* group card */
+.grp-card {
+  background: #1a1a1a;
+  border: 1px solid rgba(232,255,71,0.25);
+  border-radius: 6px;
+  flex-shrink: 0;
+  width: 110px;
+  height: 138px;
+  position: relative;
+  padding: 18px 6px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  justify-content: center;
+}
+.grp-card:hover { border-color: rgba(232,255,71,0.5); }
+.grp-swatches {
+  display: flex; gap: 3px; flex-wrap: wrap;
+  justify-content: center; margin-bottom: 2px;
+  max-width: 90px;
+}
+.grp-swatch {
+  width: 7px; height: 7px; border-radius: 50%;
+  flex-shrink: 0;
+}
+
+
+/* card hover highlight */
+.ctrl-card:hover, .grp-card:hover {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">σ-ALGEBRA</div>
+
+  <button class="tool-btn active" id="btn-draw"    data-tool="draw">✏ Curve</button>
+  <button class="tool-btn"        id="btn-spinner"  data-tool="spinner">◎ Spinner</button>
+  <button class="tool-btn"        id="btn-brush"    data-tool="brush">✦ Brush</button>
+
+  <div class="t-sep"></div>
+
+  <!-- draw params -->
+  <div id="p-draw" style="display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;">
+    <span class="lbl">Smooth</span>
+    <input type="range" id="sl-smooth" min="1" max="20" step="1" value="6"/>
+    <span class="val" id="v-smooth">6</span>
+    <div class="t-sep"></div>
+    <span class="lbl">Simplify</span>
+    <input type="range" id="sl-tol" min="1" max="30" step="1" value="8"/>
+    <span class="val" id="v-tol">8</span>
+  </div>
+
+  <!-- spinner params -->
+  <div id="p-spinner" style="display:none;align-items:center;gap:8px;min-width:0;overflow-x:auto;flex-shrink:1;">
+    <span class="lbl">Len</span>
+    <input type="range" id="sl-len" min="6" max="200" step="2" value="60"/>
+    <span class="val" id="v-len">60</span>
+    <div class="t-sep"></div>
+    <span class="lbl">Travel</span>
+    <input type="range" id="sl-travel" min="0.1" max="5" step="0.1" value="1"/>
+    <span class="val" id="v-travel">1×</span>
+    <div class="t-sep"></div>
+    <span class="lbl">CCW</span>
+    <input type="range" id="sl-spin" min="-3" max="3" step="0.02" value="0.5"/>
+    <span class="lbl">CW</span>
+    <span class="val" id="v-spin">0.5</span>
+    <div class="t-sep"></div>
+    <span class="lbl">Angle</span>
+    <input type="range" id="sl-angle" min="0" max="360" step="1" value="0"/>
+    <span class="val" id="v-angle">0°</span>
+    <div class="t-sep"></div>
+    <span class="lbl">Color</span>
+    <input type="color" id="sp-color" value="#e8ff47"/>
+    <div class="t-sep"></div>
+    <label style="display:flex;align-items:center;gap:5px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);cursor:pointer;">
+      <input type="checkbox" id="chk-trace" style="accent-color:var(--accent);width:auto;cursor:pointer;"/> Trace
+    </label>
+  </div>
+
+  <!-- brush params -->
+  <div id="p-brush" style="display:none;align-items:center;gap:8px;min-width:0;overflow:hidden;">
+    <span class="lbl">Color</span>
+    <input type="color" id="br-color" value="#ff4488"/>
+    <div class="t-sep"></div>
+    <span class="lbl">Width</span>
+    <input type="range" id="sl-brw" min="0" max="20" step="0.5" value="2"/>
+    <span class="val" id="v-brw">2</span>
+    <div class="t-sep"></div>
+    <span class="lbl">Decay</span>
+    <input type="range" id="sl-decay" min="0" max="0.08" step="0.002" value="0"/>
+    <span class="val" id="v-decay">off</span>
+    <div class="t-sep"></div>
+    <button class="btn" id="btn-clear-trace">Clear Paint</button>
+  </div>
+
+  <div class="ml" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <span class="lbl">BG</span>
+    <input type="color" id="bg-color" value="#0d0d0d" title="Canvas background color"/>
+    <div class="t-sep"></div>
+    <button class="btn" id="btn-undo">Undo</button>
+    <button class="btn danger" id="btn-clear">Clear</button>
+    <div class="t-sep"></div>
+    <button class="rec-btn" id="btn-rec"><span class="rec-dot"></span><span id="rec-label">Rec</span></button>
+    <div class="t-sep"></div>
+    <button class="btn guide-btn" id="btn-guide">? Guide</button>
+  </div>
+</header>
+
+<div id="workspace">
+  <canvas id="cv-curves"></canvas>   <!-- static curves (scaffolding) -->
+  <canvas id="cv-trace"></canvas>    <!-- tip trace trails -->
+  <canvas id="cv-spin"></canvas>     <!-- spinner arms (animated) -->
+  <canvas id="cv-live"></canvas>     <!-- live freehand preview -->
+  <canvas id="cv-inter"></canvas>    <!-- interaction layer -->
+</div>
+
+
+<div id="grp-bar">
+  <span id="grp-bar-count" class="grp-bar-label">0 selected</span>
+  <button class="grp-bar-btn" id="grp-bar-group">⊞ Group</button>
+  <button class="grp-bar-cancel" id="grp-bar-cancel">✕ cancel</button>
+</div>
+
+<div id="controllers">
+  <!-- controller cards added dynamically -->
+</div>
+
+<div id="status">
+  <span id="st-mode" class="acc">Curve mode — draw scaffolding</span>
+  <span id="st-curves">Curves: 0</span>
+  <span id="st-spinners">Spinners: 0</span>
+  <span id="st-hint">In spinner mode: click curve, spinner tip, or anywhere on canvas</span>
+  <span id="st-rec"><span id="st-rec-dot"></span><span id="st-rec-time">0:00</span> REC</span>
+</div>
+
+<!-- hidden composite canvas for recording -->
+<canvas id="cv-record" style="display:none;"></canvas>
+
+
+<!-- ── guide drawer ── -->
+<div id="guide-overlay"></div>
+<div id="guide-drawer">
+  <div class="guide-header">
+    <span class="guide-title">σ-ALGEBRA Guide</span>
+    <button class="guide-close" id="guide-close">✕</button>
+  </div>
+  <div class="guide-body">
+
+    <!-- CURVES -->
+    <div class="guide-section expanded" id="gs-curves">
+      <div class="guide-section-hd">
+        <span class="guide-section-label"><span class="guide-section-icon">✏</span>Curves</span>
+        <span class="guide-chevron">▼</span>
+      </div>
+      <div class="guide-section-body">
+        <div class="guide-desc">
+          Curves are the <strong>scaffolding</strong> of your composition. Draw freely on the canvas — your stroke is smoothed, simplified, and converted into a clean bezier path. Spinners then travel along these paths.<br><br>
+          Adjust <strong>Smooth</strong> to soften jagged input, and <strong>Simplify</strong> to reduce the number of control points. Close a curve by ending near where you started.
+        </div>
+        <div class="guide-video-wrap">
+          <video id="vid-curves" src="" autoplay loop muted playsinline style="display:none;"></video>
+          <div class="guide-video-placeholder">
+            <div class="guide-video-placeholder-icon">▶</div>
+            <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
+          </div>
+        </div>
+        <div class="guide-tips">
+          <div class="guide-tip"><span class="guide-tip-key">drag</span>Draw a freehand path</div>
+          <div class="guide-tip"><span class="guide-tip-key">close loop</span>End near start to auto-close</div>
+          <div class="guide-tip"><span class="guide-tip-key">⌘Z</span>Undo last curve</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPINNERS -->
+    <div class="guide-section" id="gs-spinners">
+      <div class="guide-section-hd">
+        <span class="guide-section-label"><span class="guide-section-icon">◎</span>Spinners</span>
+        <span class="guide-chevron">▼</span>
+      </div>
+      <div class="guide-section-body">
+        <div class="guide-desc">
+          Spinners are rotating arms that travel along curves. Click a curve to attach one, click a spinner's glowing <strong>tip dot</strong> to chain another on top of it, or click <strong>anywhere on the canvas</strong> to place a free-floating spinner.<br><br>
+          Each spinner has independent <strong>speed</strong>, <strong>arm length</strong>, <strong>travel rate</strong>, and <strong>color</strong>. Enable <strong>Trace</strong> to draw a trail from the tip. Use the <strong>A</strong> buttons in the controller strip to automate speed or length with a sine, square, or saw wave.
+        </div>
+        <div class="guide-video-wrap">
+          <video id="vid-spinners" src="" autoplay loop muted playsinline style="display:none;"></video>
+          <div class="guide-video-placeholder">
+            <div class="guide-video-placeholder-icon">▶</div>
+            <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
+          </div>
+        </div>
+        <div class="guide-tips">
+          <div class="guide-tip"><span class="guide-tip-key">click curve</span>Attach spinner to path</div>
+          <div class="guide-tip"><span class="guide-tip-key">click tip ●</span>Chain a child spinner</div>
+          <div class="guide-tip"><span class="guide-tip-key">click canvas</span>Free-floating spinner</div>
+          <div class="guide-tip"><span class="guide-tip-key">⤢ drag</span>Reposition free spinner pivot</div>
+          <div class="guide-tip"><span class="guide-tip-key">A btn</span>Automate speed or length</div>
+          <div class="guide-tip"><span class="guide-tip-key">Trace ✓</span>Leave a glowing trail</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRUSH -->
+    <div class="guide-section" id="gs-brush">
+      <div class="guide-section-hd">
+        <span class="guide-section-label"><span class="guide-section-icon">✦</span>Brush</span>
+        <span class="guide-chevron">▼</span>
+      </div>
+      <div class="guide-section-body">
+        <div class="guide-desc">
+          Brushes paint continuously from a point on any spinner arm or curve. Click while in Brush mode to snap a brush to the nearest point. The brush follows that point as it moves, drawing a stroke over time.<br><br>
+          Set two <strong>colors</strong> and a <strong>morph speed</strong> to cycle between them. Use <strong>Decay</strong> to make the paint trail fade away. Automate <strong>size</strong> or the <strong>morph</strong> blend from the controller strip.<br><br>
+          Multiple brushes can be <strong>grouped</strong> together to share a single set of automation controls — see the Grouping section below.
+        </div>
+        <div class="guide-video-wrap">
+          <video id="vid-brush" src="" autoplay loop muted playsinline style="display:none;"></video>
+          <div class="guide-video-placeholder">
+            <div class="guide-video-placeholder-icon">▶</div>
+            <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
+          </div>
+        </div>
+        <div class="guide-tips">
+          <div class="guide-tip"><span class="guide-tip-key">click arm</span>Snap brush to spinner arm</div>
+          <div class="guide-tip"><span class="guide-tip-key">⟷ drag</span>Set color morph speed</div>
+          <div class="guide-tip"><span class="guide-tip-key">Decay</span>Fade trail over time</div>
+          <div class="guide-tip"><span class="guide-tip-key">Clear Paint</span>Wipe the trace canvas</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- GROUPING -->
+    <div class="guide-section" id="gs-grouping">
+      <div class="guide-section-hd">
+        <span class="guide-section-label"><span class="guide-section-icon">⊞</span>Grouping</span>
+        <span class="guide-chevron">▼</span>
+      </div>
+      <div class="guide-section-body">
+        <div class="guide-desc">
+          Grouping lets you collapse multiple brush objects into one shared controller. All member brushes keep their individual attachment points and colors, but their <strong>size</strong> and <strong>morph</strong> are driven together from the group card.<br><br>
+          To create a group: switch to <strong>Brush mode</strong>, then <strong>Shift+click</strong> two or more brush cards in the controller strip. A yellow action bar appears above the strip — hit <strong>⊞ Group</strong> to collapse them. The individual cards are replaced by a single <strong>GRP</strong> card showing color swatches of all members.<br><br>
+          The group card has its own <strong>size</strong> and <strong>morph</strong> knobs with full <strong>A</strong> automation support (sine, square, saw). This lets you pulse or oscillate an entire set of brushes in perfect sync with a single wave.<br><br>
+          Hit <strong>ungroup</strong> on the card to dissolve it back to individual cards — brushes keep their last values. Hit <strong>✕</strong> to delete the group and all its member brushes entirely.
+        </div>
+        <div class="guide-video-wrap">
+          <video id="vid-grouping" src="" autoplay loop muted playsinline style="display:none;"></video>
+          <div class="guide-video-placeholder">
+            <div class="guide-video-placeholder-icon">▶</div>
+            <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
+          </div>
+        </div>
+        <div class="guide-tips">
+          <div class="guide-tip"><span class="guide-tip-key">Shift+click</span>Select brush cards to group</div>
+          <div class="guide-tip"><span class="guide-tip-key">⊞ Group</span>Collapse selection into one card</div>
+          <div class="guide-tip"><span class="guide-tip-key">size knob</span>Set width of all member brushes</div>
+          <div class="guide-tip"><span class="guide-tip-key">morph knob</span>Set color blend of all members</div>
+          <div class="guide-tip"><span class="guide-tip-key">A btn</span>Automate size or morph in sync</div>
+          <div class="guide-tip"><span class="guide-tip-key">ungroup</span>Dissolve back to individual cards</div>
+          <div class="guide-tip"><span class="guide-tip-key">✕ cancel</span>Dismiss selection without grouping</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIPS -->
+    <div class="guide-section" id="gs-tips">
+      <div class="guide-section-hd">
+        <span class="guide-section-label"><span class="guide-section-icon">⚡</span>Tips &amp; Shortcuts</span>
+        <span class="guide-chevron">▼</span>
+      </div>
+      <div class="guide-section-body">
+        <div class="guide-desc">
+          The canvas <strong>freezes</strong> automatically when you hover near a curve or spinner tip in Spinner/Brush mode — this makes precise attachment easier. Click to place and the animation resumes.<br><br>
+          Use <strong>BG</strong> to change the canvas background color — the recorded video will match. Hit <strong>Rec</strong> to capture a .webm of your canvas in real time.
+        </div>
+        <div class="guide-tips">
+          <div class="guide-tip"><span class="guide-tip-key">⌘Z</span>Undo last object</div>
+          <div class="guide-tip"><span class="guide-tip-key">Clear</span>Remove everything</div>
+          <div class="guide-tip"><span class="guide-tip-key">FROZEN</span>Canvas paused near snap point</div>
+          <div class="guide-tip"><span class="guide-tip-key">BG</span>Set canvas background color</div>
+          <div class="guide-tip"><span class="guide-tip-key">Rec</span>Record canvas to video</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /guide-body -->
+</div><!-- /guide-drawer -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   σ-ALGEBRA
+
+   CURVES: freehand → smooth → RDP → bezier fit
+           Just scaffolding — drawn faintly.
+
+   SPINNERS: each spinner has:
+     parent: { type: 'curve', curveIdx, t }
+          OR { type: 'spinner', spinnerIdx }
+          OR { type: 'free', x, y }   ← NEW: fixed canvas point
+     The pivot (base) follows the parent's tip position (or fixed for 'free').
+     The tip = pivot + arm in direction of angle.
+
+   CHAINING: click the glowing tip-dot of an existing spinner
+             to attach a new spinner at that tip.
+
+   TRACE: if enabled, the tip of a spinner draws on cv-trace.
+═══════════════════════════════════════════════════════════ */
+
+const wsEl    = document.getElementById('workspace');
+const cvCurves= document.getElementById('cv-curves');
+const cvTrace = document.getElementById('cv-trace');
+const cvSpin  = document.getElementById('cv-spin');
+const cvLive  = document.getElementById('cv-live');
+const cvInter = document.getElementById('cv-inter');
+const cvRecord= document.getElementById('cv-record');
+const ctxC    = cvCurves.getContext('2d');
+const ctxTr   = cvTrace.getContext('2d');
+const ctxS    = cvSpin.getContext('2d');
+const ctxL    = cvLive.getContext('2d');
+const ctxI    = cvInter.getContext('2d');
+const ctxRecord = cvRecord.getContext('2d');
+
+// ── state ──────────────────────────────────────────────
+let tool      = 'draw';
+let curves    = [];
+let spinners  = [];
+let rawPts    = [];
+let isDrawing = false;
+let hoverX    = -9999, hoverY = -9999;
+
+// spinner defaults from UI
+let spLen     = 60;
+let spTravel  = 1;
+let spSpin    = 0.5;
+let spAngle   = 0;
+let spColor   = '#e8ff47';
+let spTrace   = false;
+let brColor   = '#ff4488';
+let brWidth   = 2;
+let brDecay   = 0;
+let brushes   = [];
+let brushGroups = [];  // { memberIndices[], auto:{size,morph} }
+let selectedBrushIndices = new Set();
+let smoothing = 6;
+let tolerance = 8;
+
+const AUTO_CLOSE  = 24;
+const TIP_HIT     = 16;
+const CURVE_HIT   = 40;
+const SPEED_BASE  = 80;
+const PAUSE_DIST  = 60;
+
+let paused    = false;
+let mouseHeld = false;
+
+// highlight: { type: 'spinner'|'brush'|'group', idx }
+let highlightTarget = null;
+
+// recording state
+let mediaRecorder  = null;
+let recChunks      = [];
+let recStartTime   = 0;
+let recTimerHandle = null;
+let isRecording    = false;
+
+
+// ══════════════════════════════════════════════════════
+//  CONTROLLER CARDS
+// ══════════════════════════════════════════════════════
+const ctrlContainer = document.getElementById('controllers');
+
+function makeKnob({ id, label, min, max, value, step, unit, color, onChange }) {
+  const SIZE  = 36;
+  const R     = 12;
+  const CX    = SIZE / 2, CY = SIZE / 2;
+  const START_ANG = 225;
+  const SWEEP    = 270;
+
+  function valToAng(v) {
+    return START_ANG + ((v - min) / (max - min)) * SWEEP;
+  }
+  function polarToXY(angleDeg, r) {
+    const rad = (angleDeg - 90) * Math.PI / 180;
+    return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
+  }
+  function describeArc(startDeg, endDeg) {
+    const s = polarToXY(startDeg, R);
+    const e = polarToXY(endDeg, R);
+    const large = ((endDeg - startDeg + 360) % 360) > 180 ? 1 : 0;
+    return `M ${s.x} ${s.y} A ${R} ${R} 0 ${large} 1 ${e.x} ${e.y}`;
+  }
+
+  let val = value;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'knob-wrap';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'knob-lbl';
+  lbl.textContent = label;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', SIZE);
+  svg.setAttribute('height', SIZE);
+  svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`);
+  svg.classList.add('knob-svg');
+
+  const trackEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  trackEl.setAttribute('fill', 'none');
+  trackEl.setAttribute('stroke', '#2a2a2a');
+  trackEl.setAttribute('stroke-width', '3');
+  trackEl.setAttribute('stroke-linecap', 'round');
+  trackEl.setAttribute('d', describeArc(START_ANG, START_ANG + SWEEP));
+  svg.appendChild(trackEl);
+
+  const arcEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  arcEl.setAttribute('fill', 'none');
+  arcEl.setAttribute('stroke', color || '#e8ff47');
+  arcEl.setAttribute('stroke-width', '3');
+  arcEl.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(arcEl);
+
+  const dotEl = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  dotEl.setAttribute('cx', CX); dotEl.setAttribute('cy', CY); dotEl.setAttribute('r', '3');
+  dotEl.setAttribute('fill', color || '#e8ff47');
+  dotEl.setAttribute('opacity', '0.5');
+  svg.appendChild(dotEl);
+
+  const tickEl = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  tickEl.setAttribute('stroke', '#fff');
+  tickEl.setAttribute('stroke-width', '1.5');
+  tickEl.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(tickEl);
+
+  const valEl = document.createElement('div');
+  valEl.className = 'knob-val';
+
+  function fmt(v) {
+    if (unit === '°') return Math.round(v) + '°';
+    if (Math.abs(v) < 10) return v.toFixed(2);
+    return Math.round(v);
+  }
+
+  function updateVisuals() {
+    const endAng = valToAng(val);
+    if (Math.abs(val - min) < step * 0.5) {
+      arcEl.setAttribute('d', '');
+    } else {
+      arcEl.setAttribute('d', describeArc(START_ANG, endAng));
+    }
+    const inner = polarToXY(endAng, R - 5);
+    const outer = polarToXY(endAng, R + 1);
+    tickEl.setAttribute('x1', inner.x); tickEl.setAttribute('y1', inner.y);
+    tickEl.setAttribute('x2', outer.x); tickEl.setAttribute('y2', outer.y);
+    valEl.textContent = fmt(val) + (unit || '');
+  }
+
+  let dragStartX = 0, dragStartVal = 0;
+  const DRAG_RANGE = 120;
+
+  function onDragStart(e) {
+    dragStartX   = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    dragStartVal = val;
+    window.addEventListener('mousemove', onDragMove);
+    window.addEventListener('mouseup',   onDragEnd);
+    window.addEventListener('touchmove', onDragMove, { passive: false });
+    window.addEventListener('touchend',  onDragEnd);
+    e.preventDefault();
+  }
+  function onDragMove(e) {
+    const cx = e.clientX ?? e.touches?.[0]?.clientX ?? dragStartX;
+    const dx = cx - dragStartX;
+    const rawVal = dragStartVal + (dx / DRAG_RANGE) * (max - min);
+    const snapped = Math.round(rawVal / step) * step;
+    val = Math.max(min, Math.min(max, snapped));
+    updateVisuals();
+    onChange(val);
+    if (e.preventDefault) e.preventDefault();
+  }
+  function onDragEnd() {
+    window.removeEventListener('mousemove', onDragMove);
+    window.removeEventListener('mouseup',   onDragEnd);
+    window.removeEventListener('touchmove', onDragMove);
+    window.removeEventListener('touchend',  onDragEnd);
+  }
+
+  svg.addEventListener('mousedown',  onDragStart);
+  svg.addEventListener('touchstart', onDragStart, { passive: false });
+
+  wrap.appendChild(lbl);
+  wrap.appendChild(svg);
+  wrap.appendChild(valEl);
+
+  wrap._setValue = (v) => { val = v; updateVisuals(); };
+  updateVisuals();
+  return wrap;
+}
+
+function makeMiniKnob({ label, min, max, value, step, onChange }) {
+  const SIZE = 22, R = 7, CX = 11, CY = 11;
+  const START = 225, SWEEP = 270;
+  function polar(deg, r) {
+    const rad = (deg - 90) * Math.PI / 180;
+    return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
+  }
+  function arc(s, e) {
+    const sp = polar(s, R), ep = polar(e, R);
+    const lg = ((e - s + 360) % 360) > 180 ? 1 : 0;
+    return `M${sp.x} ${sp.y} A${R} ${R} 0 ${lg} 1 ${ep.x} ${ep.y}`;
+  }
+
+  let val = value;
+  const wrap = document.createElement('div');
+  wrap.className = 'mini-knob';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'mini-knob-lbl';
+  lbl.textContent = label;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width', SIZE); svg.setAttribute('height', SIZE);
+  svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`);
+  svg.classList.add('mini-knob');
+
+  const track = document.createElementNS('http://www.w3.org/2000/svg','path');
+  track.setAttribute('fill','none'); track.setAttribute('stroke','#222');
+  track.setAttribute('stroke-width','2.5'); track.setAttribute('stroke-linecap','round');
+  track.setAttribute('d', arc(START, START + SWEEP));
+  svg.appendChild(track);
+
+  const fill = document.createElementNS('http://www.w3.org/2000/svg','path');
+  fill.setAttribute('fill','none'); fill.setAttribute('stroke','#e8ff47');
+  fill.setAttribute('stroke-width','2.5'); fill.setAttribute('stroke-linecap','round');
+  svg.appendChild(fill);
+
+  const tick = document.createElementNS('http://www.w3.org/2000/svg','line');
+  tick.setAttribute('stroke','#fff'); tick.setAttribute('stroke-width','1.2');
+  tick.setAttribute('stroke-linecap','round');
+  svg.appendChild(tick);
+
+  const valEl = document.createElement('div');
+  valEl.className = 'mini-knob-val';
+
+  function update() {
+    const end = START + ((val - min) / (max - min)) * SWEEP;
+    fill.setAttribute('d', Math.abs(val - min) < step * 0.5 ? '' : arc(START, end));
+    const inner = polar(end, R - 3), outer = polar(end, R + 1);
+    tick.setAttribute('x1', inner.x); tick.setAttribute('y1', inner.y);
+    tick.setAttribute('x2', outer.x); tick.setAttribute('y2', outer.y);
+    valEl.textContent = Math.abs(val) < 10 ? val.toFixed(2) : Math.round(val);
+  }
+
+  let dsx = 0, dsv = 0;
+  svg.addEventListener('mousedown', e => {
+    dsx = e.clientX; dsv = val;
+    const onM = ev => {
+      val = Math.max(min, Math.min(max, Math.round((dsv + (ev.clientX - dsx) / 80 * (max - min)) / step) * step));
+      update(); onChange(val);
+    };
+    const onU = () => { window.removeEventListener('mousemove', onM); window.removeEventListener('mouseup', onU); };
+    window.addEventListener('mousemove', onM); window.addEventListener('mouseup', onU);
+    e.preventDefault();
+  });
+
+  wrap.appendChild(lbl); wrap.appendChild(svg); wrap.appendChild(valEl);
+  update();
+  return wrap;
+}
+
+function drawSinePreview(cvs, baseVal, freq, amp, valMin, valMax, color, tOffset, wave) {
+  wave = wave || 'sine';
+  const ctx = cvs.getContext('2d');
+  const W = cvs.width, H = cvs.height;
+  if (!W || !H) return;
+  ctx.clearRect(0, 0, W, H);
+
+  const range = valMax - valMin;
+  const margin = 3;
+
+  function valToY(v) {
+    return H - margin - ((v - valMin) / range) * (H - margin * 2);
+  }
+
+  ctx.save();
+  ctx.strokeStyle = '#333';
+  ctx.beginPath(); ctx.moveTo(0, valToY(baseVal)); ctx.lineTo(W, valToY(baseVal)); ctx.stroke();
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.setLineDash([2,3]);
+  ctx.beginPath(); ctx.moveTo(0, valToY(baseVal + amp)); ctx.lineTo(W, valToY(baseVal + amp)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, valToY(baseVal - amp)); ctx.lineTo(W, valToY(baseVal - amp)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = color || '#e8ff47';
+  ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.7;
+  ctx.beginPath();
+  for (let x = 0; x <= W; x++) {
+    const tPos  = x / W;
+    const phase = tPos * freq * Math.PI * 2;
+    const v     = baseVal + waveOsc(wave, phase) * amp;
+    const y     = valToY(Math.max(valMin, Math.min(valMax, v)));
+    x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  if (tOffset !== undefined) {
+    const playPhase = tOffset * freq * Math.PI * 2;
+    const playX     = (tOffset % (1/freq)) * freq * W;
+    const curVal    = baseVal + waveOsc(wave, playPhase) * amp;
+    const playY     = valToY(Math.max(valMin, Math.min(valMax, curVal)));
+
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(playX, 0); ctx.lineTo(playX, H); ctx.stroke();
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle   = color || '#e8ff47';
+    ctx.shadowColor = color || '#e8ff47';
+    ctx.shadowBlur  = 6;
+    ctx.beginPath();
+    ctx.arc(playX, playY, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function waveOsc(shape, phase) {
+  const t = ((phase / (Math.PI * 2)) % 1 + 1) % 1;
+  if (shape === 'rect') return t < 0.5 ? 1 : -1;
+  if (shape === 'saw')  return 1 - 2 * t;
+  return Math.sin(phase);
+}
+
+function buildSpinnerCard(si) {
+  const sp   = spinners[si];
+
+  if (!sp.auto) sp.auto = {
+    spin: { on:false, freq:1, amp:0.5, dc:0.5, wave:'sine' },
+    len:  { on:false, freq:1, amp:0.3, dc:0.5, wave:'sine' },
+  };
+  if (!sp.auto.spin.wave) sp.auto.spin.wave = 'sine';
+  if (!sp.auto.len.wave)  sp.auto.len.wave  = 'sine';
+
+  const card = document.createElement('div');
+  card.className = 'ctrl-card';
+  card.dataset.spinnerIdx = si;
+  card.style.cssText = 'padding:0;width:76px;height:138px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:18px 4px 4px;box-sizing:border-box;position:relative;flex-shrink:0;';
+  card.addEventListener('mouseenter', () => setHighlight('spinner', si));
+  card.addEventListener('mouseleave', () => setHighlight(null, null));
+
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:#555;';
+
+  // Show parent type indicator
+  const parentTag = sp.parent.type === 'free' ? '⊙' : sp.parent.type === 'spinner' ? '⊕' : '∿';
+  lbl.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${sp.color};margin-right:3px;vertical-align:middle;"></span>${parentTag} SP ${si+1}`;
+  card.appendChild(lbl);
+
+  // If free spinner, add drag handle to reposition pivot
+  if (sp.parent.type === 'free') {
+    const dragHint = document.createElement('div');
+    dragHint.style.cssText = 'font-size:6px;color:#444;letter-spacing:0.05em;text-transform:uppercase;cursor:move;border:1px dashed #333;border-radius:2px;padding:1px 4px;margin-bottom:2px;';
+    dragHint.textContent = '⤢ drag';
+    dragHint.title = 'Drag to reposition pivot';
+    let dragActive = false, dragSX = 0, dragSY = 0;
+    dragHint.addEventListener('mousedown', e => {
+      dragActive = true; dragSX = e.clientX; dragSY = e.clientY;
+      const origX = spinners[si].parent.x;
+      const origY = spinners[si].parent.y;
+      const onMove = ev => {
+        if (!dragActive) return;
+        spinners[si].parent.x = origX + (ev.clientX - dragSX);
+        spinners[si].parent.y = origY + (ev.clientY - dragSY);
+      };
+      const onUp = () => { dragActive = false; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      e.stopPropagation(); e.preventDefault();
+    });
+    card.appendChild(dragHint);
+  }
+
+  const spinKnob = makeKnob({ label:'spin', min:-3, max:3, value:sp.spin, step:0.02, unit:'', color:sp.color,
+    onChange:(v) => { if (!spinners[si].auto.spin.on) spinners[si].spin = v; } });
+  sp._spinKnob = spinKnob;
+  card.appendChild(spinKnob);
+
+  const lenKnob = makeKnob({ label:'len', min:6, max:200, value:sp.len, step:2, unit:'', color:sp.color,
+    onChange:(v) => { if (!spinners[si].auto.len.on) spinners[si].len = v; } });
+  sp._lenKnob = lenKnob;
+  card.appendChild(lenKnob);
+
+  function makeBtnPair(paramKey, topPx) {
+    const BASE = 'font-size:6px;background:none;border:1px solid #333;cursor:pointer;padding:1px 3px;border-radius:2px;font-family:DM Mono,monospace;position:absolute;left:2px;';
+
+    const aBtn = document.createElement('button');
+    aBtn.textContent = 'A';
+    aBtn.style.cssText = BASE + `top:${topPx}px;color:#555;`;
+    aBtn.title = 'Toggle automation';
+    aBtn.addEventListener('click', () => {
+      sp.auto[paramKey].on = !sp.auto[paramKey].on;
+      const on = sp.auto[paramKey].on;
+      aBtn.style.background = on ? 'var(--accent)' : 'none';
+      aBtn.style.color = on ? '#000' : '#555';
+      aBtn.style.borderColor = on ? 'var(--accent)' : '#333';
+    });
+
+    const pBtn = document.createElement('button');
+    pBtn.textContent = '+';
+    pBtn.style.cssText = BASE + `top:${topPx + 12}px;color:#555;`;
+    pBtn.title = 'Edit automation';
+
+    card.appendChild(aBtn);
+    card.appendChild(pBtn);
+    return { aBtn, pBtn };
+  }
+
+  const { pBtn: spinPBtn } = makeBtnPair('spin', 20);
+  const { pBtn: lenPBtn  } = makeBtnPair('len',  74);
+
+  const del = document.createElement('button');
+  del.className = 'del-btn';
+  del.textContent = '✕';
+  del.addEventListener('click', () => {
+    removeSpinnerAndChildren(si);
+    rebuildAllCards();
+    document.getElementById('st-spinners').textContent = 'Spinners: ' + spinners.length + '  Brushes: ' + brushes.length;
+  });
+  card.appendChild(del);
+
+  ctrlContainer.appendChild(card);
+
+  function buildGraphPanel(paramKey) {
+    const a = sp.auto[paramKey];
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'display:none;flex-direction:column;gap:3px;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:8px;width:196px;height:138px;box-sizing:border-box;overflow:hidden;flex-shrink:0;min-width:196px;';
+
+    const ttl = document.createElement('div');
+    ttl.style.cssText = 'font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:#555;height:12px;line-height:12px;flex-shrink:0;';
+    ttl.textContent = paramKey === 'spin' ? 'SPEED AUTO' : 'LENGTH AUTO';
+    panel.appendChild(ttl);
+
+    const graphDiv = document.createElement('div');
+    graphDiv.style.cssText = 'width:180px;height:60px;overflow:hidden;flex-shrink:0;border-radius:2px;background:#111;position:relative;display:block;';
+    const panelCvs = document.createElement('canvas');
+    panelCvs.width  = 180;
+    panelCvs.height = 60;
+    panelCvs.style.cssText = 'position:absolute;top:0;left:0;display:block;width:180px;height:60px;';
+    graphDiv.appendChild(panelCvs);
+    const waveRow = document.createElement('div');
+    waveRow.className = 'wave-btn-row';
+    const waveLb = document.createElement('span');
+    waveLb.style.cssText = 'font-size:5px;color:#444;letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;';
+    waveLb.textContent = 'wave';
+    waveRow.appendChild(waveLb);
+    const waveShapes = [['sine','∿'],['rect','⊓'],['saw','⟋']];
+    const waveBtns = {};
+    waveShapes.forEach(([shape, icon]) => {
+      const wb = document.createElement('button');
+      wb.className = 'wave-btn' + (a.wave === shape || (!a.wave && shape === 'sine') ? ' active' : '');
+      wb.textContent = icon;
+      wb.title = shape;
+      wb.addEventListener('click', () => {
+        spinners[si].auto[paramKey].wave = shape;
+        Object.values(waveBtns).forEach(b => b.classList.remove('active'));
+        wb.classList.add('active');
+      });
+      waveBtns[shape] = wb;
+      waveRow.appendChild(wb);
+    });
+    panel.appendChild(waveRow);
+    panel.appendChild(graphDiv);
+    sp[`_auto_cvs_${paramKey}`] = panelCvs;
+
+    const slRow = document.createElement('div');
+    slRow.style.cssText = 'display:flex;flex-direction:row;gap:12px;height:20px;align-items:center;flex-shrink:0;';
+
+    function makeSl(labelTxt, color, initVal, onChange) {
+      const w = document.createElement('div');
+      w.style.cssText = 'display:flex;align-items:center;gap:3px;';
+      const lb = document.createElement('span');
+      lb.style.cssText = 'font-size:5px;color:#555;text-transform:uppercase;';
+      lb.textContent = labelTxt;
+      const sl = document.createElement('input');
+      sl.type='range'; sl.min='0'; sl.max='1'; sl.step='0.01'; sl.value=initVal;
+      sl.style.cssText = `width:50px;cursor:pointer;accent-color:${color};height:2px;`;
+      const vl = document.createElement('span');
+      vl.style.cssText = 'font-size:5px;color:#666;min-width:20px;';
+      vl.textContent = Math.round(initVal*100)+'%';
+      sl.addEventListener('input', () => { vl.textContent=Math.round(+sl.value*100)+'%'; onChange(+sl.value); });
+      w.appendChild(lb); w.appendChild(sl); w.appendChild(vl);
+      return w;
+    }
+
+    slRow.appendChild(makeSl('dc',  '#60aaff', a.dc !== undefined ? a.dc : 0.5, v => { spinners[si].auto[paramKey].dc  = v; }));
+    slRow.appendChild(makeSl('amp', '#e8ff47', a.amp, v => { spinners[si].auto[paramKey].amp = v; }));
+    panel.appendChild(slRow);
+
+    const fr = document.createElement('div');
+    fr.style.cssText = 'display:flex;align-items:center;gap:4px;height:16px;flex-shrink:0;';
+    const fLb = document.createElement('span');
+    fLb.style.cssText = 'font-size:5px;color:#444;';
+    fLb.textContent = 'freq';
+    const fSl = document.createElement('input');
+    fSl.type='range'; fSl.min='0.25'; fSl.max='8'; fSl.step='0.25'; fSl.value=a.freq;
+    fSl.style.cssText = 'flex:1;accent-color:#e8ff47;cursor:pointer;height:2px;';
+    const fVl = document.createElement('span');
+    fVl.style.cssText = 'font-size:6px;color:#777;min-width:24px;text-align:right;';
+    fVl.textContent = a.freq+'×';
+    fSl.addEventListener('input', () => { spinners[si].auto[paramKey].freq=+fSl.value; fVl.textContent=(+fSl.value).toFixed(2)+'×'; });
+    fr.appendChild(fLb); fr.appendChild(fSl); fr.appendChild(fVl);
+    panel.appendChild(fr);
+
+    return { panel, cvs: panelCvs };
+  }
+
+  const { panel: spinPanel } = buildGraphPanel('spin');
+  const { panel: lenPanel  } = buildGraphPanel('len');
+  card.insertAdjacentElement('afterend', lenPanel);
+  card.insertAdjacentElement('afterend', spinPanel);
+
+  function wireExpand(pBtn, myPanel) {
+    pBtn.addEventListener('click', () => {
+      const opening = myPanel.style.display === 'none';
+      if (opening) {
+        myPanel.style.display = 'flex';
+        pBtn.style.color = 'var(--accent)'; pBtn.style.borderColor = 'var(--accent)';
+        pBtn.textContent = '×';
+      } else {
+        myPanel.style.display = 'none';
+        pBtn.style.color = '#555'; pBtn.style.borderColor = '#333';
+        pBtn.textContent = '+';
+      }
+    });
+  }
+
+  wireExpand(spinPBtn, spinPanel);
+  wireExpand(lenPBtn,  lenPanel);
+
+  sp._spinPanel = spinPanel;
+  sp._lenPanel  = lenPanel;
+}
+
+
+// ══════════════════════════════════════════════════════
+//  BRUSH SELECTION + GROUPING
+// ══════════════════════════════════════════════════════
+
+function setBrushSelected(bi, sel) {
+  if (sel) selectedBrushIndices.add(bi);
+  else selectedBrushIndices.delete(bi);
+  updateGrpBar();
+}
+
+function updateGrpBar() {
+  const bar = document.getElementById('grp-bar');
+  const n = selectedBrushIndices.size;
+  document.getElementById('grp-bar-count').textContent = n + ' brush' + (n !== 1 ? 'es' : '') + ' selected';
+  if (n >= 2) bar.classList.add('on');
+  else bar.classList.remove('on');
+}
+
+function clearBrushSelection() {
+  selectedBrushIndices.clear();
+  updateGrpBar();
+  rebuildAllCards();
+}
+
+document.getElementById('grp-bar-cancel').addEventListener('click', clearBrushSelection);
+
+document.getElementById('grp-bar-group').addEventListener('click', () => {
+  if (selectedBrushIndices.size < 2) return;
+  const indices = [...selectedBrushIndices].sort((a,b) => a - b);
+  const grp = {
+    memberIndices: indices,
+    auto: {
+      size:  { on:false, freq:1, amp:0.5, dc:0.5, wave:'sine' },
+      morph: { on:false, freq:0.5, amp:0.5, dc:0.5, wave:'sine' },
+    }
+  };
+  brushGroups.push(grp);
+  selectedBrushIndices.clear();
+  updateGrpBar();
+  rebuildAllCards();
+  document.getElementById('st-spinners').textContent =
+    'Spinners: ' + spinners.length + '  Brushes: ' + brushes.length + '  Groups: ' + brushGroups.length;
+});
+
+// returns the group index that owns brush bi, or -1
+function brushGroupOf(bi) {
+  for (let gi = 0; gi < brushGroups.length; gi++) {
+    if (brushGroups[gi].memberIndices.includes(bi)) return gi;
+  }
+  return -1;
+}
+
+function buildGroupCard(gi) {
+  const grp = brushGroups[gi];
+
+  if (!grp.auto.size.wave)  grp.auto.size.wave  = 'sine';
+  if (!grp.auto.morph.wave) grp.auto.morph.wave = 'sine';
+
+  const card = document.createElement('div');
+  card.className = 'grp-card';
+  card.dataset.groupIdx = gi;
+  card.addEventListener('mouseenter', () => setHighlight('group', gi));
+  card.addEventListener('mouseleave', () => setHighlight(null, null));
+
+  // label
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);position:absolute;top:4px;left:8px;';
+  lbl.textContent = 'GRP ' + (gi + 1);
+  card.appendChild(lbl);
+
+  // member swatches
+  const swatchRow = document.createElement('div');
+  swatchRow.className = 'grp-swatches';
+  grp.memberIndices.forEach(bi => {
+    if (!brushes[bi]) return;
+    const s = document.createElement('div');
+    s.className = 'grp-swatch';
+    s.style.background = brushes[bi].color;
+    s.title = 'BR ' + (bi + 1);
+    swatchRow.appendChild(s);
+  });
+  card.appendChild(swatchRow);
+
+  // size knob
+  const sizeKnob = makeKnob({
+    label: 'size', min: 0, max: 20, value: 2, step: 0.5, unit: '', color: '#e8ff47',
+    onChange: (v) => {
+      if (!brushGroups[gi].auto.size.on) {
+        brushGroups[gi].memberIndices.forEach(bi => { if (brushes[bi]) brushes[bi].width = v; });
+      }
+    }
+  });
+  grp._sizeKnob = sizeKnob;
+  card.appendChild(sizeKnob);
+
+  // morph knob
+  const morphKnob = makeKnob({
+    label: 'morph', min: 0, max: 1, value: 0, step: 0.01, unit: '', color: '#888',
+    onChange: (v) => {
+      if (!brushGroups[gi].auto.morph.on) {
+        brushGroups[gi].memberIndices.forEach(bi => { if (brushes[bi]) { brushes[bi].morphT = v; updateMorphSwatch(bi); } });
+      }
+    }
+  });
+  grp._morphKnob = morphKnob;
+  card.appendChild(morphKnob);
+
+  // A/+ button pairs
+  function makeGrpBtnPair(paramKey, topPx) {
+    const BASE = 'font-size:6px;background:none;border:1px solid #333;cursor:pointer;padding:1px 3px;border-radius:2px;font-family:DM Mono,monospace;position:absolute;left:2px;';
+    const aBtn = document.createElement('button');
+    aBtn.textContent = 'A'; aBtn.style.cssText = BASE + 'top:' + topPx + 'px;color:#555;';
+    aBtn.addEventListener('click', () => {
+      grp.auto[paramKey].on = !grp.auto[paramKey].on;
+      const on = grp.auto[paramKey].on;
+      aBtn.style.background = on ? 'var(--accent)' : 'none';
+      aBtn.style.color = on ? '#000' : '#555';
+      aBtn.style.borderColor = on ? 'var(--accent)' : '#333';
+    });
+    const pBtn = document.createElement('button');
+    pBtn.textContent = '+'; pBtn.style.cssText = BASE + 'top:' + (topPx + 12) + 'px;color:#555;';
+    card.appendChild(aBtn); card.appendChild(pBtn);
+    return { pBtn };
+  }
+
+  const { pBtn: sizePBtn  } = makeGrpBtnPair('size',  18);
+  const { pBtn: morphPBtn } = makeGrpBtnPair('morph', 72);
+
+  // ungroup button
+  const ungrpBtn = document.createElement('button');
+  ungrpBtn.style.cssText = 'position:absolute;bottom:4px;font-size:6px;letter-spacing:0.06em;text-transform:uppercase;background:none;border:1px solid #333;border-radius:2px;color:#555;cursor:pointer;padding:1px 4px;font-family:DM Mono,monospace;transition:all 0.12s;';
+  ungrpBtn.textContent = 'ungroup';
+  ungrpBtn.addEventListener('mouseenter', () => { ungrpBtn.style.borderColor='#ff4444'; ungrpBtn.style.color='#ff4444'; });
+  ungrpBtn.addEventListener('mouseleave', () => { ungrpBtn.style.borderColor='#333'; ungrpBtn.style.color='#555'; });
+  ungrpBtn.addEventListener('click', () => {
+    brushGroups.splice(gi, 1);
+    rebuildAllCards();
+    document.getElementById('st-spinners').textContent =
+      'Spinners: ' + spinners.length + '  Brushes: ' + brushes.length + '  Groups: ' + brushGroups.length;
+  });
+  card.appendChild(ungrpBtn);
+
+  // del button
+  const del = document.createElement('button');
+  del.className = 'del-btn'; del.textContent = '✕';
+  del.addEventListener('click', () => {
+    // remove group and all member brushes
+    const members = [...brushGroups[gi].memberIndices].sort((a,b) => b - a);
+    members.forEach(bi => brushes.splice(bi, 1));
+    brushGroups.splice(gi, 1);
+    // fix remaining group indices
+    brushGroups.forEach(g => {
+      g.memberIndices = g.memberIndices
+        .filter(bi => bi < brushes.length)
+        .map(bi => {
+          let offset = members.filter(m => m < bi).length;
+          return bi - offset;
+        });
+    });
+    rebuildAllCards();
+    document.getElementById('st-spinners').textContent =
+      'Spinners: ' + spinners.length + '  Brushes: ' + brushes.length + '  Groups: ' + brushGroups.length;
+  });
+  card.appendChild(del);
+
+  ctrlContainer.appendChild(card);
+
+  // graph panels (reusing same pattern as brush)
+  function buildGrpPanel(paramKey) {
+    const a = grp.auto[paramKey];
+    const vmin = 0, vmax = paramKey === 'size' ? 20 : 1;
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'display:none;flex-direction:column;gap:3px;background:#1a1a1a;border:1px solid rgba(232,255,71,0.2);border-radius:6px;padding:8px;width:196px;height:138px;box-sizing:border-box;overflow:hidden;flex-shrink:0;min-width:196px;';
+
+    const ttl = document.createElement('div');
+    ttl.style.cssText = 'font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);height:12px;line-height:12px;flex-shrink:0;';
+    ttl.textContent = (paramKey === 'size' ? 'GROUP SIZE' : 'GROUP MORPH') + ' AUTO';
+    panel.appendChild(ttl);
+
+    const graphDiv = document.createElement('div');
+    graphDiv.style.cssText = 'width:180px;height:60px;overflow:hidden;flex-shrink:0;border-radius:2px;background:#111;position:relative;display:block;';
+    const panelCvs = document.createElement('canvas');
+    panelCvs.width = 180; panelCvs.height = 60;
+    panelCvs.style.cssText = 'position:absolute;top:0;left:0;display:block;width:180px;height:60px;';
+    graphDiv.appendChild(panelCvs);
+
+    const waveRow = document.createElement('div');
+    waveRow.className = 'wave-btn-row';
+    const waveLb = document.createElement('span');
+    waveLb.style.cssText = 'font-size:5px;color:#444;letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;';
+    waveLb.textContent = 'wave';
+    waveRow.appendChild(waveLb);
+    [['sine','∿'],['rect','⊓'],['saw','⟋']].forEach(([shape, icon]) => {
+      const wb = document.createElement('button');
+      wb.className = 'wave-btn' + (a.wave === shape ? ' active' : '');
+      wb.textContent = icon; wb.title = shape;
+      wb.addEventListener('click', () => {
+        brushGroups[gi].auto[paramKey].wave = shape;
+        waveRow.querySelectorAll('.wave-btn').forEach(b => b.classList.remove('active'));
+        wb.classList.add('active');
+      });
+      waveRow.appendChild(wb);
+    });
+    panel.appendChild(waveRow);
+    panel.appendChild(graphDiv);
+    grp['_auto_cvs_' + paramKey] = panelCvs;
+
+    const slRow = document.createElement('div');
+    slRow.style.cssText = 'display:flex;flex-direction:row;gap:12px;height:20px;align-items:center;flex-shrink:0;';
+    function makeSl(labelTxt, color, initVal, onChange) {
+      const w = document.createElement('div');
+      w.style.cssText = 'display:flex;align-items:center;gap:3px;';
+      const lb = document.createElement('span'); lb.style.cssText='font-size:5px;color:#555;text-transform:uppercase;'; lb.textContent=labelTxt;
+      const sl = document.createElement('input'); sl.type='range'; sl.min='0'; sl.max='1'; sl.step='0.01'; sl.value=initVal;
+      sl.style.cssText='width:50px;cursor:pointer;accent-color:'+color+';height:2px;';
+      const vl = document.createElement('span'); vl.style.cssText='font-size:5px;color:#666;min-width:20px;'; vl.textContent=Math.round(initVal*100)+'%';
+      sl.addEventListener('input', ()=>{ vl.textContent=Math.round(+sl.value*100)+'%'; onChange(+sl.value); });
+      w.appendChild(lb); w.appendChild(sl); w.appendChild(vl); return w;
+    }
+    slRow.appendChild(makeSl('dc',  '#60aaff', a.dc !== undefined ? a.dc : 0.5, v => { brushGroups[gi].auto[paramKey].dc = v; }));
+    slRow.appendChild(makeSl('amp', '#e8ff47', a.amp, v => { brushGroups[gi].auto[paramKey].amp = v; }));
+    panel.appendChild(slRow);
+
+    const fr = document.createElement('div');
+    fr.style.cssText = 'display:flex;align-items:center;gap:4px;height:16px;flex-shrink:0;';
+    const fLb=document.createElement('span'); fLb.style.cssText='font-size:5px;color:#444;'; fLb.textContent='freq';
+    const fSl=document.createElement('input'); fSl.type='range'; fSl.min='0.25'; fSl.max='8'; fSl.step='0.25'; fSl.value=a.freq;
+    fSl.style.cssText='flex:1;accent-color:#e8ff47;cursor:pointer;height:2px;';
+    const fVl=document.createElement('span'); fVl.style.cssText='font-size:6px;color:#777;min-width:24px;text-align:right;'; fVl.textContent=a.freq+'x';
+    fSl.addEventListener('input',()=>{ brushGroups[gi].auto[paramKey].freq=+fSl.value; fVl.textContent=(+fSl.value).toFixed(2)+'x'; });
+    fr.appendChild(fLb); fr.appendChild(fSl); fr.appendChild(fVl);
+    panel.appendChild(fr);
+
+    return panel;
+  }
+
+  const sizePanel  = buildGrpPanel('size');
+  const morphPanel = buildGrpPanel('morph');
+  card.insertAdjacentElement('afterend', morphPanel);
+  card.insertAdjacentElement('afterend', sizePanel);
+
+  function wireExpand(pBtn, myPanel, otherPanel, otherPBtn) {
+    pBtn.addEventListener('click', () => {
+      const opening = myPanel.style.display === 'none';
+      otherPanel.style.display = 'none';
+      otherPBtn.textContent='+'; otherPBtn.style.color='#555'; otherPBtn.style.borderColor='#333';
+      if (opening) {
+        myPanel.style.display = 'flex';
+        pBtn.textContent='x'; pBtn.style.color='var(--accent)'; pBtn.style.borderColor='var(--accent)';
+      } else {
+        myPanel.style.display = 'none';
+        pBtn.textContent='+'; pBtn.style.color='#555'; pBtn.style.borderColor='#333';
+      }
+    });
+  }
+  wireExpand(sizePBtn,  sizePanel,  morphPanel, morphPBtn);
+  wireExpand(morphPBtn, morphPanel, sizePanel,  sizePBtn);
+}
+
+function rebuildAllCards() {
+  ctrlContainer.innerHTML = '';
+  for (let i = 0; i < spinners.length; i++) buildSpinnerCard(i);
+
+  // build brush cards — grouped brushes are shown inside their group card
+  const groupedBrushIndices = new Set(brushGroups.flatMap(g => g.memberIndices));
+  for (let i = 0; i < brushes.length; i++) {
+    if (!groupedBrushIndices.has(i)) buildBrushCard(i);
+  }
+  for (let i = 0; i < brushGroups.length; i++) buildGroupCard(i);
+}
+
+
+function lerpColor(a, b, t) {
+  const ah = a.replace('#',''), bh = b.replace('#','');
+  const ar = parseInt(ah.slice(0,2),16), ag = parseInt(ah.slice(2,4),16), ab2 = parseInt(ah.slice(4,6),16);
+  const br2 = parseInt(bh.slice(0,2),16), bg = parseInt(bh.slice(2,4),16), bb2 = parseInt(bh.slice(4,6),16);
+  const rr = Math.round(ar + (br2-ar)*t), rg = Math.round(ag + (bg-ag)*t), rb = Math.round(ab2 + (bb2-ab2)*t);
+  return `rgb(${rr},${rg},${rb})`;
+}
+
+function buildBrushCard(bi) {
+  const br = brushes[bi];
+
+  if (!br.auto) br.auto = {
+    size:  { on:false, freq:1, amp:0.5, dc:0.5, wave:'sine' },
+    morph: { on:false, freq:0.5, amp:0.5, dc:0.5, wave:'sine' },
+  };
+  if (!br.auto.size.wave)  br.auto.size.wave  = 'sine';
+  if (!br.auto.morph.wave) br.auto.morph.wave = 'sine';
+
+  const card = document.createElement('div');
+  card.className = 'ctrl-card';
+  card.dataset.brushIdx = bi;
+  card.style.cssText = 'padding:18px 4px 4px;position:relative;';
+  if (selectedBrushIndices.has(bi)) card.classList.add('selected');
+  card.addEventListener('mouseenter', () => setHighlight('brush', bi));
+  card.addEventListener('mouseleave', () => setHighlight(null, null));
+  card.addEventListener('click', e => {
+    if (!e.shiftKey) return;
+    const sel = !selectedBrushIndices.has(bi);
+    setBrushSelected(bi, sel);
+    card.classList.toggle('selected', sel);
+    e.stopPropagation();
+  });
+
+  const lbl = document.createElement('div');
+  lbl.className = 'card-label';
+  lbl.id = `br-lbl-${bi}`;
+  lbl.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${br.color};margin-right:4px;vertical-align:middle;"></span>BR ${bi+1}`;
+  card.appendChild(lbl);
+
+  const sizeKnob = makeKnob({ label:'size', min:0, max:20, value:br.width, step:0.5, unit:'', color:br.color,
+    onChange:(v) => { if (!brushes[bi].auto.size.on) brushes[bi].width = v; } });
+  br._sizeKnob = sizeKnob;
+  card.appendChild(sizeKnob);
+
+  const morphKnob = makeKnob({ label:'morph', min:0, max:1, value:br.morphT, step:0.01, unit:'', color:'#888',
+    onChange:(v) => { if (!brushes[bi].auto.morph.on) { brushes[bi].morphT = v; updateMorphSwatch(bi); } } });
+  br._morphKnob = morphKnob;
+  card.appendChild(morphKnob);
+
+  const colorRow = document.createElement('div');
+  colorRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;';
+  const c1 = document.createElement('input');
+  c1.type='color'; c1.value=br.color;
+  c1.style.cssText='width:18px;height:14px;border:none;background:none;cursor:pointer;padding:0;';
+  c1.addEventListener('input', e => { brushes[bi].color=e.target.value; updateMorphSwatch(bi); });
+  const morphSpd = document.createElement('div');
+  morphSpd.style.cssText='font-size:7px;color:#444;text-align:center;flex:1;cursor:ew-resize;';
+  morphSpd.textContent='⟷';
+  let msDragStart=0, msValStart=0;
+  morphSpd.addEventListener('mousedown', e => {
+    msDragStart=e.clientX; msValStart=brushes[bi].morphSpeed||0;
+    const onMove=(ev)=>{ brushes[bi].morphSpeed=Math.max(0,Math.round((msValStart+(ev.clientX-msDragStart)/60*10))/10); morphSpd.textContent=brushes[bi].morphSpeed>0?brushes[bi].morphSpeed.toFixed(1):'⟷'; };
+    const onUp=()=>{ window.removeEventListener('mousemove',onMove); window.removeEventListener('mouseup',onUp); };
+    window.addEventListener('mousemove',onMove); window.addEventListener('mouseup',onUp); e.preventDefault();
+  });
+  const c2 = document.createElement('input');
+  c2.type='color'; c2.value=br.color2||br.color;
+  c2.style.cssText='width:18px;height:14px;border:none;background:none;cursor:pointer;padding:0;';
+  c2.addEventListener('input', e => { brushes[bi].color2=e.target.value; updateMorphSwatch(bi); });
+  colorRow.appendChild(c1); colorRow.appendChild(morphSpd); colorRow.appendChild(c2);
+  card.appendChild(colorRow);
+
+  function makeBrBtnPair(paramKey, topPx) {
+    const BASE = 'font-size:6px;background:none;border:1px solid #333;cursor:pointer;padding:1px 3px;border-radius:2px;font-family:DM Mono,monospace;position:absolute;left:2px;';
+    const aBtn = document.createElement('button');
+    aBtn.textContent = 'A'; aBtn.style.cssText = BASE + `top:${topPx}px;color:#555;`;
+    aBtn.addEventListener('click', () => {
+      br.auto[paramKey].on = !br.auto[paramKey].on;
+      const on = br.auto[paramKey].on;
+      aBtn.style.background = on ? 'var(--accent)' : 'none';
+      aBtn.style.color = on ? '#000' : '#555';
+      aBtn.style.borderColor = on ? 'var(--accent)' : '#333';
+    });
+    const pBtn = document.createElement('button');
+    pBtn.textContent = '+'; pBtn.style.cssText = BASE + `top:${topPx+12}px;color:#555;`;
+    card.appendChild(aBtn); card.appendChild(pBtn);
+    return { pBtn };
+  }
+
+  const { pBtn: sizePBtn  } = makeBrBtnPair('size',  20);
+  const { pBtn: morphPBtn } = makeBrBtnPair('morph', 72);
+
+  const del = document.createElement('button');
+  del.className = 'del-btn'; del.textContent = '✕';
+  del.addEventListener('click', () => {
+    brushes.splice(bi,1); rebuildAllCards();
+    document.getElementById('st-spinners').textContent = 'Spinners: '+spinners.length+'  Brushes: '+brushes.length;
+  });
+  card.appendChild(del);
+  ctrlContainer.appendChild(card);
+
+  function buildBrushPanel(paramKey) {
+    const a = br.auto[paramKey];
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'display:none;flex-direction:column;gap:3px;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:8px;width:196px;height:138px;box-sizing:border-box;overflow:hidden;flex-shrink:0;min-width:196px;';
+
+    const ttl = document.createElement('div');
+    ttl.style.cssText = 'font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:#555;height:12px;line-height:12px;flex-shrink:0;';
+    ttl.textContent = paramKey === 'size' ? 'SIZE AUTO' : 'MORPH AUTO';
+    panel.appendChild(ttl);
+
+    const graphDiv = document.createElement('div');
+    graphDiv.style.cssText = 'width:180px;height:60px;overflow:hidden;flex-shrink:0;border-radius:2px;background:#111;position:relative;display:block;';
+    const panelCvs = document.createElement('canvas');
+    panelCvs.width = 180; panelCvs.height = 60;
+    panelCvs.style.cssText = 'position:absolute;top:0;left:0;display:block;width:180px;height:60px;';
+    graphDiv.appendChild(panelCvs);
+    const waveRow = document.createElement('div');
+    waveRow.className = 'wave-btn-row';
+    const waveLb = document.createElement('span');
+    waveLb.style.cssText = 'font-size:5px;color:#444;letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;';
+    waveLb.textContent = 'wave';
+    waveRow.appendChild(waveLb);
+    const waveShapes = [['sine','∿'],['rect','⊓'],['saw','⟋']];
+    const waveBtns = {};
+    waveShapes.forEach(([shape, icon]) => {
+      const wb = document.createElement('button');
+      wb.className = 'wave-btn' + (a.wave === shape || (!a.wave && shape === 'sine') ? ' active' : '');
+      wb.textContent = icon;
+      wb.title = shape;
+      wb.addEventListener('click', () => {
+        brushes[bi].auto[paramKey].wave = shape;
+        Object.values(waveBtns).forEach(b => b.classList.remove('active'));
+        wb.classList.add('active');
+      });
+      waveBtns[shape] = wb;
+      waveRow.appendChild(wb);
+    });
+    panel.appendChild(waveRow);
+    panel.appendChild(graphDiv);
+    br[`_auto_cvs_${paramKey}`] = panelCvs;
+
+    const slRow = document.createElement('div');
+    slRow.style.cssText = 'display:flex;flex-direction:row;gap:12px;height:20px;align-items:center;flex-shrink:0;';
+    function makeSl(labelTxt, color, initVal, onChange) {
+      const w = document.createElement('div');
+      w.style.cssText = 'display:flex;align-items:center;gap:3px;';
+      const lb = document.createElement('span'); lb.style.cssText='font-size:5px;color:#555;text-transform:uppercase;'; lb.textContent=labelTxt;
+      const sl = document.createElement('input'); sl.type='range'; sl.min='0'; sl.max='1'; sl.step='0.01'; sl.value=initVal;
+      sl.style.cssText=`width:50px;cursor:pointer;accent-color:${color};height:2px;`;
+      const vl = document.createElement('span'); vl.style.cssText='font-size:5px;color:#666;min-width:20px;'; vl.textContent=Math.round(initVal*100)+'%';
+      sl.addEventListener('input', ()=>{ vl.textContent=Math.round(+sl.value*100)+'%'; onChange(+sl.value); });
+      w.appendChild(lb); w.appendChild(sl); w.appendChild(vl); return w;
+    }
+    slRow.appendChild(makeSl('dc',  '#60aaff', a.dc!==undefined?a.dc:0.5, v=>{ brushes[bi].auto[paramKey].dc=v; }));
+    slRow.appendChild(makeSl('amp', '#e8ff47', a.amp, v=>{ brushes[bi].auto[paramKey].amp=v; }));
+    panel.appendChild(slRow);
+
+    const fr = document.createElement('div');
+    fr.style.cssText='display:flex;align-items:center;gap:4px;height:16px;flex-shrink:0;';
+    const fLb=document.createElement('span'); fLb.style.cssText='font-size:5px;color:#444;'; fLb.textContent='freq';
+    const fSl=document.createElement('input'); fSl.type='range'; fSl.min='0.25'; fSl.max='8'; fSl.step='0.25'; fSl.value=a.freq;
+    fSl.style.cssText='flex:1;accent-color:#e8ff47;cursor:pointer;height:2px;';
+    const fVl=document.createElement('span'); fVl.style.cssText='font-size:6px;color:#777;min-width:24px;text-align:right;'; fVl.textContent=a.freq+'×';
+    fSl.addEventListener('input',()=>{ brushes[bi].auto[paramKey].freq=+fSl.value; fVl.textContent=(+fSl.value).toFixed(2)+'×'; });
+    fr.appendChild(fLb); fr.appendChild(fSl); fr.appendChild(fVl);
+    panel.appendChild(fr);
+
+    return panel;
+  }
+
+  const sizePanel  = buildBrushPanel('size');
+  const morphPanel = buildBrushPanel('morph');
+  card.insertAdjacentElement('afterend', morphPanel);
+  card.insertAdjacentElement('afterend', sizePanel);
+
+  function wireExpand(pBtn, myPanel, otherPanel) {
+    pBtn.addEventListener('click', () => {
+      const opening = myPanel.style.display === 'none';
+      otherPanel.style.display = 'none';
+      const otherPBtn = pBtn === sizePBtn ? morphPBtn : sizePBtn;
+      otherPBtn.textContent='+'; otherPBtn.style.color='#555'; otherPBtn.style.borderColor='#333';
+      if (opening) {
+        myPanel.style.display = 'flex';
+        pBtn.textContent='×'; pBtn.style.color='var(--accent)'; pBtn.style.borderColor='var(--accent)';
+      } else {
+        myPanel.style.display = 'none';
+        pBtn.textContent='+'; pBtn.style.color='#555'; pBtn.style.borderColor='#333';
+      }
+    });
+  }
+  wireExpand(sizePBtn,  sizePanel,  morphPanel);
+  wireExpand(morphPBtn, morphPanel, sizePanel);
+
+  br._sizePanel  = sizePanel;
+  br._morphPanel = morphPanel;
+}
+
+function updateMorphSwatch(bi) {
+  const br  = brushes[bi];
+  const lbl = document.getElementById(`br-lbl-${bi}`);
+  if (!lbl) return;
+  const c = lerpColor(br.color, br.color2 || br.color, br.morphT);
+  lbl.querySelector('span').style.background = c;
+}
+
+// ── resize ─────────────────────────────────────────────
+function resize() {
+  [cvCurves, cvTrace, cvSpin, cvLive, cvInter].forEach(c => {
+    c.width  = wsEl.clientWidth;
+    c.height = wsEl.clientHeight;
+  });
+  if (typeof syncRecordCanvas === 'function') syncRecordCanvas();
+  drawCurves();
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ── controls ───────────────────────────────────────────
+const slSmooth = document.getElementById('sl-smooth'), vSmooth = document.getElementById('v-smooth');
+const slTol    = document.getElementById('sl-tol'),    vTol    = document.getElementById('v-tol');
+const slLen    = document.getElementById('sl-len'),    vLen    = document.getElementById('v-len');
+const slTravel = document.getElementById('sl-travel'), vTravel = document.getElementById('v-travel');
+const slSpin   = document.getElementById('sl-spin'),   vSpin   = document.getElementById('v-spin');
+const chkTrace = document.getElementById('chk-trace');
+
+slSmooth.addEventListener('input', () => { smoothing = +slSmooth.value; vSmooth.textContent = smoothing; });
+slTol.addEventListener('input',    () => { tolerance = +slTol.value;    vTol.textContent    = tolerance; });
+slLen.addEventListener('input',    () => { spLen    = +slLen.value;     vLen.textContent    = spLen; });
+slTravel.addEventListener('input', () => { spTravel = +slTravel.value;  vTravel.textContent = spTravel + '×'; });
+slSpin.addEventListener('input',   () => { spSpin   = +slSpin.value;    vSpin.textContent   = spSpin; });
+const slAngle = document.getElementById('sl-angle'), vAngle = document.getElementById('v-angle');
+slAngle.addEventListener('input',  () => { spAngle  = +slAngle.value * Math.PI / 180; vAngle.textContent  = slAngle.value + '°'; });
+document.getElementById('sp-color').addEventListener('input', e => spColor = e.target.value);
+document.getElementById('br-color').addEventListener('input', e => brColor = e.target.value);
+document.getElementById('bg-color').addEventListener('input', e => {
+  const col = e.target.value;
+  document.documentElement.style.setProperty('--bg', col);
+  wsEl.style.background = col;
+});
+const slDecay = document.getElementById('sl-decay'), vDecay = document.getElementById('v-decay');
+slDecay.addEventListener('input', () => {
+  brDecay = +slDecay.value;
+  vDecay.textContent = brDecay === 0 ? 'off' : brDecay.toFixed(3);
+});
+const slBrW = document.getElementById('sl-brw'), vBrW = document.getElementById('v-brw');
+slBrW.addEventListener('input', () => { brWidth = +slBrW.value; vBrW.textContent = brWidth; });
+document.getElementById('btn-clear-trace').addEventListener('click', () => {
+  ctxTr.clearRect(0, 0, cvTrace.width, cvTrace.height);
+});
+chkTrace.addEventListener('change', () => spTrace = chkTrace.checked);
+
+// ── tool switching ─────────────────────────────────────
+document.querySelectorAll('[data-tool]').forEach(b => {
+  b.addEventListener('click', () => switchTool(b.dataset.tool));
+});
+
+function switchTool(t) {
+  tool = t;
+  document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
+  document.getElementById('p-draw').style.display    = t === 'draw'    ? 'flex' : 'none';
+  document.getElementById('p-spinner').style.display = t === 'spinner' ? 'flex' : 'none';
+  document.getElementById('p-brush').style.display   = t === 'brush'   ? 'flex' : 'none';
+  cvInter.className = 'tool-' + t;
+  const modeHints = {
+    draw:    'Curve mode — draw scaffolding',
+    spinner: 'Spinner mode — click curve, spinner tip, or anywhere on canvas',
+    brush:   'Brush mode — click spinner tip to paint'
+  };
+  document.getElementById('st-mode').textContent = modeHints[t] || '';
+}
+
+// ── mouse ──────────────────────────────────────────────
+cvInter.addEventListener('mousedown', e => {
+  const r = cvInter.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  mouseHeld = true;
+  if (tool === 'draw') { rawPts = [{x, y}]; isDrawing = true; }
+  else if (tool === 'spinner') placeSpinner(x, y);
+  else if (tool === 'brush') placeBrush(x, y);
+});
+
+document.addEventListener('mouseup', () => {
+  mouseHeld = false;
+});
+
+cvInter.addEventListener('mousemove', e => {
+  const r = cvInter.getBoundingClientRect();
+  hoverX = e.clientX - r.left; hoverY = e.clientY - r.top;
+
+  if (tool === 'spinner' || tool === 'brush') {
+    paused = isNearAnyObject(hoverX, hoverY, PAUSE_DIST);
+  } else {
+    paused = false;
+  }
+
+  if (!isDrawing) return;
+  rawPts.push({x: hoverX, y: hoverY});
+  ctxL.clearRect(0, 0, cvLive.width, cvLive.height);
+  ctxL.save();
+  ctxL.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctxL.lineWidth = 1; ctxL.lineCap = 'round'; ctxL.lineJoin = 'round';
+  ctxL.beginPath();
+  rawPts.forEach((p, i) => i === 0 ? ctxL.moveTo(p.x, p.y) : ctxL.lineTo(p.x, p.y));
+  ctxL.stroke(); ctxL.restore();
+});
+
+cvInter.addEventListener('mouseup',    () => { if (isDrawing) finishDraw(); });
+cvInter.addEventListener('mouseleave', () => { if (isDrawing) finishDraw(); });
+
+function finishDraw() {
+  isDrawing = false;
+  ctxL.clearRect(0, 0, cvLive.width, cvLive.height);
+  if (rawPts.length < 3) return;
+  vectorize();
+}
+
+// ── vectorize ──────────────────────────────────────────
+function vectorize() {
+  let pts = gaussianSmooth(rawPts, smoothing);
+  pts = rdp(pts, tolerance);
+  if (pts.length < 2) return;
+  const beziers = fitCubicBeziers(pts);
+
+  const firstPt = rawPts[0];
+  const lastPt  = rawPts[rawPts.length - 1];
+  const autoClose = Math.hypot(lastPt.x - firstPt.x, lastPt.y - firstPt.y) < AUTO_CLOSE;
+
+  const lut = buildLUT(beziers, autoClose);
+  curves.push({ beziers, closed: autoClose, lut });
+  document.getElementById('st-curves').textContent = 'Curves: ' + curves.length;
+  drawCurves();
+}
+
+// ── place spinner ──────────────────────────────────────
+function placeSpinner(x, y) {
+  // 1. check if clicking a spinner tip (chain)
+  for (let si = spinners.length - 1; si >= 0; si--) {
+    const tip = getSpinnerTip(si);
+    if (tip && Math.hypot(x - tip.x, y - tip.y) < TIP_HIT) {
+      spinners.push({
+        parent: { type: 'spinner', idx: si },
+        t: 0, dir: 1,
+        angle: spAngle,
+        len:    spLen,
+        travel: spTravel,
+        spin:   spSpin,
+        color:  spColor,
+        trace:  spTrace,
+      });
+      buildSpinnerCard(spinners.length - 1);
+      document.getElementById('st-spinners').textContent = 'Spinners: ' + spinners.length;
+      return;
+    }
+  }
+
+  // 2. check if clicking near a curve
+  let bestCurve = -1, bestT = 0, bestDist = Infinity;
+  for (let ci = 0; ci < curves.length; ci++) {
+    for (const e of curves[ci].lut) {
+      const d = Math.hypot(x - e.x, y - e.y);
+      if (d < bestDist) { bestDist = d; bestCurve = ci; bestT = e.t; }
+    }
+  }
+  if (bestCurve >= 0 && bestDist < CURVE_HIT) {
+    spinners.push({
+      parent: { type: 'curve', curveIdx: bestCurve, t: bestT },
+      t: bestT, dir: 1,
+      angle: spAngle,
+      len:    spLen,
+      travel: spTravel,
+      spin:   spSpin,
+      color:  spColor,
+      trace:  spTrace,
+    });
+    buildSpinnerCard(spinners.length - 1);
+    document.getElementById('st-spinners').textContent = 'Spinners: ' + spinners.length;
+    return;
+  }
+
+  // 3. FREE PLACEMENT — anchor spinner at any canvas point
+  spinners.push({
+    parent: { type: 'free', x, y },
+    t: 0, dir: 1,
+    angle: spAngle,
+    len:    spLen,
+    travel: spTravel,
+    spin:   spSpin,
+    color:  spColor,
+    trace:  spTrace,
+  });
+  buildSpinnerCard(spinners.length - 1);
+  document.getElementById('st-spinners').textContent = 'Spinners: ' + spinners.length;
+}
+
+// ── get pivot position of a spinner ─────────────────────
+function getSpinnerPivot(si) {
+  const sp = spinners[si];
+  const p  = sp.parent;
+  if (p.type === 'curve') {
+    const c = curves[p.curveIdx];
+    if (!c) return null;
+    return sampleLUT(c.lut, sp.t);
+  } else if (p.type === 'spinner') {
+    return getSpinnerTip(p.idx);
+  } else {
+    // free: fixed position (may be dragged via card)
+    return { x: p.x, y: p.y };
+  }
+}
+
+// ── get tip position of a spinner ──────────────────────
+function getSpinnerTip(si) {
+  const pivot = getSpinnerPivot(si);
+  if (!pivot) return null;
+  const sp = spinners[si];
+  return {
+    x: pivot.x + Math.cos(sp.angle) * sp.len,
+    y: pivot.y + Math.sin(sp.angle) * sp.len,
+  };
+}
+
+// ── draw curves (scaffolding) ──────────────────────────
+function drawCurves() {
+  ctxC.clearRect(0, 0, cvCurves.width, cvCurves.height);
+
+  ctxC.save();
+  ctxC.strokeStyle = 'rgba(255,255,255,0.025)';
+  ctxC.lineWidth = 1;
+  for (let x = 0; x < cvCurves.width;  x += 40) { ctxC.beginPath(); ctxC.moveTo(x,0); ctxC.lineTo(x,cvCurves.height); ctxC.stroke(); }
+  for (let y = 0; y < cvCurves.height; y += 40) { ctxC.beginPath(); ctxC.moveTo(0,y); ctxC.lineTo(cvCurves.width,y); ctxC.stroke(); }
+  ctxC.restore();
+
+  for (const c of curves) {
+    if (!c.beziers.length) continue;
+    ctxC.save();
+    ctxC.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctxC.lineWidth   = 1;
+    ctxC.lineCap     = 'round';
+    ctxC.lineJoin    = 'round';
+    ctxC.setLineDash([3, 6]);
+    ctxC.beginPath();
+    ctxC.moveTo(c.beziers[0].p0.x, c.beziers[0].p0.y);
+    for (const seg of c.beziers) {
+      ctxC.bezierCurveTo(seg.cp1.x, seg.cp1.y, seg.cp2.x, seg.cp2.y, seg.p3.x, seg.p3.y);
+    }
+    if (c.closed) ctxC.closePath();
+    ctxC.stroke();
+    ctxC.restore();
+  }
+}
+
+// ── undo / clear ───────────────────────────────────────
+document.getElementById('btn-undo').addEventListener('click', () => {
+  if (brushes.length > 0) {
+    brushes.pop();
+    document.getElementById('st-spinners').textContent = 'Spinners: ' + spinners.length + '  Brushes: ' + brushes.length;
+    return;
+  }
+  if (spinners.length > 0) {
+    const idx = spinners.length - 1;
+    for (let i = brushes.length - 1; i >= 0; i--) { const a = brushes[i].attachment; if (a.type === 'spinner' && a.idx === idx) brushes.splice(i, 1); }
+    removeSpinnerAndChildren(idx);
+    rebuildAllCards();
+  } else {
+    curves.pop();
+    document.getElementById('st-curves').textContent = 'Curves: ' + curves.length;
+    drawCurves();
+  }
+  document.getElementById('st-spinners').textContent = 'Spinners: ' + spinners.length;
+});
+
+function removeSpinnerAndChildren(idx) {
+  for (let i = spinners.length - 1; i >= 0; i--) {
+    const sp = spinners[i];
+    if (sp.parent.type === 'spinner' && sp.parent.idx === idx) {
+      removeSpinnerAndChildren(i);
+    }
+  }
+  spinners.splice(idx, 1);
+  for (const sp of spinners) {
+    if (sp.parent.type === 'spinner' && sp.parent.idx > idx) {
+      sp.parent.idx--;
+    }
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+    document.getElementById('btn-undo').click();
+  }
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  curves = []; spinners = []; brushes = []; brushGroups = []; selectedBrushIndices.clear();
+  rebuildAllCards();
+  ctxC.clearRect(0, 0, cvCurves.width, cvCurves.height);
+  ctxTr.clearRect(0, 0, cvTrace.width, cvTrace.height);
+  drawCurves();
+  document.getElementById('st-curves').textContent   = 'Curves: 0';
+  document.getElementById('st-spinners').textContent = 'Spinners: 0  Brushes: 0';
+});
+
+// ══════════════════════════════════════════════════════
+//  MATH
+// ══════════════════════════════════════════════════════
+function gaussianSmooth(pts, passes) {
+  let p = pts.slice();
+  for (let pass = 0; pass < passes; pass++) {
+    const out = [p[0]];
+    for (let i = 1; i < p.length - 1; i++) {
+      out.push({ x: (p[i-1].x + 2*p[i].x + p[i+1].x) / 4, y: (p[i-1].y + 2*p[i].y + p[i+1].y) / 4 });
+    }
+    out.push(p[p.length - 1]);
+    p = out;
+  }
+  return p;
+}
+
+function rdp(pts, eps) {
+  if (pts.length <= 2) return pts;
+  let maxD = 0, idx = 0;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const d = ptLineDist(pts[i], pts[0], pts[pts.length - 1]);
+    if (d > maxD) { maxD = d; idx = i; }
+  }
+  if (maxD > eps) {
+    return [...rdp(pts.slice(0, idx + 1), eps).slice(0, -1), ...rdp(pts.slice(idx), eps)];
+  }
+  return [pts[0], pts[pts.length - 1]];
+}
+
+function ptLineDist(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  if (dx === 0 && dy === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+  const tVal = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx*dx + dy*dy);
+  return Math.hypot(p.x - (a.x + tVal*dx), p.y - (a.y + tVal*dy));
+}
+
+function tangentAt(pts, i) {
+  let dx, dy;
+  if (i === 0)                { dx = pts[1].x - pts[0].x;   dy = pts[1].y - pts[0].y; }
+  else if (i === pts.length-1){ dx = pts[i].x - pts[i-1].x; dy = pts[i].y - pts[i-1].y; }
+  else                        { dx = pts[i+1].x - pts[i-1].x; dy = pts[i+1].y - pts[i-1].y; }
+  const l = Math.hypot(dx, dy) || 1;
+  return { x: dx/l, y: dy/l };
+}
+
+function fitCubicBeziers(pts) {
+  const segs = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i], p3 = pts[i+1];
+    const t0 = tangentAt(pts, i), t3 = tangentAt(pts, i+1);
+    const a  = Math.hypot(p3.x - p0.x, p3.y - p0.y) / 3;
+    segs.push({ p0, p3,
+      cp1: { x: p0.x + t0.x * a, y: p0.y + t0.y * a },
+      cp2: { x: p3.x - t3.x * a, y: p3.y - t3.y * a },
+    });
+  }
+  return segs;
+}
+
+function buildLUT(beziers, closed, steps = 300) {
+  const lut = [];
+  const totalSegs = closed ? beziers.length + 1 : beziers.length;
+  let cumLen = 0, prevPt = null;
+  for (let si = 0; si < totalSegs; si++) {
+    const seg       = beziers[si % beziers.length];
+    const isClosure = closed && si === beziers.length;
+    for (let step = 0; step <= steps; step++) {
+      const tLocal = step / steps;
+      const gt     = (si + tLocal) / totalSegs;
+      let pt;
+      if (isClosure) {
+        const lp = beziers[beziers.length - 1].p3;
+        const fp = beziers[0].p0;
+        pt = { x: lp.x + tLocal*(fp.x - lp.x), y: lp.y + tLocal*(fp.y - lp.y) };
+      } else {
+        pt = evalCubic(seg, tLocal);
+      }
+      if (prevPt) cumLen += Math.hypot(pt.x - prevPt.x, pt.y - prevPt.y);
+      lut.push({ t: gt, x: pt.x, y: pt.y, cumLen });
+      prevPt = pt;
+    }
+  }
+  return lut;
+}
+
+function evalCubic(seg, tVal) {
+  const u = 1 - tVal;
+  return {
+    x: u*u*u*seg.p0.x + 3*u*u*tVal*seg.cp1.x + 3*u*tVal*tVal*seg.cp2.x + tVal*tVal*tVal*seg.p3.x,
+    y: u*u*u*seg.p0.y + 3*u*u*tVal*seg.cp1.y + 3*u*tVal*tVal*seg.cp2.y + tVal*tVal*tVal*seg.p3.y,
+  };
+}
+
+function sampleLUT(lut, tVal) {
+  const totalLen = lut[lut.length - 1].cumLen;
+  const target   = ((tVal % 1) + 1) % 1 * totalLen;
+  let lo = 0, hi = lut.length - 1;
+  while (lo < hi - 1) {
+    const mid = (lo + hi) >> 1;
+    if (lut[mid].cumLen < target) lo = mid; else hi = mid;
+  }
+  const aa = lut[lo], bb = lut[hi];
+  const frac = (bb.cumLen - aa.cumLen) > 0 ? (target - aa.cumLen) / (bb.cumLen - aa.cumLen) : 0;
+  return {
+    x: aa.x + frac * (bb.x - aa.x),
+    y: aa.y + frac * (bb.y - aa.y),
+  };
+}
+
+
+// ── canvas highlight for hovered/active controller card ──────────────────
+function setHighlight(type, idx) {
+  highlightTarget = (type !== null) ? { type, idx } : null;
+}
+
+function drawHighlights() {
+  if (!highlightTarget) return;
+  const { type, idx } = highlightTarget;
+
+  if (type === 'spinner') {
+    const sp = spinners[idx];
+    if (!sp) return;
+    const pivot = getSpinnerPivot(idx);
+    const tip   = getSpinnerTip(idx);
+    if (!pivot || !tip) return;
+
+    // halo ring around pivot
+    ctxI.save();
+    ctxI.strokeStyle = sp.color;
+    ctxI.lineWidth   = 1.5;
+    ctxI.globalAlpha = 0.55;
+    ctxI.shadowColor = sp.color;
+    ctxI.shadowBlur  = 14;
+    ctxI.beginPath();
+    ctxI.arc(pivot.x, pivot.y, 10, 0, Math.PI * 2);
+    ctxI.stroke();
+
+    // highlight arm line
+    ctxI.lineWidth   = 2.5;
+    ctxI.globalAlpha = 0.4;
+    ctxI.beginPath();
+    ctxI.moveTo(pivot.x, pivot.y);
+    ctxI.lineTo(tip.x, tip.y);
+    ctxI.stroke();
+
+    // halo ring around tip
+    ctxI.globalAlpha = 0.7;
+    ctxI.lineWidth   = 1.5;
+    ctxI.beginPath();
+    ctxI.arc(tip.x, tip.y, 8, 0, Math.PI * 2);
+    ctxI.stroke();
+    ctxI.restore();
+
+  } else if (type === 'brush') {
+    const br = brushes[idx];
+    if (!br) return;
+    const pos = getBrushPos(br);
+    if (!pos) return;
+    const col = (br.color2 && br.color2 !== br.color)
+      ? lerpColor(br.color, br.color2, br.morphT || 0)
+      : br.color;
+
+    ctxI.save();
+    ctxI.strokeStyle = col;
+    ctxI.lineWidth   = 2;
+    ctxI.globalAlpha = 0.65;
+    ctxI.shadowColor = col;
+    ctxI.shadowBlur  = 16;
+    // outer ring
+    ctxI.beginPath();
+    ctxI.arc(pos.x, pos.y, br.width / 2 + 9, 0, Math.PI * 2);
+    ctxI.stroke();
+    // inner ring
+    ctxI.globalAlpha = 0.35;
+    ctxI.lineWidth   = 1;
+    ctxI.beginPath();
+    ctxI.arc(pos.x, pos.y, br.width / 2 + 4, 0, Math.PI * 2);
+    ctxI.stroke();
+    ctxI.restore();
+
+  } else if (type === 'group') {
+    const grp = brushGroups[idx];
+    if (!grp) return;
+    grp.memberIndices.forEach(bi => {
+      const br = brushes[bi];
+      if (!br) return;
+      const pos = getBrushPos(br);
+      if (!pos) return;
+      const col = (br.color2 && br.color2 !== br.color)
+        ? lerpColor(br.color, br.color2, br.morphT || 0)
+        : br.color;
+
+      ctxI.save();
+      ctxI.strokeStyle = col;
+      ctxI.lineWidth   = 2;
+      ctxI.globalAlpha = 0.65;
+      ctxI.shadowColor = col;
+      ctxI.shadowBlur  = 16;
+      ctxI.beginPath();
+      ctxI.arc(pos.x, pos.y, br.width / 2 + 9, 0, Math.PI * 2);
+      ctxI.stroke();
+      ctxI.restore();
+
+      // connecting lines between group members (faint)
+      ctxI.save();
+      ctxI.strokeStyle = '#e8ff47';
+      ctxI.lineWidth   = 0.5;
+      ctxI.globalAlpha = 0.12;
+      ctxI.setLineDash([3, 5]);
+      grp.memberIndices.forEach(bi2 => {
+        if (bi2 <= bi) return;
+        const br2 = brushes[bi2];
+        if (!br2) return;
+        const pos2 = getBrushPos(br2);
+        if (!pos2) return;
+        ctxI.beginPath();
+        ctxI.moveTo(pos.x, pos.y);
+        ctxI.lineTo(pos2.x, pos2.y);
+        ctxI.stroke();
+      });
+      ctxI.setLineDash([]);
+      ctxI.restore();
+    });
+
+    // group label badge at centroid
+    if (grp.memberIndices.length > 0) {
+      let cx = 0, cy = 0, count = 0;
+      grp.memberIndices.forEach(bi => {
+        const pos = getBrushPos(brushes[bi]);
+        if (pos) { cx += pos.x; cy += pos.y; count++; }
+      });
+      if (count > 0) {
+        cx /= count; cy /= count;
+        ctxI.save();
+        ctxI.font = '9px DM Mono, monospace';
+        ctxI.textAlign = 'center';
+        ctxI.fillStyle = 'rgba(232,255,71,0.7)';
+        ctxI.shadowColor = '#e8ff47';
+        ctxI.shadowBlur = 8;
+        ctxI.fillText('GRP ' + (idx + 1), cx, cy - 14);
+        ctxI.restore();
+      }
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  ANIMATION LOOP
+// ══════════════════════════════════════════════════════
+let lastTime = performance.now();
+
+function animLoop(now) {
+  const dt = paused ? 0 : Math.min((now - lastTime) / 1000, 0.05);
+  if (!paused) lastTime = now;
+
+  ctxS.clearRect(0, 0, cvSpin.width, cvSpin.height);
+  ctxI.clearRect(0, 0, cvInter.width, cvInter.height);
+
+  if (paused) {
+    ctxI.save();
+    ctxI.fillStyle   = 'rgba(232,255,71,0.12)';
+    ctxI.fillRect(0, 0, cvInter.width, cvInter.height);
+    ctxI.fillStyle   = 'rgba(232,255,71,0.7)';
+    ctxI.font        = '11px DM Mono, monospace';
+    ctxI.letterSpacing = '0.2em';
+    ctxI.textAlign   = 'center';
+    ctxI.fillText('FROZEN — CLICK TO ATTACH', cvInter.width / 2, 24);
+    ctxI.restore();
+  }
+
+  const autoTAbs   = performance.now() / 1000;
+  const tOffset    = (autoTAbs / 2) % 1;
+
+  for (let si = 0; si < spinners.length; si++) {
+    const sp = spinners[si];
+    if (!sp.auto) continue;
+
+    if (sp.auto.len.on) {
+      const a         = sp.auto.len;
+      const LEN_MIN   = 6, LEN_MAX = 200;
+      const dcVal     = a.dc !== undefined ? a.dc : 0.5;
+      const center    = LEN_MIN + dcVal * (LEN_MAX - LEN_MIN);
+      const halfRange = (LEN_MAX - LEN_MIN) / 2;
+      const sweep     = a.amp * halfRange;
+      sp.len = center + waveOsc(a.wave || 'sine', tOffset * a.freq * Math.PI * 2) * sweep;
+      sp.len = Math.max(LEN_MIN, Math.min(LEN_MAX, sp.len));
+      if (sp._lenKnob) sp._lenKnob._setValue(sp.len);
+    }
+
+    if (sp.auto.spin.on) {
+      const a        = sp.auto.spin;
+      const SPD_MIN  = -3, SPD_MAX = 3;
+      const dcVal    = a.dc !== undefined ? a.dc : 0.5;
+      const center   = SPD_MIN + dcVal * (SPD_MAX - SPD_MIN);
+      const halfRange= (SPD_MAX - SPD_MIN) / 2;
+      const sweep    = a.amp * halfRange;
+      sp.spin = center + waveOsc(a.wave || 'sine', tOffset * a.freq * Math.PI * 2) * sweep;
+      sp.spin = Math.max(SPD_MIN, Math.min(SPD_MAX, sp.spin));
+      if (sp._spinKnob) sp._spinKnob._setValue(sp.spin);
+    }
+
+    for (const [pk, vmin, vmax] of [['spin',-3,3],['len',6,200]]) {
+      const cvs = sp[`_auto_cvs_${pk}`];
+      if (!cvs) continue;
+      if (cvs.width > 0 && cvs.height > 0) {
+        const dcV    = sp.auto[pk].dc !== undefined ? sp.auto[pk].dc : 0.5;
+        const center = vmin + dcV * (vmax - vmin);
+        const half   = (vmax - vmin) / 2;
+        const modAmt = sp.auto[pk].amp * half;
+        drawSinePreview(cvs, center, sp.auto[pk].freq, modAmt, vmin, vmax, sp.color, tOffset, sp.auto[pk].wave || 'sine');
+      }
+    }
+  }
+
+  for (let si = 0; si < spinners.length; si++) {
+    const sp = spinners[si];
+
+    // advance travel position — only for curve-parented spinners
+    if (sp.parent.type === 'curve') {
+      const c = curves[sp.parent.curveIdx];
+      if (!c) continue;
+      const totalLen = c.lut[c.lut.length - 1].cumLen;
+      if (totalLen < 1) continue;
+      const dtT = (SPEED_BASE * sp.travel * dt) / totalLen;
+      if (c.closed) {
+        sp.t = (sp.t + dtT * sp.dir + 1) % 1;
+      } else {
+        sp.t += dtT * sp.dir;
+        if (sp.t >= 1) { sp.t = 1; sp.dir = -1; }
+        if (sp.t <= 0) { sp.t = 0; sp.dir =  1; }
+      }
+    }
+    // free spinners: pivot is fixed, no travel
+
+    sp.angle += sp.spin * dt * Math.PI * 2;
+
+    const pivot = getSpinnerPivot(si);
+    if (!pivot) continue;
+    const tipX = pivot.x + Math.cos(sp.angle) * sp.len;
+    const tipY = pivot.y + Math.sin(sp.angle) * sp.len;
+
+    // draw arm
+    ctxS.save();
+    ctxS.strokeStyle = sp.color;
+    ctxS.lineWidth   = 1.2;
+    ctxS.lineCap     = 'round';
+    ctxS.shadowColor = sp.color;
+    ctxS.shadowBlur  = 6;
+    ctxS.globalAlpha = 0.85;
+    ctxS.beginPath();
+    ctxS.moveTo(pivot.x, pivot.y);
+    ctxS.lineTo(tipX, tipY);
+    ctxS.stroke();
+
+    // pivot dot — draw a ⊙ crosshair for free spinners so the anchor is visible
+    ctxS.shadowBlur  = 0;
+    ctxS.globalAlpha = 0.6;
+    if (sp.parent.type === 'free') {
+      // draw a small crosshair to indicate draggable anchor
+      ctxS.strokeStyle = sp.color;
+      ctxS.lineWidth = 1;
+      ctxS.beginPath();
+      ctxS.moveTo(pivot.x - 5, pivot.y); ctxS.lineTo(pivot.x + 5, pivot.y);
+      ctxS.moveTo(pivot.x, pivot.y - 5); ctxS.lineTo(pivot.x, pivot.y + 5);
+      ctxS.stroke();
+      ctxS.beginPath();
+      ctxS.arc(pivot.x, pivot.y, 3, 0, Math.PI * 2);
+      ctxS.strokeStyle = sp.color;
+      ctxS.stroke();
+    } else {
+      ctxS.fillStyle = sp.color;
+      ctxS.beginPath();
+      ctxS.arc(pivot.x, pivot.y, 2, 0, Math.PI * 2);
+      ctxS.fill();
+    }
+    ctxS.restore();
+
+    // tip dot
+    ctxS.save();
+    ctxS.fillStyle   = sp.color;
+    ctxS.shadowColor = sp.color;
+    ctxS.shadowBlur  = 12;
+    ctxS.globalAlpha = 0.9;
+    ctxS.beginPath();
+    ctxS.arc(tipX, tipY, 3, 0, Math.PI * 2);
+    ctxS.fill();
+    ctxS.restore();
+
+    if (sp.trace) {
+      ctxTr.save();
+      ctxTr.fillStyle   = sp.color;
+      ctxTr.globalAlpha = 0.6;
+      ctxTr.beginPath();
+      ctxTr.arc(tipX, tipY, 0.8, 0, Math.PI * 2);
+      ctxTr.fill();
+      ctxTr.restore();
+    }
+  }
+
+  // ── paint brushes ──────────────────────────────────────
+  if (brDecay > 0 && !paused) {
+    ctxTr.save();
+    ctxTr.globalCompositeOperation = 'destination-out';
+    ctxTr.globalAlpha = brDecay;
+    ctxTr.fillStyle   = 'rgba(0,0,0,1)';
+    ctxTr.fillRect(0, 0, cvTrace.width, cvTrace.height);
+    ctxTr.restore();
+  }
+
+  for (let bi = 0; bi < brushes.length; bi++) {
+    const br = brushes[bi];
+    if (!br.auto) continue;
+    if (br.auto.size.on) {
+      const a = br.auto.size;
+      const center = 0 + a.dc * (20 - 0);
+      const sweep  = a.amp * (20 - 0) / 2;
+      br.width = Math.max(0, Math.min(20, center + waveOsc(a.wave || 'sine', tOffset * a.freq * Math.PI * 2) * sweep));
+      if (br._sizeKnob) br._sizeKnob._setValue(br.width);
+    }
+    if (br.auto.morph.on) {
+      const a = br.auto.morph;
+      const center = a.dc;
+      const sweep  = a.amp * 0.5;
+      br.morphT = Math.max(0, Math.min(1, center + waveOsc(a.wave || 'sine', tOffset * a.freq * Math.PI * 2) * sweep));
+      if (br._morphKnob) br._morphKnob._setValue(br.morphT);
+    }
+    for (const [pk, vmin, vmax] of [['size',0,20],['morph',0,1]]) {
+      const cvs = br[`_auto_cvs_${pk}`];
+      if (!cvs || !cvs.width) continue;
+      const a = br.auto[pk];
+      const center = vmin + a.dc * (vmax - vmin);
+      const modAmt = a.amp * (vmax - vmin) / 2;
+      drawSinePreview(cvs, center, a.freq, modAmt, vmin, vmax, br.color, tOffset, a.wave || 'sine');
+    }
+  }
+
+  // ── group automation: drive all member brushes ──────────────
+  for (let gi = 0; gi < brushGroups.length; gi++) {
+    const grp = brushGroups[gi];
+    const tOff = tOffset;
+
+    if (grp.auto.size.on) {
+      const a = grp.auto.size;
+      const center = a.dc * 20;
+      const sweep  = a.amp * 10;
+      const val = Math.max(0, Math.min(20, center + waveOsc(a.wave || 'sine', tOff * a.freq * Math.PI * 2) * sweep));
+      grp.memberIndices.forEach(bi => { if (brushes[bi]) brushes[bi].width = val; });
+      if (grp._sizeKnob) grp._sizeKnob._setValue(val);
+    }
+    if (grp.auto.morph.on) {
+      const a = grp.auto.morph;
+      const center = a.dc;
+      const sweep  = a.amp * 0.5;
+      const val = Math.max(0, Math.min(1, center + waveOsc(a.wave || 'sine', tOff * a.freq * Math.PI * 2) * sweep));
+      grp.memberIndices.forEach(bi => { if (brushes[bi]) { brushes[bi].morphT = val; updateMorphSwatch(bi); } });
+      if (grp._morphKnob) grp._morphKnob._setValue(val);
+    }
+    for (const [pk, vmin, vmax] of [['size',0,20],['morph',0,1]]) {
+      const cvs = grp['_auto_cvs_' + pk];
+      if (!cvs || !cvs.width) continue;
+      const a = grp.auto[pk];
+      const center = vmin + a.dc * (vmax - vmin);
+      const modAmt = a.amp * (vmax - vmin) / 2;
+      drawSinePreview(cvs, center, a.freq, modAmt, vmin, vmax, '#e8ff47', tOff, a.wave || 'sine');
+    }
+  }
+
+  for (let bi = 0; bi < brushes.length; bi++) {
+    const br  = brushes[bi];
+    const pos = getBrushPos(br);
+    if (!pos) continue;
+
+    if (!paused && br.morphSpeed > 0) {
+      br.morphT = (Math.sin(performance.now() / 1000 * br.morphSpeed * Math.PI * 2) + 1) / 2;
+      updateMorphSwatch(bi);
+    }
+
+    const paintColor = (br.color2 && br.color2 !== br.color)
+      ? lerpColor(br.color, br.color2, br.morphT)
+      : br.color;
+
+    if (!paused && br.prevX !== undefined && br.width > 0) {
+      ctxTr.save();
+      ctxTr.strokeStyle = paintColor;
+      ctxTr.lineWidth   = br.width;
+      ctxTr.lineCap     = 'round';
+      ctxTr.lineJoin    = 'round';
+      ctxTr.beginPath();
+      ctxTr.moveTo(br.prevX, br.prevY);
+      ctxTr.lineTo(pos.x, pos.y);
+      ctxTr.stroke();
+      ctxTr.restore();
+    }
+    br.prevX = pos.x;
+    br.prevY = pos.y;
+  }
+
+  for (const br of brushes) {
+    const pos = getBrushPos(br);
+    if (!pos) continue;
+    const dotColor = (br.color2 && br.color2 !== br.color)
+      ? lerpColor(br.color, br.color2, br.morphT || 0)
+      : br.color;
+    ctxS.save();
+    ctxS.fillStyle   = dotColor;
+    ctxS.shadowColor = dotColor;
+    ctxS.shadowBlur  = 12;
+    ctxS.globalAlpha = 0.95;
+    ctxS.beginPath();
+    ctxS.arc(pos.x, pos.y, br.width / 2 + 3, 0, Math.PI * 2);
+    ctxS.fill();
+    ctxS.shadowBlur  = 0;
+    ctxS.fillStyle   = '#ffffff';
+    ctxS.globalAlpha = 0.7;
+    ctxS.beginPath();
+    ctxS.arc(pos.x, pos.y, Math.min(2, br.width / 2), 0, Math.PI * 2);
+    ctxS.fill();
+    ctxS.restore();
+  }
+
+  // hover preview
+  if (tool === 'brush') {
+    const { bestDist: ds, bestAtt: sa } = findNearestOnSpinnerArm(hoverX, hoverY);
+    const { bestDist: dc, bestAtt: ca } = findNearestOnCurve(hoverX, hoverY);
+    let snapAtt = null;
+    if (ds <= dc && ds < 40) snapAtt = sa;
+    else if (dc < ds && dc < 40) snapAtt = ca;
+    if (snapAtt) {
+      const pos = getBrushPos({ attachment: snapAtt });
+      if (pos) {
+        ctxI.save();
+        ctxI.strokeStyle = brColor;
+        ctxI.lineWidth   = 1.5;
+        ctxI.globalAlpha = 0.7;
+        ctxI.shadowColor = brColor;
+        ctxI.shadowBlur  = 10;
+        ctxI.beginPath();
+        ctxI.arc(pos.x, pos.y, brWidth / 2 + 5, 0, Math.PI * 2);
+        ctxI.stroke();
+        ctxI.fillStyle = brColor;
+        ctxI.globalAlpha = 0.9;
+        ctxI.beginPath();
+        ctxI.arc(pos.x, pos.y, 2, 0, Math.PI * 2);
+        ctxI.fill();
+        ctxI.restore();
+      }
+    }
+  }
+  if (tool === 'spinner') {
+    let snapX = hoverX, snapY = hoverY, snapFound = false, snapType = null;
+    let minDist = Infinity;
+
+    for (let si = spinners.length - 1; si >= 0; si--) {
+      const tip = getSpinnerTip(si);
+      if (!tip) continue;
+      const d = Math.hypot(hoverX - tip.x, hoverY - tip.y);
+      if (d < TIP_HIT && d < minDist) { minDist = d; snapX = tip.x; snapY = tip.y; snapFound = true; snapType = 'tip'; }
+    }
+
+    if (!snapFound) {
+      for (const c of curves) {
+        for (const entry of c.lut) {
+          const d = Math.hypot(hoverX - entry.x, hoverY - entry.y);
+          if (d < CURVE_HIT && d < minDist) { minDist = d; snapX = entry.x; snapY = entry.y; snapFound = true; snapType = 'curve'; }
+        }
+      }
+    }
+
+    // cursor dot for free placement preview (when not snapping to anything)
+    if (!snapFound) {
+      ctxI.save();
+      ctxI.strokeStyle = spColor;
+      ctxI.lineWidth = 1;
+      ctxI.globalAlpha = 0.3;
+      ctxI.beginPath();
+      ctxI.moveTo(hoverX - 6, hoverY); ctxI.lineTo(hoverX + 6, hoverY);
+      ctxI.moveTo(hoverX, hoverY - 6); ctxI.lineTo(hoverX, hoverY + 6);
+      ctxI.stroke();
+      ctxI.restore();
+    }
+
+    const previewAngle = now / 1000 * spSpin * Math.PI * 2;
+    const tipPX = snapX + Math.cos(previewAngle) * spLen;
+    const tipPY = snapY + Math.sin(previewAngle) * spLen;
+
+    ctxI.save();
+    ctxI.globalAlpha = 0.4;
+    ctxI.strokeStyle = spColor;
+    ctxI.lineWidth   = 1.2;
+    ctxI.lineCap     = 'round';
+    ctxI.shadowColor = spColor;
+    ctxI.shadowBlur  = 8;
+    ctxI.beginPath();
+    ctxI.moveTo(snapX, snapY);
+    ctxI.lineTo(tipPX, tipPY);
+    ctxI.stroke();
+
+    if (snapFound) {
+      ctxI.strokeStyle = spColor;
+      ctxI.lineWidth   = 1;
+      ctxI.globalAlpha = 0.35;
+      ctxI.shadowBlur  = 0;
+      ctxI.beginPath();
+      ctxI.arc(snapX, snapY, 10, 0, Math.PI * 2);
+      ctxI.stroke();
+    }
+    ctxI.restore();
+  }
+
+  drawHighlights();
+  compositeFrame();
+  requestAnimationFrame(animLoop);
+}
+
+// ── place brush ────────────────────────────────────────
+function getBrushPos(br) {
+  const a = br.attachment;
+  if (a.type === 'spinner') {
+    const pivot = getSpinnerPivot(a.idx);
+    if (!pivot) return null;
+    const sp = spinners[a.idx];
+    return {
+      x: pivot.x + Math.cos(sp.angle) * sp.len * a.frac,
+      y: pivot.y + Math.sin(sp.angle) * sp.len * a.frac,
+    };
+  } else {
+    const c = curves[a.curveIdx];
+    if (!c) return null;
+    return sampleLUT(c.lut, a.t);
+  }
+}
+
+function findNearestOnSpinnerArm(x, y) {
+  const N = 40;
+  let bestDist = Infinity, bestAtt = null;
+  for (let si = 0; si < spinners.length; si++) {
+    const pivot = getSpinnerPivot(si);
+    if (!pivot) continue;
+    const sp = spinners[si];
+    const cosA = Math.cos(sp.angle), sinA = Math.sin(sp.angle);
+    for (let k = 0; k <= N; k++) {
+      const frac = k / N;
+      const px = pivot.x + cosA * sp.len * frac;
+      const py = pivot.y + sinA * sp.len * frac;
+      const d = Math.hypot(x - px, y - py);
+      if (d < bestDist) { bestDist = d; bestAtt = { type:'spinner', idx: si, frac }; }
+    }
+  }
+  return { bestDist, bestAtt };
+}
+
+function findNearestOnCurve(x, y) {
+  let bestDist = Infinity, bestAtt = null;
+  for (let ci = 0; ci < curves.length; ci++) {
+    for (const e of curves[ci].lut) {
+      const d = Math.hypot(x - e.x, y - e.y);
+      if (d < bestDist) { bestDist = d; bestAtt = { type:'curve', curveIdx: ci, t: e.t }; }
+    }
+  }
+  return { bestDist, bestAtt };
+}
+
+function placeBrush(x, y) {
+  const BRUSH_HIT = 24;
+  const { bestDist: ds, bestAtt: sa } = findNearestOnSpinnerArm(x, y);
+  const { bestDist: dc, bestAtt: ca } = findNearestOnCurve(x, y);
+
+  let att = null;
+  if (ds <= dc && ds < BRUSH_HIT) att = sa;
+  else if (dc < ds && dc < BRUSH_HIT) att = ca;
+  if (!att) return;
+
+  const pos = getBrushPos({ attachment: att });
+  brushes.push({
+    attachment: att,
+    color:  brColor,
+    color2: brColor,
+    morphT: 0,
+    morphSpeed: 0,
+    width: brWidth,
+    prevX: pos ? pos.x : x,
+    prevY: pos ? pos.y : y,
+  });
+  buildBrushCard(brushes.length - 1);
+  document.getElementById('st-spinners').textContent =
+    'Spinners: ' + spinners.length + '  Brushes: ' + brushes.length;
+}
+
+function isNearAnyObject(x, y, dist) {
+  for (let si = 0; si < spinners.length; si++) {
+    const tip = getSpinnerTip(si);
+    if (tip && Math.hypot(x - tip.x, y - tip.y) < dist) return true;
+    const pivot = getSpinnerPivot(si);
+    if (pivot && Math.hypot(x - pivot.x, y - pivot.y) < dist) return true;
+  }
+  for (const c of curves) {
+    for (const entry of c.lut) {
+      if (Math.hypot(x - entry.x, y - entry.y) < dist) return true;
+    }
+  }
+  return false;
+}
+
+// ── recording ─────────────────────────────────────────
+const btnRec     = document.getElementById('btn-rec');
+const recLabel   = document.getElementById('rec-label');
+const stRec      = document.getElementById('st-rec');
+const stRecTime  = document.getElementById('st-rec-time');
+
+function syncRecordCanvas() {
+  if (cvRecord.width  !== cvCurves.width)  cvRecord.width  = cvCurves.width;
+  if (cvRecord.height !== cvCurves.height) cvRecord.height = cvCurves.height;
+}
+
+function compositeFrame() {
+  if (!isRecording) return;
+  syncRecordCanvas();
+  ctxRecord.clearRect(0, 0, cvRecord.width, cvRecord.height);
+  ctxRecord.fillStyle = document.getElementById('bg-color').value;
+  ctxRecord.fillRect(0, 0, cvRecord.width, cvRecord.height);
+  ctxRecord.drawImage(cvCurves, 0, 0);
+  ctxRecord.drawImage(cvTrace,  0, 0);
+  ctxRecord.drawImage(cvSpin,   0, 0);
+}
+
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+function startRecording() {
+  syncRecordCanvas();
+  const mimeTypes = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
+  const mimeType = mimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || '';
+  const stream = cvRecord.captureStream(60);
+  mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: 8_000_000 } : {});
+  recChunks = [];
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(recChunks, { type: mimeType || 'video/webm' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const ext  = (mimeType.includes('mp4')) ? 'mp4' : 'webm';
+    a.href = url; a.download = `vektr-${Date.now()}.${ext}`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+  mediaRecorder.start(100);
+  isRecording   = true;
+  recStartTime  = performance.now();
+  btnRec.classList.add('recording');
+  recLabel.textContent = 'Stop';
+  stRec.classList.add('on');
+  recTimerHandle = setInterval(() => { stRecTime.textContent = formatTime(performance.now() - recStartTime); }, 500);
+}
+
+function stopRecording() {
+  if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+  mediaRecorder.stop();
+  isRecording = false;
+  btnRec.classList.remove('recording');
+  recLabel.textContent = 'Rec';
+  stRec.classList.remove('on');
+  clearInterval(recTimerHandle);
+  stRecTime.textContent = '0:00';
+}
+
+btnRec.addEventListener('click', () => {
+  if (!isRecording) startRecording();
+  else stopRecording();
+});
+
+
+// ── guide drawer ────────────────────────────────────────
+const guideDrawer  = document.getElementById('guide-drawer');
+const guideOverlay = document.getElementById('guide-overlay');
+
+function openGuide() {
+  guideDrawer.classList.add('open');
+  guideOverlay.classList.add('on');
+}
+function closeGuide() {
+  guideDrawer.classList.remove('open');
+  guideOverlay.classList.remove('on');
+}
+
+document.getElementById('btn-guide').addEventListener('click', () => {
+  guideDrawer.classList.contains('open') ? closeGuide() : openGuide();
+});
+document.getElementById('guide-close').addEventListener('click', closeGuide);
+guideOverlay.addEventListener('click', closeGuide);
+
+// section accordion
+document.querySelectorAll('.guide-section-hd').forEach(hd => {
+  hd.addEventListener('click', () => {
+    const section = hd.closest('.guide-section');
+    section.classList.toggle('expanded');
+  });
+});
+
+// drag-and-drop video loading onto placeholders
+document.querySelectorAll('.guide-video-wrap').forEach(wrap => {
+  const vid = wrap.querySelector('video');
+  const ph  = wrap.querySelector('.guide-video-placeholder');
+
+  wrap.addEventListener('dragover', e => {
+    e.preventDefault();
+    wrap.style.borderColor = 'rgba(232,255,71,0.5)';
+  });
+  wrap.addEventListener('dragleave', () => {
+    wrap.style.borderColor = '';
+  });
+  wrap.addEventListener('drop', e => {
+    e.preventDefault();
+    wrap.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('video/')) return;
+    const url = URL.createObjectURL(file);
+    vid.src = url;
+    vid.style.display = 'block';
+    if (ph) ph.style.display = 'none';
+    vid.play().catch(() => {});
+  });
+});
+
+// ── init ──────────────────────────────────────────────
+switchTool('spinner');
+drawCurves();
+requestAnimationFrame(animLoop);
+</script>
+</body>
+</html>
