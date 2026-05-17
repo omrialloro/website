@@ -471,6 +471,13 @@ input.auto-vsl.dc-sl::-webkit-slider-thumb {
 .guide-btn { color: var(--accent) !important; border-color: rgba(232,255,71,0.3) !important; }
 .guide-btn:hover { border-color: var(--accent) !important; background: rgba(232,255,71,0.07) !important; }
 
+.guide-link {
+  color: var(--accent); text-decoration: none; font-size: inherit;
+  border-bottom: 1px solid rgba(232,255,71,0.3); cursor: pointer;
+  white-space: nowrap;
+}
+.guide-link:hover { border-bottom-color: var(--accent); }
+
 
 /* ── brush selection + grouping ── */
 .ctrl-card.selected {
@@ -702,7 +709,7 @@ input.auto-vsl.dc-sl::-webkit-slider-thumb {
       <div class="guide-section-body">
         <div class="guide-desc">
           Spinners are rotating arms that travel along curves. Click a curve to attach one, click a spinner's glowing <strong>tip dot</strong> to chain another on top of it, or click <strong>anywhere on the canvas</strong> to place a free-floating spinner.<br><br>
-          Each spinner has independent <strong>speed</strong>, <strong>arm length</strong>, <strong>travel rate</strong>, and <strong>color</strong>. Enable <strong>Trace</strong> to draw a trail from the tip. Use the <strong>A</strong> buttons in the controller strip to automate speed or length with a sine, square, or saw wave.
+          Each spinner has independent <strong>speed</strong>, <strong>arm length</strong>, <strong>travel rate</strong>, and <strong>color</strong>. Enable <strong>Trace</strong> to draw a trail from the tip. Use the <strong>A</strong> buttons in the controller strip to automate speed or length with a sine, square, or saw wave — <a class="guide-link" onclick="navigateGuideSection('gs-automation')">see Automation ↓</a>.
         </div>
         <div class="guide-video-wrap">
           <video id="vid-spinners" src="" autoplay loop muted playsinline style="display:none;"></video>
