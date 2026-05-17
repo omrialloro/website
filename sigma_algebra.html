@@ -686,7 +686,7 @@ input.auto-vsl.dc-sl::-webkit-slider-thumb {
           Adjust <strong>Smooth</strong> to soften jagged input, and <strong>Simplify</strong> to reduce the number of control points. Close a curve by ending near where you started.
         </div>
         <div class="guide-video-wrap">
-          <video id="vid-curves" src="" autoplay loop muted playsinline style="display:none;"></video>
+          <video id="vid-curves" src="curves.mp4" autoplay loop muted playsinline style="display:none;"></video>
           <div class="guide-video-placeholder">
             <div class="guide-video-placeholder-icon">▶</div>
             <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
@@ -712,7 +712,7 @@ input.auto-vsl.dc-sl::-webkit-slider-thumb {
           Each spinner has independent <strong>speed</strong>, <strong>arm length</strong>, <strong>travel rate</strong>, and <strong>color</strong>. Enable <strong>Trace</strong> to draw a trail from the tip. Use the <strong>A</strong> buttons in the controller strip to automate speed or length with a sine, square, or saw wave — <a class="guide-link" onclick="navigateGuideSection('gs-automation')">see Automation ↓</a>.
         </div>
         <div class="guide-video-wrap">
-          <video id="vid-spinners" src="" autoplay loop muted playsinline style="display:none;"></video>
+          <video id="vid-spinners" src="spinners.mp4" autoplay loop muted playsinline style="display:none;"></video>
           <div class="guide-video-placeholder">
             <div class="guide-video-placeholder-icon">▶</div>
             <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
@@ -723,7 +723,7 @@ input.auto-vsl.dc-sl::-webkit-slider-thumb {
           <div class="guide-tip"><span class="guide-tip-key">click tip ●</span>Chain a child spinner</div>
           <div class="guide-tip"><span class="guide-tip-key">click canvas</span>Free-floating spinner</div>
           <div class="guide-tip"><span class="guide-tip-key">⤢ drag</span>Reposition free spinner pivot</div>
-          <div class="guide-tip"><span class="guide-tip-key">A btn</span>Automate speed or length</div>
+          <div class="guide-tip"><span class="guide-tip-key">A btn</span>Automate speed or length — <a class="guide-link" onclick="navigateGuideSection('gs-automation')">see Automation ↓</a></div>
           <div class="guide-tip"><span class="guide-tip-key">Trace ✓</span>Leave a glowing trail</div>
         </div>
       </div>
@@ -738,11 +738,11 @@ input.auto-vsl.dc-sl::-webkit-slider-thumb {
       <div class="guide-section-body">
         <div class="guide-desc">
           Brushes paint continuously from a point on any spinner arm or curve. Click while in Brush mode to snap a brush to the nearest point. The brush follows that point as it moves, drawing a stroke over time.<br><br>
-          Set two <strong>colors</strong> and a <strong>morph speed</strong> to cycle between them. Use <strong>Decay</strong> to make the paint trail fade away. Automate <strong>size</strong> or the <strong>morph</strong> blend from the controller strip.<br><br>
-          Multiple brushes can be <strong>grouped</strong> together to share a single set of automation controls — see the Grouping section below.
+          Set two <strong>colors</strong> and a <strong>morph speed</strong> to cycle between them. Use <strong>Decay</strong> to make the paint trail fade away. Automate <strong>size</strong> or the <strong>morph</strong> blend from the controller strip — <a class="guide-link" onclick="navigateGuideSection('gs-automation')">see Automation ↓</a>.<br><br>
+          Multiple brushes can be <strong>grouped</strong> together to share a single set of automation controls — <a class="guide-link" onclick="navigateGuideSection('gs-grouping')">see Grouping ↓</a>.
         </div>
         <div class="guide-video-wrap">
-          <video id="vid-brush" src="" autoplay loop muted playsinline style="display:none;"></video>
+          <video id="vid-brush" src="brushes.mp4" autoplay loop muted playsinline style="display:none;"></video>
           <div class="guide-video-placeholder">
             <div class="guide-video-placeholder-icon">▶</div>
             <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
@@ -758,6 +758,35 @@ input.auto-vsl.dc-sl::-webkit-slider-thumb {
     </div>
 
 
+    <!-- AUTOMATION -->
+    <div class="guide-section" id="gs-automation">
+      <div class="guide-section-hd">
+        <span class="guide-section-label"><span class="guide-section-icon">∿</span>Automation</span>
+        <span class="guide-chevron">▼</span>
+      </div>
+      <div class="guide-section-body">
+        <div class="guide-desc">
+          Every controller card — spinner speed, spinner length, brush size, brush morph, and group knobs — has an <strong>A</strong> button in the top-left corner. Press it to expand the card and reveal the automation lane.<br><br>
+          Each lane shows a live <strong>waveform canvas</strong>. Use the <strong>Amp</strong> slider (yellow, right) to set oscillation depth and the <strong>DC</strong> slider (blue, left) to shift the center value. The <strong>Freq</strong> slider at the bottom controls cycle speed.<br><br>
+          Choose between <strong>sine</strong>, <strong>square</strong>, and <strong>saw</strong> wave shapes. The wave drives the knob continuously — the knob itself shows the live output value so you always know where you are.
+        </div>
+        <div class="guide-video-wrap">
+          <video id="vid-automation" src="automation.mp4" autoplay loop muted playsinline style="display:none;"></video>
+          <div class="guide-video-placeholder">
+            <div class="guide-video-placeholder-icon">▶</div>
+            <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
+          </div>
+        </div>
+        <div class="guide-tips">
+          <div class="guide-tip"><span class="guide-tip-key">A btn</span>Toggle automation lane open / closed</div>
+          <div class="guide-tip"><span class="guide-tip-key">Amp slider</span>Set oscillation depth (yellow)</div>
+          <div class="guide-tip"><span class="guide-tip-key">DC slider</span>Shift center value (blue)</div>
+          <div class="guide-tip"><span class="guide-tip-key">Freq slider</span>Control cycle speed</div>
+          <div class="guide-tip"><span class="guide-tip-key">sine / sq / saw</span>Choose wave shape</div>
+        </div>
+      </div>
+    </div>
+
     <!-- GROUPING -->
     <div class="guide-section" id="gs-grouping">
       <div class="guide-section-hd">
@@ -768,11 +797,11 @@ input.auto-vsl.dc-sl::-webkit-slider-thumb {
         <div class="guide-desc">
           Grouping lets you collapse multiple brush objects into one shared controller. All member brushes keep their individual attachment points and colors, but their <strong>size</strong> and <strong>morph</strong> are driven together from the group card.<br><br>
           To create a group: switch to <strong>Brush mode</strong>, then <strong>Shift+click</strong> two or more brush cards in the controller strip. A yellow action bar appears above the strip — hit <strong>⊞ Group</strong> to collapse them. The individual cards are replaced by a single <strong>GRP</strong> card showing color swatches of all members.<br><br>
-          The group card has its own <strong>size</strong> and <strong>morph</strong> knobs with full <strong>A</strong> automation support (sine, square, saw). This lets you pulse or oscillate an entire set of brushes in perfect sync with a single wave.<br><br>
+          The group card has its own <strong>size</strong> and <strong>morph</strong> knobs with full <strong>A</strong> automation support (sine, square, saw) — <a class="guide-link" onclick="navigateGuideSection('gs-automation')">see Automation ↑</a>. This lets you pulse or oscillate an entire set of brushes in perfect sync with a single wave.<br><br>
           Hit <strong>ungroup</strong> on the card to dissolve it back to individual cards — brushes keep their last values. Hit <strong>✕</strong> to delete the group and all its member brushes entirely.
         </div>
         <div class="guide-video-wrap">
-          <video id="vid-grouping" src="" autoplay loop muted playsinline style="display:none;"></video>
+          <video id="vid-grouping" src="grouping.mp4" autoplay loop muted playsinline style="display:none;"></video>
           <div class="guide-video-placeholder">
             <div class="guide-video-placeholder-icon">▶</div>
             <div class="guide-video-placeholder-lbl">Drop a .mp4 / .webm here</div>
@@ -2948,10 +2977,24 @@ document.querySelectorAll('.guide-section-hd').forEach(hd => {
   });
 });
 
+function navigateGuideSection(id) {
+  const section = document.getElementById(id);
+  if (!section) return;
+  section.classList.add('expanded');
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // drag-and-drop video loading onto placeholders
 document.querySelectorAll('.guide-video-wrap').forEach(wrap => {
   const vid = wrap.querySelector('video');
   const ph  = wrap.querySelector('.guide-video-placeholder');
+
+  // show video immediately if src is already set
+  if (vid && vid.getAttribute('src')) {
+    vid.style.display = 'block';
+    if (ph) ph.style.display = 'none';
+    vid.play().catch(() => {});
+  }
 
   wrap.addEventListener('dragover', e => {
     e.preventDefault();
