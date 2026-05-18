@@ -190,17 +190,17 @@ const data = {
             },
           ],
         },
-        {
-          title: "Other Courses",
-          courses: [
-            {
-              title: "Dummy Course Title",
-              description:
-                "This is a placeholder description for the dummy course. Replace this text with the actual course description.",
-              syllabus: "https://REPLACE_WITH_DUMMY_COURSE_SYLLABUS_URL",
-            },
-          ],
-        },
+        // {
+        //   title: "Other Courses",
+        //   courses: [
+        //     {
+        //       title: "Dummy Course Title",
+        //       description:
+        //         "This is a placeholder description for the dummy course. Replace this text with the actual course description.",
+        //       syllabus: "https://REPLACE_WITH_DUMMY_COURSE_SYLLABUS_URL",
+        //     },
+        //   ],
+        // },
       ],
     },
     bio: {
