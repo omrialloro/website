@@ -100,6 +100,10 @@ input.sb { accent-color: #4488ff; width: 60px; }
 .btn:hover { border-color: #555; color: #ccc; }
 .btn.save { border-color: #aaa4; color: #aaa; }
 .btn.adv  { border-color: #444; color: #666; }
+.btn.capture { border-color: #ff444488; color: #ff8888; }
+.btn.capture:hover { border-color: #ff4444; color: #fff; }
+.btn.capture.recording { background: #2a0000; border-color: #ff4444; color: #ff4444; cursor: default; }
+.btn.capture:disabled { opacity: 0.3; cursor: not-allowed; }
 .btn.adv.on { border-color: #aa88ff; color: #aa88ff; background: #1a1530; }
 
 .adv-lbl { font-size: 9px; color: #444; letter-spacing: 0.12em; white-space: nowrap; padding-right: 2px; }
@@ -123,6 +127,7 @@ input.sb { accent-color: #4488ff; width: 60px; }
       <button class="btn adv" id="advBtn">ADV</button>
       <button class="btn" id="clearBtn">clear</button>
       <button class="btn save" id="saveBtn">save PNG</button>
+      <button class="btn capture" id="captureBtn">&#9679; capture</button>
     </div>
   </div>
 
@@ -240,6 +245,7 @@ const ctx = canvas.getContext('2d');
 // ── DOM ────────────────────────────────────────────────────────────────────
 const clearBtn    = document.getElementById('clearBtn');
 const saveBtn     = document.getElementById('saveBtn');
+const captureBtn  = document.getElementById('captureBtn');
 const advBtn      = document.getElementById('advBtn');
 const delBtn      = document.getElementById('delBtn');
 const advControls = document.getElementById('adv-controls');
@@ -545,10 +551,84 @@ saveBtn.addEventListener('click', () => {
   a.href = tmp.toDataURL('image/png'); a.download = 'laser-mirror.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
 
-// ── document-level touch test ──────────────────────────────────────────────
-document.addEventListener('touchstart', e => {
-  console.log(`DOCUMENT touchstart: target=${e.target.id||e.target.tagName} touches=${e.touches.length}`);
-}, { passive: true });
+// ── capture video ──────────────────────────────────────────────────────────
+// Renders offline at a fixed 1/30s timestep per frame, independent of real
+// wall-clock/render performance, so the output is always full quality —
+// heavy scenes just take longer to render, never play back slow or choppy.
+const CAPTURE_SECONDS = 20;
+const CAPTURE_FPS = 30;
+const CAPTURE_FRAMES = CAPTURE_SECONDS * CAPTURE_FPS;
+const FRAME_DT = 1 / CAPTURE_FPS;
+const MEDIABUNNY_URL = 'https://cdn.jsdelivr.net/npm/mediabunny@1.50.6/+esm';
+// render at native pixel density so thin glowing lines aren't already soft
+// before compression — the live canvas is CSS-pixel sized, which looks fine
+// on screen (GPU-composited) but bakes in less detail than a Retina display has
+const CAPTURE_SCALE = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
+
+const canRecord = typeof VideoEncoder !== 'undefined';
+let isRecording = false;
+if (!canRecord) {
+  captureBtn.disabled = true;
+  captureBtn.title = 'video capture not supported in this browser';
+}
+
+let mediabunnyPromise = null;
+function loadMediabunny() {
+  if (!mediabunnyPromise) mediabunnyPromise = import(MEDIABUNNY_URL);
+  return mediabunnyPromise;
+}
+
+captureBtn.addEventListener('click', async () => {
+  if (!canRecord || isRecording) return;
+  isRecording = true;
+  captureBtn.classList.add('recording');
+  captureBtn.textContent = '● rendering 0%';
+
+  try {
+    const { Output, BufferTarget, WebMOutputFormat, CanvasSource, QUALITY_VERY_HIGH } = await loadMediabunny();
+
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = canvas.width * CAPTURE_SCALE;
+    offCanvas.height = canvas.height * CAPTURE_SCALE;
+    const offCtx = offCanvas.getContext('2d');
+    offCtx.scale(CAPTURE_SCALE, CAPTURE_SCALE);
+
+    // snapshot the composition at click-time so the live canvas stays fully
+    // interactive while this renders in the background
+    const snapshot = objects.map(o => ({ ...o }));
+
+    const output = new Output({ format: new WebMOutputFormat(), target: new BufferTarget() });
+    const videoSource = new CanvasSource(offCanvas, { codec: 'vp9', bitrate: QUALITY_VERY_HIGH });
+    output.addVideoTrack(videoSource);
+    await output.start();
+
+    for (let f = 0; f < CAPTURE_FRAMES; f++) {
+      const t = f * FRAME_DT;
+      stepAndDrawCore(offCtx, snapshot, FRAME_DT, t, -1);
+      await videoSource.add(t, FRAME_DT);
+      if (f % 3 === 0) {
+        captureBtn.textContent = `● rendering ${Math.round((f + 1) / CAPTURE_FRAMES * 100)}%`;
+        await new Promise(r => setTimeout(r, 0)); // yield so the UI stays responsive
+      }
+    }
+
+    await output.finalize();
+    const blob = new Blob([output.target.buffer], { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `beam-composition-${Date.now()}.webm`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    captureBtn.textContent = '● capture';
+  } catch (err) {
+    console.error('video capture failed', err);
+    captureBtn.textContent = '● capture failed';
+    setTimeout(() => { captureBtn.textContent = '● capture'; }, 2000);
+  } finally {
+    isRecording = false;
+    captureBtn.classList.remove('recording');
+  }
+});
 
 // ── two-finger touch: hold + spin/rotate ──────────────────────────────────
 let pinnedIdx    = -1;
@@ -572,22 +652,18 @@ function nearestObject(x, y) {
 
 canvas.addEventListener('touchstart', e => {
   lastTouchEnd = Date.now();
-  console.log(`touchstart FIRED: mode=${selectedObj} objs=${objects.length} total=${e.touches.length}`);
   if (selectedObj === 'select') return;
   e.preventDefault();
 
   for (const t of e.changedTouches) {
-    console.log(`  changed touch id=${t.identifier} pinFingerId=${pinFingerId}`);
     if (pinFingerId === -1) {
       const pos = getTouchPos(t);
       pinnedIdx   = objects.length > 0 ? nearestObject(pos.x, pos.y) : -1;
       pinFingerId = t.identifier;
       pinTapX = pos.x; pinTapY = pos.y;
       pinTapTime = Date.now();
-      console.log(`  → first finger: pinnedIdx=${pinnedIdx} at (${pos.x.toFixed(0)},${pos.y.toFixed(0)})`);
     } else if (spinFingerId === -1 && t.identifier !== pinFingerId) {
       spinFingerId = t.identifier;
-      console.log(`  → second finger registered: spinFingerId=${spinFingerId}`);
     }
   }
 }, { passive: false });
@@ -596,29 +672,20 @@ canvas.addEventListener('touchmove', e => {
   if (selectedObj === 'select') return;
   e.preventDefault();
 
-  console.log(`touchmove: pinnedIdx=${pinnedIdx} spinFingerId=${spinFingerId} changedTouches=${e.changedTouches.length}`);
-
-  if (pinnedIdx < 0 || spinFingerId === -1) {
-    console.log(`  → skipped: pinnedIdx=${pinnedIdx} spinFingerId=${spinFingerId}`);
-    return;
-  }
+  if (pinnedIdx < 0 || spinFingerId === -1) return;
 
   for (const t of e.changedTouches) {
-    console.log(`  touch id=${t.identifier} (looking for spinFingerId=${spinFingerId})`);
     if (t.identifier !== spinFingerId) continue;
     const pos = getTouchPos(t);
     const o   = objects[pinnedIdx];
     const dx  = pos.x - o.x;
     const dy  = pos.y - o.y;
     const angle = Math.atan2(dy, dx);
-    console.log(`  → pos=(${pos.x.toFixed(0)},${pos.y.toFixed(0)}) obj=(${o.x.toFixed(0)},${o.y.toFixed(0)}) dx=${dx.toFixed(0)} dy=${dy.toFixed(0)} angle=${(angle*180/Math.PI).toFixed(1)}°`);
 
     if (o.type === 'spinner') {
       o.angle = angle;
-      console.log(`  → spinner angle set to ${(angle*180/Math.PI).toFixed(1)}°`);
     } else if (o.type === 'beam') {
       o.dir = (angle * 180 / Math.PI + 90 + 360) % 360;
-      console.log(`  → beam dir set to ${o.dir.toFixed(1)}°`);
     }
   }
 }, { passive: false });
@@ -684,66 +751,77 @@ function traceRay(ox,oy,dirDeg,spinners,excl,er,eg,eb,depth,segs){
 }
 
 // ── draw ───────────────────────────────────────────────────────────────────
-function drawSegs(segs,base,ghost,wMult){
+// All draw* helpers take an explicit ctx (rather than closing over the live
+// canvas context) so the same functions can render to an offscreen canvas
+// for video capture, decoupled from the live view.
+function drawSegs(dctx,segs,base,ghost,wMult){
   wMult = wMult || 1;
   for(const seg of segs){
     const sc=ghost?0.45:base,bright=Math.max(seg.er,seg.eg,seg.eb);
     if(bright<0.01)continue;
     const r=Math.round(seg.er*255),g=Math.round(seg.eg*255),b=Math.round(seg.eb*255);
-    ctx.save();ctx.lineCap='round';
-    ctx.strokeStyle=`rgba(${r},${g},${b},${sc*bright*0.15})`;ctx.lineWidth=7;ctx.shadowBlur=0;
-    ctx.beginPath();ctx.moveTo(seg.x1,seg.y1);ctx.lineTo(seg.x2,seg.y2);ctx.stroke();
-    ctx.strokeStyle=`rgba(${r},${g},${b},${sc*bright*0.6})`;ctx.lineWidth=1.2*wMult;ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=(ghost?2:5)*wMult;
-    ctx.beginPath();ctx.moveTo(seg.x1,seg.y1);ctx.lineTo(seg.x2,seg.y2);ctx.stroke();
-    ctx.strokeStyle=`rgba(${Math.min(255,r+80)},${Math.min(255,g+80)},${Math.min(255,b+80)},${sc*bright*0.7})`;ctx.lineWidth=0.5*wMult;ctx.shadowBlur=0;
-    ctx.beginPath();ctx.moveTo(seg.x1,seg.y1);ctx.lineTo(seg.x2,seg.y2);ctx.stroke();
-    if(!seg.last){ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=(ghost?4:8)*wMult;ctx.fillStyle=`rgba(${r},${g},${b},${sc*bright*0.85})`;ctx.beginPath();ctx.arc(seg.x2,seg.y2,2,0,Math.PI*2);ctx.fill();}
-    ctx.restore();
+    dctx.save();dctx.lineCap='round';
+    dctx.strokeStyle=`rgba(${r},${g},${b},${sc*bright*0.15})`;dctx.lineWidth=7;dctx.shadowBlur=0;
+    dctx.beginPath();dctx.moveTo(seg.x1,seg.y1);dctx.lineTo(seg.x2,seg.y2);dctx.stroke();
+    dctx.strokeStyle=`rgba(${r},${g},${b},${sc*bright*0.6})`;dctx.lineWidth=1.2*wMult;dctx.shadowColor=`rgb(${r},${g},${b})`;dctx.shadowBlur=(ghost?2:5)*wMult;
+    dctx.beginPath();dctx.moveTo(seg.x1,seg.y1);dctx.lineTo(seg.x2,seg.y2);dctx.stroke();
+    dctx.strokeStyle=`rgba(${Math.min(255,r+80)},${Math.min(255,g+80)},${Math.min(255,b+80)},${sc*bright*0.7})`;dctx.lineWidth=0.5*wMult;dctx.shadowBlur=0;
+    dctx.beginPath();dctx.moveTo(seg.x1,seg.y1);dctx.lineTo(seg.x2,seg.y2);dctx.stroke();
+    if(!seg.last){dctx.shadowColor=`rgb(${r},${g},${b})`;dctx.shadowBlur=(ghost?4:8)*wMult;dctx.fillStyle=`rgba(${r},${g},${b},${sc*bright*0.85})`;dctx.beginPath();dctx.arc(seg.x2,seg.y2,2,0,Math.PI*2);dctx.fill();}
+    dctx.restore();
   }
 }
 
-function drawMirror(x,y,angle,length,hue,leakR,leakG,leakB,alpha,sel){
+function drawMirror(dctx,x,y,angle,length,hue,leakR,leakG,leakB,alpha,sel){
   if(mirrorBrightness<=0)return;
   const cos=Math.cos(angle),sin=Math.sin(angle),half=length/2;
-  ctx.save();ctx.globalAlpha=alpha*mirrorBrightness;
-  if(sel){ctx.strokeStyle='rgba(170,136,255,0.5)';ctx.lineWidth=10;ctx.shadowBlur=0;ctx.beginPath();ctx.moveTo(x-cos*half,y-sin*half);ctx.lineTo(x+cos*half,y+sin*half);ctx.stroke();}
-  ctx.strokeStyle=`hsl(${hue},100%,70%)`;ctx.lineWidth=1.5;ctx.shadowColor=`hsl(${hue},100%,70%)`;ctx.shadowBlur=6;
-  ctx.beginPath();ctx.moveTo(x-cos*half,y-sin*half);ctx.lineTo(x+cos*half,y+sin*half);ctx.stroke();
+  dctx.save();dctx.globalAlpha=alpha*mirrorBrightness;
+  if(sel){dctx.strokeStyle='rgba(170,136,255,0.5)';dctx.lineWidth=10;dctx.shadowBlur=0;dctx.beginPath();dctx.moveTo(x-cos*half,y-sin*half);dctx.lineTo(x+cos*half,y+sin*half);dctx.stroke();}
+  dctx.strokeStyle=`hsl(${hue},100%,70%)`;dctx.lineWidth=1.5;dctx.shadowColor=`hsl(${hue},100%,70%)`;dctx.shadowBlur=6;
+  dctx.beginPath();dctx.moveTo(x-cos*half,y-sin*half);dctx.lineTo(x+cos*half,y+sin*half);dctx.stroke();
   const ml=Math.max(leakR,leakG,leakB);
-  if(ml>0){ctx.globalAlpha=alpha*mirrorBrightness*ml*0.5;ctx.strokeStyle=`rgb(${Math.round(leakR*220+35)},${Math.round(leakG*220+35)},${Math.round(leakB*220+35)})`;ctx.lineWidth=3;ctx.shadowBlur=0;ctx.beginPath();ctx.moveTo(x-cos*half,y-sin*half);ctx.lineTo(x+cos*half,y+sin*half);ctx.stroke();}
-  ctx.globalAlpha=alpha*mirrorBrightness;ctx.fillStyle=sel?'#aa88ff':`hsl(${hue},100%,85%)`;ctx.shadowBlur=0;
-  ctx.beginPath();ctx.arc(x,y,sel?3:1.5,0,Math.PI*2);ctx.fill();
-  ctx.restore();
+  if(ml>0){dctx.globalAlpha=alpha*mirrorBrightness*ml*0.5;dctx.strokeStyle=`rgb(${Math.round(leakR*220+35)},${Math.round(leakG*220+35)},${Math.round(leakB*220+35)})`;dctx.lineWidth=3;dctx.shadowBlur=0;dctx.beginPath();dctx.moveTo(x-cos*half,y-sin*half);dctx.lineTo(x+cos*half,y+sin*half);dctx.stroke();}
+  dctx.globalAlpha=alpha*mirrorBrightness;dctx.fillStyle=sel?'#aa88ff':`hsl(${hue},100%,85%)`;dctx.shadowBlur=0;
+  dctx.beginPath();dctx.arc(x,y,sel?3:1.5,0,Math.PI*2);dctx.fill();
+  dctx.restore();
 }
 
-function drawBeamDot(o,sel){
+function drawBeamDot(dctx,o,sel){
   const pr=Math.round(o.r*255),pg=Math.round(o.g*255),pb=Math.round(o.b*255);
-  ctx.save();
-  if(sel){ctx.strokeStyle='rgba(170,136,255,0.6)';ctx.lineWidth=1;ctx.shadowBlur=0;ctx.beginPath();ctx.arc(o.x,o.y,HIT_RADIUS*0.7,0,Math.PI*2);ctx.stroke();}
-  ctx.shadowColor=`rgb(${pr},${pg},${pb})`;ctx.shadowBlur=6;ctx.fillStyle=`rgba(${pr},${pg},${pb},0.9)`;
-  ctx.beginPath();ctx.arc(o.x,o.y,2.5,0,Math.PI*2);ctx.fill();ctx.restore();
+  dctx.save();
+  if(sel){dctx.strokeStyle='rgba(170,136,255,0.6)';dctx.lineWidth=1;dctx.shadowBlur=0;dctx.beginPath();dctx.arc(o.x,o.y,HIT_RADIUS*0.7,0,Math.PI*2);dctx.stroke();}
+  dctx.shadowColor=`rgb(${pr},${pg},${pb})`;dctx.shadowBlur=6;dctx.fillStyle=`rgba(${pr},${pg},${pb},0.9)`;
+  dctx.beginPath();dctx.arc(o.x,o.y,2.5,0,Math.PI*2);dctx.fill();dctx.restore();
+}
+
+// Advances mirror/beam physics by dt and draws the composition — shared by
+// the live rAF loop and the offline capture loop so capture output is
+// identical regardless of how the frame was produced.
+function stepAndDrawCore(dctx, objs, dt, t, selIdx) {
+  dctx.clearRect(0,0,canvas.width,canvas.height);
+  const spinners = objs.filter(o=>o.type==='spinner');
+
+  for(let i=0;i<objs.length;i++){
+    const o=objs[i];if(o.type!=='spinner')continue;
+    o.angle+=o.speed*SPEED_SCALE*dt*Math.PI*2;
+    drawMirror(dctx,o.x,o.y,o.angle,o.length,o.hue,o.leakR,o.leakG,o.leakB,1.0,i===selIdx);
+  }
+  for(let i=0;i<objs.length;i++){
+    const o=objs[i];if(o.type!=='beam')continue;
+    const fl=0.92+0.05*Math.sin(t*18+o.phase)+0.03*(Math.random()-0.5);
+    const al=Math.max(0.8,Math.min(1.0,fl));
+    drawBeamDot(dctx,o,i===selIdx);
+    const segs=[];traceRay(o.x,o.y,o.dir,spinners,-1,o.r,o.g,o.b,0,segs);
+    drawSegs(dctx,segs,al,false, o.width || 1);
+  }
 }
 
 let last = performance.now();
 function draw(now) {
   const dt = Math.min((now-last)/1000,0.05); last=now; const t=now/1000;
   previewAngle += spinnerSpeed*SPEED_SCALE*dt*Math.PI*2;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  stepAndDrawCore(ctx, objects, dt, t, selectedIdx);
   const spinners = objects.filter(o=>o.type==='spinner');
-
-  for(let i=0;i<objects.length;i++){
-    const o=objects[i];if(o.type!=='spinner')continue;
-    o.angle+=o.speed*SPEED_SCALE*dt*Math.PI*2;
-    drawMirror(o.x,o.y,o.angle,o.length,o.hue,o.leakR,o.leakG,o.leakB,1.0,i===selectedIdx);
-  }
-  for(let i=0;i<objects.length;i++){
-    const o=objects[i];if(o.type!=='beam')continue;
-    const fl=0.92+0.05*Math.sin(t*18+o.phase)+0.03*(Math.random()-0.5);
-    const al=Math.max(0.8,Math.min(1.0,fl));
-    drawBeamDot(o,i===selectedIdx);
-    const segs=[];traceRay(o.x,o.y,o.dir,spinners,-1,o.r,o.g,o.b,0,segs);
-    drawSegs(segs,al,false, o.width || 1);
-  }
 
   // hover glow
   if(mouseOnCanvas&&selectedObj==='select'&&!isDragging){
@@ -756,16 +834,17 @@ function draw(now) {
     }
   }
 
-  // ghost preview
+  // ghost preview — purely a live-canvas UI aid; capture renders from the
+  // object list directly and never sees this, so no need to hide it here.
   if(mouseOnCanvas&&selectedObj!=='select'){
     if(selectedObj==='spinner'){
-      drawMirror(mouseX,mouseY,previewAngle,spinnerLength,180,spinnerLeakR,spinnerLeakG,spinnerLeakB,0.35,false);
+      drawMirror(ctx,mouseX,mouseY,previewAngle,spinnerLength,180,spinnerLeakR,spinnerLeakG,spinnerLeakB,0.35,false);
       const gs=[...spinners,{x:mouseX,y:mouseY,angle:previewAngle,length:spinnerLength,leakR:spinnerLeakR,leakG:spinnerLeakG,leakB:spinnerLeakB}];
-      for(const o of objects){if(o.type!=='beam')continue;const s=[];traceRay(o.x,o.y,o.dir,gs,-1,o.r,o.g,o.b,0,s);drawSegs(s,0.5,true,o.width||1);}
+      for(const o of objects){if(o.type!=='beam')continue;const s=[];traceRay(o.x,o.y,o.dir,gs,-1,o.r,o.g,o.b,0,s);drawSegs(ctx,s,0.5,true,o.width||1);}
     } else {
       const pr=Math.round(beamR*255),pg=Math.round(beamG*255),pb=Math.round(beamB*255);
       ctx.save();ctx.shadowColor=`rgb(${pr},${pg},${pb})`;ctx.shadowBlur=4;ctx.fillStyle=`rgba(${pr},${pg},${pb},0.4)`;ctx.beginPath();ctx.arc(mouseX,mouseY,2.5,0,Math.PI*2);ctx.fill();ctx.restore();
-      const s=[];traceRay(mouseX,mouseY,beamDir,spinners,-1,beamR,beamG,beamB,0,s);drawSegs(s,1.0,true,beamWidth);
+      const s=[];traceRay(mouseX,mouseY,beamDir,spinners,-1,beamR,beamG,beamB,0,s);drawSegs(ctx,s,1.0,true,beamWidth);
     }
   }
   requestAnimationFrame(draw);
