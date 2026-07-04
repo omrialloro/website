@@ -179,9 +179,8 @@ input.sb { accent-color: #4488ff; width: 60px; }
 
     <!-- SPINNER create -->
     <div id="ctx-spinner" style="display:none;" class="ctrl">
-      <span class="lbl">CCW</span>
+      <span class="lbl">SPEED</span>
       <input type="range" class="sl-c" id="sl-speed" min="-10" max="10" step="0.1" value="2">
-      <span class="lbl">CW</span>
       <span class="val vc" id="v-speed">7.2°/s</span>
       <div class="sep"></div>
       <span class="lbl">LENGTH</span>
@@ -585,7 +584,7 @@ captureBtn.addEventListener('click', async () => {
   captureBtn.textContent = '● rendering 0%';
 
   try {
-    const { Output, BufferTarget, WebMOutputFormat, CanvasSource, QUALITY_VERY_HIGH } = await loadMediabunny();
+    const { Output, BufferTarget, Mp4OutputFormat, CanvasSource, QUALITY_VERY_HIGH } = await loadMediabunny();
 
     const offCanvas = document.createElement('canvas');
     offCanvas.width = canvas.width * CAPTURE_SCALE;
@@ -597,8 +596,8 @@ captureBtn.addEventListener('click', async () => {
     // interactive while this renders in the background
     const snapshot = objects.map(o => ({ ...o }));
 
-    const output = new Output({ format: new WebMOutputFormat(), target: new BufferTarget() });
-    const videoSource = new CanvasSource(offCanvas, { codec: 'vp9', bitrate: QUALITY_VERY_HIGH });
+    const output = new Output({ format: new Mp4OutputFormat(), target: new BufferTarget() });
+    const videoSource = new CanvasSource(offCanvas, { codec: 'avc', bitrate: QUALITY_VERY_HIGH });
     output.addVideoTrack(videoSource);
     await output.start();
 
@@ -613,10 +612,10 @@ captureBtn.addEventListener('click', async () => {
     }
 
     await output.finalize();
-    const blob = new Blob([output.target.buffer], { type: 'video/webm' });
+    const blob = new Blob([output.target.buffer], { type: 'video/mp4' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `beam-composition-${Date.now()}.webm`;
+    a.href = url; a.download = `beam-composition-${Date.now()}.mp4`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
     captureBtn.textContent = '● capture';
