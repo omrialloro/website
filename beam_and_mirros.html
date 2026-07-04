@@ -116,13 +116,13 @@ input.sb { accent-color: #4488ff; width: 60px; }
 
   <!-- toolbar -->
   <div id="toolbar">
-    <div class="obj-tab active" id="tab-select"  data-obj="select">&#8982; SELECT</div>
+    <div class="obj-tab" id="tab-select"  data-obj="select">&#8982; SELECT</div>
     <div class="tab-sep"></div>
-    <div class="obj-tab" id="tab-spinner" data-obj="spinner">&#9675; SPINNER</div>
+    <div class="obj-tab active" id="tab-spinner" data-obj="spinner">&#9675; MIRROR</div>
     <div class="tab-sep"></div>
     <div class="obj-tab" id="tab-beam"    data-obj="beam">&#9135; BEAM</div>
     <div class="tab-sep"></div>
-    <span style="padding:0 12px;font-size:10px;color:#2e2e2e;" id="hint-txt">click to select · drag to move</span>
+    <span style="padding:0 12px;font-size:10px;color:#2e2e2e;" id="hint-txt">click canvas to spawn</span>
     <div style="margin-left:auto;display:flex;gap:8px;padding-right:12px;">
       <button class="btn adv" id="advBtn">ADV</button>
       <button class="btn" id="clearBtn">clear</button>
@@ -141,14 +141,14 @@ input.sb { accent-color: #4488ff; width: 60px; }
 
     <!-- SELECT + spinner selected -->
     <div id="ctx-sel-spinner" style="display:none;" class="ctrl">
-      <span id="sel-label">⊙ SPINNER</span>
+      <span id="sel-label">⊙ MIRROR</span>
       <span class="lbl sel">SPEED</span>
       <input type="range" class="sl-p" id="sl-ss-speed" min="-10" max="10" step="0.1" value="2">
       <span class="val vp" id="v-ss-speed">7.2°/s</span>
       <div class="sep"></div>
       <span class="lbl sel">LENGTH</span>
-      <input type="range" class="sl-p" id="sl-ss-len" min="5" max="120" step="1" value="20">
-      <span class="val vp" id="v-ss-len">20px</span>
+      <input type="range" class="sl-p" id="sl-ss-len" min="5" max="240" step="1" value="150">
+      <span class="val vp" id="v-ss-len">150px</span>
       <div class="sep"></div>
       <span class="lbl sel">LEAK</span>
       <input type="range" class="sl-o sl-sm" id="sl-ss-leak" min="0" max="1" step="0.01" value="0">
@@ -185,8 +185,8 @@ input.sb { accent-color: #4488ff; width: 60px; }
       <span class="val vc" id="v-speed">7.2°/s</span>
       <div class="sep"></div>
       <span class="lbl">LENGTH</span>
-      <input type="range" class="sl-c" id="sl-length" min="5" max="240" step="1" value="20">
-      <span class="val vc" id="v-length">20px</span>
+      <input type="range" class="sl-c" id="sl-length" min="5" max="240" step="1" value="150">
+      <span class="val vc" id="v-length">150px</span>
       <div class="sep"></div>
       <span class="lbl">LEAK</span>
       <input type="range" class="sl-o" id="sl-opacity" min="0" max="1" step="0.01" value="0">
@@ -292,8 +292,8 @@ const slSbG=document.getElementById('sl-sb-g'),vSbG=document.getElementById('v-s
 const slSbB=document.getElementById('sl-sb-b'),vSbB=document.getElementById('v-sb-b');
 
 // ── state ──────────────────────────────────────────────────────────────────
-let selectedObj = 'select';
-let spinnerSpeed = 2.0, spinnerLength = 20, spinnerOpacity = 0.0, mirrorBrightness = 1.0;
+let selectedObj = 'spinner';
+let spinnerSpeed = 2.0, spinnerLength = 150, spinnerOpacity = 0.0, mirrorBrightness = 1.0;
 let beamDir = 45, advMode = false, beamWidth = 1.0;
 let spinnerLeakR = 0, spinnerLeakG = 0, spinnerLeakB = 0;
 let beamR = 0, beamG = 1, beamB = 0;
@@ -360,7 +360,7 @@ function selectObject(idx) {
   const o = objects[idx];
   if (o.type === 'spinner') {
     showContext('sel-spinner');
-    document.getElementById('sel-label').textContent = `⊙ SPINNER #${idx+1}`;
+    document.getElementById('sel-label').textContent = `⊙ MIRROR #${idx+1}`;
     slSsSpeed.value = o.speed;   vSsSpeed.textContent = speedLabel(o.speed);
     slSsLen.value   = o.length;  vSsLen.textContent   = o.length + 'px';
     const avgLeak = (o.leakR + o.leakG + o.leakB) / 3;
@@ -851,8 +851,8 @@ function draw(now) {
 }
 
 // init
-showContext('select-idle');
-canvas.style.cursor = 'default';
+showContext('create-spinner');
+canvas.style.cursor = 'none';
 requestAnimationFrame(draw);
 </script>
 </body>
