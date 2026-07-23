@@ -1641,7 +1641,7 @@ function renderCollection(items, body, sectionTitle) {
     } else if (label === "beams&mirrors") {
       wrapper.querySelector(".item-toggle").onclick = (e) => {
         e.stopPropagation();
-        window.location.href = "beam_and_mirros.html";
+        window.location.href = "beam_and_mirros/index.html";
       };
     } else if (label === "sigma algebra") {
       wrapper.querySelector(".item-toggle").onclick = (e) => {
