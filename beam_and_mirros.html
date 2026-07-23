@@ -98,13 +98,20 @@ input.sb { accent-color: #4488ff; width: 60px; }
   white-space: nowrap;
 }
 .btn:hover { border-color: #555; color: #ccc; }
-.btn.save { border-color: #aaa4; color: #aaa; }
 .btn.adv  { border-color: #444; color: #666; }
 .btn.capture { border-color: #ff444488; color: #ff8888; }
 .btn.capture:hover { border-color: #ff4444; color: #fff; }
 .btn.capture.recording { background: #2a0000; border-color: #ff4444; color: #ff4444; cursor: default; }
 .btn.capture:disabled { opacity: 0.3; cursor: not-allowed; }
 .btn.adv.on { border-color: #aa88ff; color: #aa88ff; background: #1a1530; }
+
+.email-input {
+  background: transparent; border: 0.5px solid #333; color: #999;
+  font-size: 11px; padding: 4px 8px; border-radius: 5px; font-family: monospace;
+  width: 130px;
+}
+.email-input:focus { outline: none; border-color: #666; }
+.email-input::placeholder { color: #444; }
 
 .adv-lbl { font-size: 9px; color: #444; letter-spacing: 0.12em; white-space: nowrap; padding-right: 2px; }
 
@@ -126,7 +133,7 @@ input.sb { accent-color: #4488ff; width: 60px; }
     <div style="margin-left:auto;display:flex;gap:8px;padding-right:12px;">
       <button class="btn adv" id="advBtn">ADV</button>
       <button class="btn" id="clearBtn">clear</button>
-      <button class="btn save" id="saveBtn">save PNG</button>
+      <input type="email" id="captureEmail" placeholder="email (optional)" class="email-input">
       <button class="btn capture" id="captureBtn">&#9679; capture</button>
     </div>
   </div>
@@ -243,8 +250,10 @@ const ctx = canvas.getContext('2d');
 
 // ── DOM ────────────────────────────────────────────────────────────────────
 const clearBtn    = document.getElementById('clearBtn');
-const saveBtn     = document.getElementById('saveBtn');
 const captureBtn  = document.getElementById('captureBtn');
+const captureEmail = document.getElementById('captureEmail');
+captureEmail.value = localStorage.getItem('captureEmail') || '';
+captureEmail.addEventListener('change', () => localStorage.setItem('captureEmail', captureEmail.value.trim()));
 const advBtn      = document.getElementById('advBtn');
 const delBtn      = document.getElementById('delBtn');
 const advControls = document.getElementById('adv-controls');
@@ -540,16 +549,6 @@ canvas.addEventListener('click', e => {
 
 // ── save/clear ─────────────────────────────────────────────────────────────
 clearBtn.addEventListener('click', () => { objects.length = 0; selectObject(-1); updateCount(); });
-saveBtn.addEventListener('click', () => {
-  const tmp = document.createElement('canvas');
-  tmp.width = canvas.width; tmp.height = canvas.height;
-  const tc = tmp.getContext('2d');
-  tc.fillStyle = '#0d0d0d'; tc.fillRect(0, 0, tmp.width, tmp.height);
-  tc.drawImage(canvas, 0, 0);
-  const a = document.createElement('a');
-  a.href = tmp.toDataURL('image/png'); a.download = 'laser-mirror.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-});
-
 // ── capture video ──────────────────────────────────────────────────────────
 // Renders offline at a fixed 1/30s timestep per frame, independent of real
 // wall-clock/render performance, so the output is always full quality —
@@ -559,6 +558,8 @@ const CAPTURE_FPS = 30;
 const CAPTURE_FRAMES = CAPTURE_SECONDS * CAPTURE_FPS;
 const FRAME_DT = 1 / CAPTURE_FPS;
 const MEDIABUNNY_URL = 'https://cdn.jsdelivr.net/npm/mediabunny@1.50.6/+esm';
+// TODO: replace with your deployed Cloudflare Worker URL (see capture-worker/)
+const CAPTURE_WORKER_URL = 'https://beam-capture-worker.YOUR-SUBDOMAIN.workers.dev/send-video';
 // render at native pixel density so thin glowing lines aren't already soft
 // before compression — the live canvas is CSS-pixel sized, which looks fine
 // on screen (GPU-composited) but bakes in less detail than a Retina display has
@@ -613,12 +614,25 @@ captureBtn.addEventListener('click', async () => {
 
     await output.finalize();
     const blob = new Blob([output.target.buffer], { type: 'video/mp4' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `beam-composition-${Date.now()}.mp4`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    captureBtn.textContent = '● capture';
+    const email = captureEmail.value.trim();
+
+    if (email) {
+      captureBtn.textContent = '● sending...';
+      const form = new FormData();
+      form.append('email', email);
+      form.append('video', blob, `beam-composition-${Date.now()}.mp4`);
+      const resp = await fetch(CAPTURE_WORKER_URL, { method: 'POST', body: form });
+      if (!resp.ok) throw new Error(await resp.text());
+      captureBtn.textContent = '● sent!';
+      setTimeout(() => { captureBtn.textContent = '● capture'; }, 2000);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `beam-composition-${Date.now()}.mp4`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      captureBtn.textContent = '● capture';
+    }
   } catch (err) {
     console.error('video capture failed', err);
     captureBtn.textContent = '● capture failed';

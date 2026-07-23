@@ -1,0 +1,3 @@
+capture-worker/node_modules/
+capture-worker/.wrangler/
+capture-worker/.dev.vars
